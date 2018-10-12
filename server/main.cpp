@@ -21,65 +21,44 @@
 #include <string>
 #include <thread>
 #include <vector>
-
-#include "Server.h"
+#include "Listener.h"
 #include "cert_loader.hpp"
 
 
 
 //------------------------------------------------------------------------------
 
-// Report a failure
-void
-fail(boost::system::error_code ec, char const* what)
-{
-    std::cerr << what << ": " << ec.message() << "\n";
-}
-
-
-
-
 
 int main(int argc, char* argv[])
 {
-	//Server s;
 
-    auto const address = boost::asio::ip::make_address("0.0.0.0");
-    auto const port = static_cast<unsigned short>(19999);
-    auto const threads = std::max<int>(1, 1);
 
-    // The io_context is required for all I/O
-    boost::asio::io_context ioc{ threads };
+	auto const address = boost::asio::ip::make_address("0.0.0.0");
+	auto const port = static_cast<unsigned short>(19999);
+	auto const threads = std::max<int>(1, 1);
 
-    // The SSL context is required, and holds certificates
-    ssl::context ctx{ ssl::context::sslv23 };
+	// The io_context is required for all I/O
+	boost::asio::io_context ioc{ threads };
 
-    try {
-        load_server_certificate(ctx);
-    }
-    catch (std::exception e) {
-        std::cout << e.what() << std::endl;
-    }
+	// The SSL context is required, and holds certificates
+	ssl::context ctx{ ssl::context::sslv23 };
 
-    // Spawn a listening port
-    boost::asio::spawn(ioc,
-        std::bind(
-            &Server::doListen,
-            std::ref(ioc),
-            std::ref(ctx),
-            tcp::endpoint{ address, port },
-            std::placeholders::_1));
+	// This holds the self-signed certificate used by the server
+	load_server_certificate(ctx);
 
-    // Run the I/O service on the requested number of threads
-    std::vector<std::thread> v;
-    v.reserve(threads - 1);
-    for (auto i = threads - 1; i > 0; --i)
-        v.emplace_back(
-            [&ioc]
-    {
-        ioc.run();
-    });
-    ioc.run();
+	// Create and launch a listening port
+	std::make_shared<Listener>(ioc, ctx, tcp::endpoint{ address, port })->run();
 
-    return EXIT_SUCCESS;
+	// Run the I/O service on the requested number of threads
+	std::vector<std::thread> v;
+	v.reserve(threads - 1);
+	for (auto i = threads - 1; i > 0; --i)
+		v.emplace_back(
+			[&ioc]
+	{
+		ioc.run();
+	});
+	ioc.run();
+
+	return EXIT_SUCCESS;
 }

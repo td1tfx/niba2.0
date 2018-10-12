@@ -1,6 +1,6 @@
 #include "Server.h"
 
-
+/*
 
 Server::Server()
 {
@@ -105,3 +105,5 @@ void Server::doSession_(tcp::socket& socket, ssl::context& ctx, boost::asio::yie
 
 	}
 }
+
+*/

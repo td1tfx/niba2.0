@@ -24,6 +24,9 @@
     <ClInclude Include="Session.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Listener.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -33,6 +36,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Session.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Listener.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
