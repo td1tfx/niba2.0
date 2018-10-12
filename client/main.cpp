@@ -132,5 +132,6 @@ int main(int argc, char** argv)
     // the socket is closed.
     ioc.run();
 
+	system("pause");
     return EXIT_SUCCESS;
 }
