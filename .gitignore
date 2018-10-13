@@ -1,4 +1,11 @@
 .git/
 .vs/
 Debug/
+Release/
 temp/
+client/Debug/
+client/Release/
+client/x64/
+server/Debug/
+server/Release/
+server/x64/
