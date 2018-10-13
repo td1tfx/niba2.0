@@ -34,19 +34,11 @@ namespace websocket = boost::beast::websocket;  // from <boost/beast/websocket.h
 
 //------------------------------------------------------------------------------
 
-// Report a failure
-void
-fail(boost::system::error_code ec, char const* what)
-{
-    std::cerr << what << ": " << ec.message() << "\n";
-}
-
 // Sends a WebSocket message and prints the response
 void
 do_session(
     std::string const& host,
     std::string const& port,
-    std::string const& text,
     boost::asio::io_context& ioc,
     ssl::context& ctx,
     boost::asio::yield_context yield)
@@ -57,48 +49,47 @@ do_session(
     tcp::resolver resolver{ ioc };
     websocket::stream<ssl::stream<tcp::socket>> ws{ ioc, ctx };
 
-    // Look up the domain name
-    auto const results = resolver.async_resolve(host, port, yield[ec]);
-    if (ec)
-        return fail(ec, "resolve");
+    try {
+        // Look up the domain name
+        auto const results = resolver.async_resolve(host, port, yield);
 
-    // Make the connection on the IP address we get from a lookup
-    boost::asio::async_connect(ws.next_layer().next_layer(), results.begin(), results.end(), yield[ec]);
-    if (ec)
-        return fail(ec, "connect");
+        // Make the connection on the IP address we get from a lookup
+        boost::asio::async_connect(ws.next_layer().next_layer(), results.begin(), results.end(), yield);
 
-    // Perform the SSL handshake
-    ws.next_layer().async_handshake(ssl::stream_base::client, yield[ec]);
-    if (ec)
-        return fail(ec, "ssl_handshake");
+        // Perform the SSL handshake
+        ws.next_layer().async_handshake(ssl::stream_base::client, yield);
 
-    // Perform the websocket handshake
-    ws.async_handshake(host, "/", yield[ec]);
-    if (ec)
-        return fail(ec, "handshake");
+        // Perform the websocket handshake
+        ws.async_handshake(host, "/", yield);
 
-    // Send the message
-    ws.async_write(boost::asio::buffer(std::string(text)), yield[ec]);
-    if (ec)
-        return fail(ec, "write");
+        for (;;) {
+            std::string txt;
+            if (!std::getline(std::cin, txt)) {
+                break;
+            }
+            if (txt == "exit" || txt == "quit") {
+                break;
+            }
 
-    // This buffer will hold the incoming message
-    boost::beast::multi_buffer b;
+            // do parsing, then send json obj
 
-    // Read a message into our buffer
-    ws.async_read(b, yield[ec]);
-    if (ec)
-        return fail(ec, "read");
+            ws.async_write(boost::asio::buffer(txt), yield);
 
+            boost::beast::multi_buffer b;
+            // Read a message into our buffer
+            ws.async_read(b, yield);
+
+            // deserialize json, process it
+
+            // The buffers() function helps print a ConstBufferSequence
+            std::cout << boost::beast::buffers(b.data()) << std::endl;
+        }
+    }
+    catch (std::exception& e) {
+        std::cout << "client failed " << e.what() << std::endl;
+    }
     // Close the WebSocket connection
-    ws.async_close(websocket::close_code::normal, yield[ec]);
-    if (ec)
-        return fail(ec, "close");
-
-    // If we get here then the connection is closed gracefully
-
-    // The buffers() function helps print a ConstBufferSequence
-    std::cout << boost::beast::buffers(b.data()) << std::endl;
+    ws.async_close(websocket::close_code::normal, yield);
 }
 
 //------------------------------------------------------------------------------
@@ -107,7 +98,6 @@ int main(int argc, char** argv)
 {
     auto const host = "localhost";
     auto const port = "19999";
-    auto const text = "niba wudi\n";
 
     // The io_context is required for all I/O
     boost::asio::io_context ioc;
@@ -119,19 +109,13 @@ int main(int argc, char** argv)
     load_root_certificates(ctx);
 
     // Launch the asynchronous operation
-    boost::asio::spawn(ioc, std::bind(
-        &do_session,
-        std::string(host),
-        std::string(port),
-        std::string(text),
-        std::ref(ioc),
-        std::ref(ctx),
-        std::placeholders::_1));
+    boost::asio::spawn(ioc, [&ioc, &ctx, &host, &port](boost::asio::yield_context yield) {
+        do_session(host, port, ioc, ctx, yield);
+    });
 
     // Run the I/O service. The call will return when
     // the socket is closed.
     ioc.run();
 
-	system("pause");
     return EXIT_SUCCESS;
 }

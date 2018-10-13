@@ -1,0 +1,41 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28010.2036
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NibaServer", "server\NibaServer.vcxproj", "{41B2CA93-0CCF-4A4C-AB27-5425A422620A}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NibaClient", "client\NibaClient.vcxproj", "{1B55F266-6AD5-42AD-8451-D9B4B653AE3B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{41B2CA93-0CCF-4A4C-AB27-5425A422620A}.Debug|x64.ActiveCfg = Debug|x64
+		{41B2CA93-0CCF-4A4C-AB27-5425A422620A}.Debug|x64.Build.0 = Debug|x64
+		{41B2CA93-0CCF-4A4C-AB27-5425A422620A}.Debug|x86.ActiveCfg = Debug|Win32
+		{41B2CA93-0CCF-4A4C-AB27-5425A422620A}.Debug|x86.Build.0 = Debug|Win32
+		{41B2CA93-0CCF-4A4C-AB27-5425A422620A}.Release|x64.ActiveCfg = Release|x64
+		{41B2CA93-0CCF-4A4C-AB27-5425A422620A}.Release|x64.Build.0 = Release|x64
+		{41B2CA93-0CCF-4A4C-AB27-5425A422620A}.Release|x86.ActiveCfg = Release|Win32
+		{41B2CA93-0CCF-4A4C-AB27-5425A422620A}.Release|x86.Build.0 = Release|Win32
+		{1B55F266-6AD5-42AD-8451-D9B4B653AE3B}.Debug|x64.ActiveCfg = Debug|x64
+		{1B55F266-6AD5-42AD-8451-D9B4B653AE3B}.Debug|x64.Build.0 = Debug|x64
+		{1B55F266-6AD5-42AD-8451-D9B4B653AE3B}.Debug|x86.ActiveCfg = Debug|Win32
+		{1B55F266-6AD5-42AD-8451-D9B4B653AE3B}.Debug|x86.Build.0 = Debug|Win32
+		{1B55F266-6AD5-42AD-8451-D9B4B653AE3B}.Release|x64.ActiveCfg = Release|x64
+		{1B55F266-6AD5-42AD-8451-D9B4B653AE3B}.Release|x64.Build.0 = Release|x64
+		{1B55F266-6AD5-42AD-8451-D9B4B653AE3B}.Release|x86.ActiveCfg = Release|Win32
+		{1B55F266-6AD5-42AD-8451-D9B4B653AE3B}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DDDF9CA9-9595-4FF9-B1ED-DA089F2C32FA}
+	EndGlobalSection
+EndGlobal
