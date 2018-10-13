@@ -27,6 +27,8 @@
 #include <string>
 
 #include "cert_loader.hpp"
+#include "cmd_parser.h"
+#include "cmd_processor.h"
 
 using tcp = boost::asio::ip::tcp;               // from <boost/asio/ip/tcp.hpp>
 namespace ssl = boost::asio::ssl;               // from <boost/asio/ssl.hpp>
@@ -71,9 +73,12 @@ do_session(
                 break;
             }
 
-            // do parsing, then send json obj
+            auto request_str = nibaclient::cmd_processor::handle_cmd(txt);
+            if (!request_str) {
+                continue;
+            }
 
-            ws.async_write(boost::asio::buffer(txt), yield);
+            ws.async_write(boost::asio::buffer(*request_str), yield);
 
             boost::beast::multi_buffer b;
             // Read a message into our buffer
