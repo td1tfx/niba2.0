@@ -129,12 +129,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\shared\global_defs.h" />
     <ClInclude Include="cert_loader.hpp" />
+    <ClInclude Include="client_processor.h" />
     <ClInclude Include="cmd_parser.h" />
     <ClInclude Include="cmd_processor.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\shared\client_request.cpp" />
+    <ClCompile Include="..\shared\utils.cpp" />
+    <ClCompile Include="client_processor.cpp" />
     <ClCompile Include="cmd_parser.cpp" />
     <ClCompile Include="cmd_processor.cpp" />
     <ClCompile Include="main.cpp" />

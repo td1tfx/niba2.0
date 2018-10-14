@@ -1,5 +1,7 @@
 #pragma once
 
+#include "global_defs.h"
+
 #include <boost/beast/core.hpp>
 #include <boost/beast/websocket.hpp>
 #include <boost/beast/websocket/ssl.hpp>
