@@ -1,25 +1,20 @@
 #include "cmd_processor.h"
 #include "cmd_parser.h"
+#include "utils.h"
 #include <iostream>
 
 using namespace nibaclient;
 
-std::optional<std::string> nibaclient::cmd_processor::handle_cmd(std::string & s)
-{
-    return handle_cmd(s, {});
-}
 
 std::optional<std::string> nibaclient::cmd_processor::handle_cmd(std::string & s, 
-    const std::vector<nibashared::cmdtype>& acceptable)
+    nibashared::gamestate state)
 {
     try {
+        // std::cout << s << std::endl;
         auto j_str = cmd_parser::parse(s);
         nibashared::cmdtype t = j_str["type"];
-        if (!acceptable.empty()) {
-            auto iter = std::find(acceptable.begin(), acceptable.end(), t);
-            if (iter == acceptable.end()) {
-                throw std::exception("command not allowed");
-            }
+        if (!nibashared::is_cmd_valid(state, t)) {
+            throw std::exception("command not allowed");
         }
         post_process(t, j_str);
         return j_str.dump();

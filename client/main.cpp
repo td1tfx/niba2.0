@@ -29,6 +29,8 @@
 #include "cert_loader.hpp"
 #include "cmd_parser.h"
 #include "cmd_processor.h"
+#include "client_processor.h"
+#include "request_dispatcher.h"
 
 using tcp = boost::asio::ip::tcp;               // from <boost/asio/ip/tcp.hpp>
 namespace ssl = boost::asio::ssl;               // from <boost/asio/ssl.hpp>
@@ -64,6 +66,8 @@ do_session(
         // Perform the websocket handshake
         ws.async_handshake(host, "/", yield);
 
+        nibaclient::client_processor processor;
+        nibashared::request_dispatcher dispatcher(processor);
         for (;;) {
             std::string txt;
             if (!std::getline(std::cin, txt)) {
@@ -73,21 +77,25 @@ do_session(
                 break;
             }
 
-            auto request_str = nibaclient::cmd_processor::handle_cmd(txt);
+            auto request_str = nibaclient::cmd_processor::handle_cmd(txt, 
+                processor.get_session().state);
+
             if (!request_str) {
                 continue;
             }
 
             ws.async_write(boost::asio::buffer(*request_str), yield);
-
-            boost::beast::multi_buffer b;
-            // Read a message into our buffer
-            ws.async_read(b, yield);
-
-            // deserialize json, process it
-
-            // The buffers() function helps print a ConstBufferSequence
-            std::cout << boost::beast::buffers(b.data()) << std::endl;
+            std::string response;
+            auto buffer = boost::asio::dynamic_buffer(response);
+            ws.async_read(buffer, yield);
+            // what happens here is that, the response dispatcher
+            // builds the request_str into an object
+            // and calls merge_response, then client processor is called
+            // we are not doing client side validation - to test server side validation
+            // is actually working (also deprecating this client anyway)
+            std::string result = dispatcher.dispatch(*request_str, response);
+            // we don't care about the result that much
+            // processor keeps track of the states, so we could check its state
         }
     }
     catch (std::exception& e) {

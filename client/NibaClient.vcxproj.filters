@@ -24,6 +24,15 @@
     <ClCompile Include="cmd_processor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="client_processor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\client_request.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\utils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cert_loader.hpp">
@@ -32,10 +41,10 @@
     <ClInclude Include="cmd_parser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\shared\global_defs.h">
+    <ClInclude Include="cmd_processor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="cmd_processor.h">
+    <ClInclude Include="client_processor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
