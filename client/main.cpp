@@ -25,92 +25,22 @@
 #include <functional>
 #include <iostream>
 #include <string>
+#include <memory>
 
 #include "cert_loader.hpp"
-#include "cmd_parser.h"
-#include "cmd_processor.h"
-#include "client_processor.h"
-#include "request_dispatcher.h"
+#include "client_session.h"
 
 using tcp = boost::asio::ip::tcp;               // from <boost/asio/ip/tcp.hpp>
 namespace ssl = boost::asio::ssl;               // from <boost/asio/ssl.hpp>
 namespace websocket = boost::beast::websocket;  // from <boost/beast/websocket.hpp>
 
-//------------------------------------------------------------------------------
-
-// Sends a WebSocket message and prints the response
-void
-do_session(
-    std::string const& host,
-    std::string const& port,
-    boost::asio::io_context& ioc,
-    ssl::context& ctx,
-    boost::asio::yield_context yield)
-{
-    boost::system::error_code ec;
-
-    // These objects perform our I/O
-    tcp::resolver resolver{ ioc };
-    websocket::stream<ssl::stream<tcp::socket>> ws{ ioc, ctx };
-
-    try {
-        // Look up the domain name
-        auto const results = resolver.async_resolve(host, port, yield);
-
-        // Make the connection on the IP address we get from a lookup
-        boost::asio::async_connect(ws.next_layer().next_layer(), results.begin(), results.end(), yield);
-
-        // Perform the SSL handshake
-        ws.next_layer().async_handshake(ssl::stream_base::client, yield);
-
-        // Perform the websocket handshake
-        ws.async_handshake(host, "/", yield);
-
-        nibaclient::client_processor processor;
-        nibashared::request_dispatcher dispatcher(processor);
-        for (;;) {
-            std::string txt;
-            if (!std::getline(std::cin, txt)) {
-                break;
-            }
-            if (txt == "exit" || txt == "quit") {
-                break;
-            }
-
-            auto request_str = nibaclient::cmd_processor::handle_cmd(txt, 
-                processor.get_session().state);
-
-            if (!request_str) {
-                continue;
-            }
-
-            ws.async_write(boost::asio::buffer(*request_str), yield);
-            std::string response;
-            auto buffer = boost::asio::dynamic_buffer(response);
-            ws.async_read(buffer, yield);
-            // what happens here is that, the response dispatcher
-            // builds the request_str into an object
-            // and calls merge_response, then client processor is called
-            // we are not doing client side validation - to test server side validation
-            // is actually working (also deprecating this client anyway)
-            std::string result = dispatcher.dispatch(*request_str, response);
-            // we don't care about the result that much
-            // processor keeps track of the states, so we could check its state
-        }
-    }
-    catch (std::exception& e) {
-        std::cout << "client failed " << e.what() << std::endl;
-    }
-    // Close the WebSocket connection
-    ws.async_close(websocket::close_code::normal, yield);
-}
 
 //------------------------------------------------------------------------------
 
 int main(int argc, char** argv)
 {
-    auto const host = "localhost";
-    auto const port = "19999";
+    std::string host = "localhost";
+    std::string port = "19999";
 
     // The io_context is required for all I/O
     boost::asio::io_context ioc;
@@ -121,10 +51,8 @@ int main(int argc, char** argv)
     // ctx.load_verify_file("server.crt");
     load_root_certificates(ctx);
 
-    // Launch the asynchronous operation
-    boost::asio::spawn(ioc, [&ioc, &ctx, &host, &port](boost::asio::yield_context yield) {
-        do_session(host, port, ioc, ctx, yield);
-    });
+    auto session = std::make_shared<nibaclient::client_session>(host, port, ioc, ctx);
+    session->go();
 
     // Run the I/O service. The call will return when
     // the socket is closed.
