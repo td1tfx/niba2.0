@@ -1,8 +1,8 @@
-#include <boost/asio/spawn.hpp>
-
 #include "server_session.h"
 #include "server_processor.h"
 #include "request_dispatcher.h"
+
+#include <boost/asio/spawn.hpp>
 
 using tcp = boost::asio::ip::tcp;               // from <boost/asio/ip/tcp.hpp>
 namespace ssl = boost::asio::ssl;               // from <boost/asio/ssl.hpp>

@@ -1,3 +1,4 @@
+#pragma once
 #include "global_defs.h"
 
 namespace nibashared {

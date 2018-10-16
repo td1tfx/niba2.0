@@ -33,7 +33,7 @@ json register_request::create_response()
 json register_request::create_request()
 {
     json j = {
-        {"type", cmdtype::registeration},
+        {"type", type},
         {"id", id},
         {"password", password}
     };
@@ -80,7 +80,7 @@ json login_request::create_response()
 json login_request::create_request()
 {
     json j = {
-        {"type", cmdtype::registeration},
+        {"type", type},
         {"id", id},
         {"password", password}
     };
