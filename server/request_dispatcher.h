@@ -1,6 +1,6 @@
 #pragma once
 
-#include "client_request.h"
+#include "message.h"
 
 #include <string>
 #include <nlohmann/json.hpp>
@@ -19,7 +19,7 @@ public:
     }
     // dispatch is responsible to handle all the type conversion, make the whatever calls
     // and then finally return the serialized message
-    std::string dispatch(const std::string & request, const std::string & response = "")
+    std::string dispatch(const std::string & request)
     {
         // if exceptions happen
         try {
@@ -31,12 +31,12 @@ public:
             case nibashared::cmdtype::registeration: {
                 nibashared::register_request req;
                 req.from_json(j);
-                return do_request_(req, response);
+                return do_request_(req);
             }
             case nibashared::cmdtype::login: {
                 nibashared::login_request req;
                 req.from_json(j);
-                return do_request_(req, response);
+                return do_request_(req);
             }
             }
             throw std::exception("invalid request");
@@ -53,15 +53,7 @@ public:
     }
 private:
     template<typename request>
-    std::string do_request_(request& req, const std::string & merger = "") {
-        if (!merger.empty()) {
-            auto merge_j = nlohmann::json::parse(merger);
-            if (merge_j.find("error") != merge_j.end()) {
-                std::string err = merge_j["error"].get<std::string>();
-                throw std::exception(err.c_str());
-            }
-            req.merge_response(merge_j);
-        }
+    std::string do_request_(request& req) {
         if (!req.validate(processor_.get_session())) {
             throw std::exception("validation failure");
         }

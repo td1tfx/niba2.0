@@ -1,5 +1,4 @@
-#include "client_request.h"
-#include "utils.h"
+#include "message.h"
 
 using nlohmann::json;
 using namespace nibashared;
@@ -11,10 +10,9 @@ register_request::register_request(const std::string & id, const std::string & p
 
 bool register_request::validate(nibashared::sessionstate session)
 {
-    // TODO: probably throw errors?
-    if (!nibashared::is_cmd_valid(session.state, cmdtype::registeration)) {
-        return false;
-    }
+    // TODO: throw error with error code?
+    if (session.state != nibashared::gamestate::prelogin) return false;
+
     if (id.size() < 4 || id.size() > 16 || password.size() < 6 || password.size() > 24) {
         return false;
     }
@@ -58,9 +56,8 @@ login_request::login_request(const std::string & id, const std::string & passwor
 
 bool login_request::validate(nibashared::sessionstate session)
 {
-    if (!nibashared::is_cmd_valid(session.state, cmdtype::registeration)) {
-        return false;
-    }
+    if (session.state != nibashared::gamestate::prelogin) return false;
+
     if (id.size() < 4 || id.size() > 16 || password.size() < 6 || password.size() > 24) {
         return false;
     }

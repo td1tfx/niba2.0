@@ -40,10 +40,7 @@ public:
     std::string id;
     std::string password;
     bool success = false;
-    // return list of characters
-    // we don't have character class yet, so just vector string
     std::vector<std::string> characters;
 };
 
 }
-
