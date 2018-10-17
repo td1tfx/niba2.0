@@ -1,6 +1,4 @@
 #include "cmd_processor.h"
-#include "utils.h"
-
 #include <iostream>
 #include <boost/algorithm/string.hpp>
 

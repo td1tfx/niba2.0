@@ -9,12 +9,14 @@
 #include <boost/asio/spawn.hpp>
 #include <boost/asio/ssl/stream.hpp>
 
+namespace nibaserver {
+
 class server_session : public std::enable_shared_from_this<server_session>
 {
 public:
     server_session(boost::asio::io_context& ioc,
-                   boost::asio::ip::tcp::socket&& socket,
-                   boost::asio::ssl::context& ctx);
+        boost::asio::ip::tcp::socket&& socket,
+        boost::asio::ssl::context& ctx);
     ~server_session() = default;
     void go();
 private:
@@ -23,3 +25,4 @@ private:
     boost::beast::websocket::stream<boost::asio::ssl::stream<boost::asio::ip::tcp::socket&>> ws_;
 };
 
+}

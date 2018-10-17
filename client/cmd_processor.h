@@ -1,8 +1,7 @@
 #pragma once
 #include "global_defs.h"
 #include "client_processor.h"
-#include "client_request.h"
-#include "utils.h"
+#include "message.h"
 
 #include <nlohmann/json.hpp>
 #include <optional>
@@ -31,8 +30,9 @@ namespace nibaclient {
 
     private:
         template<typename message, typename handler>
-        static void validate_and_go(nibaclient::client_processor& processor, message& message, handler handler) {
-            if (!nibashared::is_cmd_valid(processor.get_session().state, message.type) || !message.validate(processor.get_session())) {
+        static void validate_and_go(nibaclient::client_processor& processor,
+            message& message, handler handler) {
+            if (!message.validate(processor.get_session())) {
                 // TODO maybe message specific error msg
                 std::cout << "command validation failed" << std::endl;
             }

@@ -1,6 +1,6 @@
 #pragma once
 #include "global_defs.h"
-#include "client_request.h"
+#include "message.h"
 
 namespace nibaserver {
 class server_processor
