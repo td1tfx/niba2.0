@@ -4,6 +4,7 @@
 #include "request_dispatcher.h"
 
 #include <boost/asio/spawn.hpp>
+#include <boost/beast/http.hpp>
 
 using tcp = boost::asio::ip::tcp;               // from <boost/asio/ip/tcp.hpp>
 namespace ssl = boost::asio::ssl;               // from <boost/asio/ssl.hpp>
@@ -24,7 +25,11 @@ void server_session::go()
         try {
             ws_.next_layer().async_handshake(ssl::stream_base::server, yield);
             // Accept the websocket handshake
-            ws_.async_accept(yield);
+            ws_.async_accept_ex([](boost::beast::websocket::response_type& m)
+            {
+                // js-websocket(or chrome) require this field to be non-empty
+                m.insert(boost::beast::http::field::sec_websocket_protocol, "niba-server");
+            }, yield);
             nibashared::request_dispatcher dispatcher(processor);
             for (;;)
             {
