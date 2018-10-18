@@ -80,6 +80,7 @@ int main(int argc, char* argv[])
         {
             tcp::socket socket(ioc);
             acceptor.async_accept(socket, yield);
+            std::cout << "got connection" << std::endl;
             auto session = std::make_shared<server_session>(acceptor.get_executor().context(), 
                                                             std::move(socket), ctx);
             session->go();
