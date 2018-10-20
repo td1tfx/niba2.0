@@ -24,21 +24,19 @@
     depending on your environment Please see the documentation
     accompanying the Beast certificate for more details.
 */
-inline
-void
-load_server_certificate(boost::asio::ssl::context& ctx)
-{
+inline void load_server_certificate(boost::asio::ssl::context &ctx) {
     /*
         The certificate was generated from CMD.EXE on Windows 10 using:
 
         winpty openssl dhparam -out dh.pem 2048
-        winpty openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 10000 -out cert.pem -subj "//C=US\ST=CA\L=Los Angeles\O=Beast\CN=www.example.com"
+        winpty openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 10000 -out cert.pem
+       -subj "//C=US\ST=CA\L=Los Angeles\O=Beast\CN=www.example.com"
     */
 
-// https://stackoverflow.com/questions/6452756/exception-running-boost-asio-ssl-example
+    // https://stackoverflow.com/questions/6452756/exception-running-boost-asio-ssl-example
 
     std::string const cert =
-R"(-----BEGIN CERTIFICATE-----
+        R"(-----BEGIN CERTIFICATE-----
 MIICtDCCAZwCCQC82WtqGSF5jDANBgkqhkiG9w0BAQsFADAcMQswCQYDVQQGEwJV
 UzENMAsGA1UECgwEbmliYTAeFw0xODEwMTIwNDM1MThaFw0yODEwMDkwNDM1MTha
 MBwxCzAJBgNVBAYTAlVTMQ0wCwYDVQQKDARuaWJhMIIBIjANBgkqhkiG9w0BAQEF
@@ -56,9 +54,8 @@ luOLJAzTRGJYImdk5DPBV9mp0K+HtA1+gIxb2AcFadXFfBGgiZKiZ+MWiRJx9X5+
 UaAKuOzw5yef9xSK6Ek2VdCtfvycTufe
 -----END CERTIFICATE-----)";
 
-
     std::string const key =
-R"(-----BEGIN RSA PRIVATE KEY-----
+        R"(-----BEGIN RSA PRIVATE KEY-----
 MIIEpAIBAAKCAQEA0U9vp6mOrjUPVLhYAKFpREoR/+CieVGDKUghnNV11TOt66fU
 fwhzRirU9OmlytzDLPgmY3rGTdc0B6pY6FJGmGy6SI2RCxfmRrBh1Sa2TaFZN/3u
 iNQym+eR3lUGRq5c2XGB/re6gnRKidOL3wX+N3ZcPxkxBEO3DNSWq9JqL8NGWASE
@@ -87,26 +84,21 @@ d80BojEu/Fcy0RXblovxmxin/NKdftS1bYytMgeb2e5ndPSia3SVUg==
 -----END RSA PRIVATE KEY-----)";
 
     std::string const dh =
-R"(-----BEGIN DH PARAMETERS-----
+        R"(-----BEGIN DH PARAMETERS-----
 MIGHAoGBANZaLAnxkSdgP4Fh4D3umehbjEWSw46HAIOTnqz4pP0VERvMUVevDDVI
 gb5baHyfcW3tzijkQ3klN/y0u6hqxFu43BKFfVuSXc5FPEi6DwDpCJ4S2aPQksD9
 7N2oAUiNkHlbGhnThIeMRz2HBXMBydhZVuSiRvBiqZsB6PRYxF4rAgEC
 -----END DH PARAMETERS-----)";
 
-    ctx.set_options(
-        boost::asio::ssl::context::default_workarounds |
-        boost::asio::ssl::context::no_sslv2 |
-        boost::asio::ssl::context::single_dh_use);
+    ctx.set_options(boost::asio::ssl::context::default_workarounds |
+                    boost::asio::ssl::context::no_sslv2 | boost::asio::ssl::context::single_dh_use);
 
-    ctx.use_certificate_chain(
-        boost::asio::buffer(cert.data(), cert.size()));
+    ctx.use_certificate_chain(boost::asio::buffer(cert.data(), cert.size()));
 
-    ctx.use_private_key(
-        boost::asio::buffer(key.data(), key.size()),
-        boost::asio::ssl::context::file_format::pem);
+    ctx.use_private_key(boost::asio::buffer(key.data(), key.size()),
+                        boost::asio::ssl::context::file_format::pem);
 
-    ctx.use_tmp_dh(
-        boost::asio::buffer(dh.data(), dh.size()));
+    ctx.use_tmp_dh(boost::asio::buffer(dh.data(), dh.size()));
 }
 
 #endif
