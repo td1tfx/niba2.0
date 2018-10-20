@@ -25,18 +25,13 @@ public:
         try {
             // std::cout << request << std::endl;
             auto j = nlohmann::json::parse(request);
-            nibashared::cmdtype cmd =
-                static_cast<nibashared::cmdtype>(j.at("type").get<std::size_t>());
+            auto cmd = static_cast<nibashared::cmdtype>(j.at("type").get<std::size_t>());
             switch (cmd) {
             case nibashared::cmdtype::registeration: {
-                nibashared::register_request req;
-                req.from_json(j);
-                return do_request_(req);
+                return do_request<nibashared::register_request>(j);
             }
             case nibashared::cmdtype::login: {
-                nibashared::login_request req;
-                req.from_json(j);
-                return do_request_(req);
+                return do_request<nibashared::login_request>(j);
             }
             }
             throw std::exception("invalid request");
@@ -53,7 +48,9 @@ public:
     }
 private:
     template<typename request>
-    std::string do_request_(request& req) {
+    std::string do_request(const nlohmann::json & json_request) {
+        request req;
+        req.from_json(json_request);
         if (!req.validate(processor_.get_session())) {
             throw std::exception("validation failure");
         }

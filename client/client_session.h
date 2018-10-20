@@ -11,7 +11,6 @@
 #include <boost/beast/websocket/ssl.hpp>
 #include <boost/asio/steady_timer.hpp>
 #include <boost/asio/connect.hpp>
-#include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/ssl/stream.hpp>
 #include <boost/algorithm/string.hpp>
