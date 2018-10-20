@@ -18,9 +18,6 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="cmd_processor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="client_processor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -33,9 +30,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cert_loader.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="cmd_processor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="client_processor.h">
