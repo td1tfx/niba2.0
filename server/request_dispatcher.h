@@ -2,25 +2,21 @@
 
 #include "message.h"
 
-#include <string>
-#include <nlohmann/json.hpp>
 #include <iostream>
+#include <nlohmann/json.hpp>
+#include <string>
 
 namespace nibashared {
 
 // read json string, figure out which request this, check if the request can be accepted
 // at the current game state
 template<typename processor>
-class request_dispatcher
-{
+class request_dispatcher {
 public:
-    request_dispatcher(processor & proc) : processor_(proc)
-    {
-    }
+    request_dispatcher(processor &proc) : processor_(proc) {}
     // dispatch is responsible to handle all the type conversion, make the whatever calls
     // and then finally return the serialized message
-    std::string dispatch(const std::string & request)
-    {
+    std::string dispatch(const std::string &request) {
         // if exceptions happen
         try {
             // std::cout << request << std::endl;
@@ -37,18 +33,17 @@ public:
             throw std::exception("invalid request");
         }
         // return whatever error message, I don't care
-        catch (std::exception& e) {
+        catch (std::exception &e) {
             // TODO: use glog
             std::cout << e.what() << std::endl;
         }
-        nlohmann::json error_msg{
-            {"error", "request error"}
-        };
+        nlohmann::json error_msg{{"error", "request error"}};
         return error_msg.dump();
     }
+
 private:
     template<typename request>
-    std::string do_request(const nlohmann::json & json_request) {
+    std::string do_request(const nlohmann::json &json_request) {
         request req;
         req.from_json(json_request);
         if (!req.validate(processor_.get_session())) {
@@ -57,7 +52,7 @@ private:
         processor_.process(req);
         return req.create_response().dump();
     }
-    processor& processor_;
+    processor &processor_;
 };
 
-}
+} // namespace nibashared

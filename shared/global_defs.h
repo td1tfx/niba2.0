@@ -1,42 +1,41 @@
 #pragma once
 
-#include <cstdint>
-#include <vector>
 #include <algorithm>
 #include <array>
-#include <string>
+#include <cstdint>
 #include <optional>
+#include <string>
+#include <vector>
 
-namespace  nibashared {
+namespace nibashared {
 
-    enum class cmdtype : std::size_t {
-        login = 0,
-        registeration = 1,
-        create = 2,
-        start = 3,
+enum class cmdtype : std::size_t {
+    login = 0,
+    registeration = 1,
+    create = 2,
+    start = 3,
 
-        LAST
-    };
+    LAST
+};
 
-    enum class gamestate : std::size_t {
-        prelogin = 0,
-        selectchar = 1,
+enum class gamestate : std::size_t {
+    prelogin = 0,
+    selectchar = 1,
 
-        LAST
-    };
+    LAST
+};
 
-    struct sessionstate {
-        gamestate state;
-        std::optional<std::string> id;
-    };
+struct sessionstate {
+    gamestate state;
+    std::optional<std::string> id;
+};
 
-    // from effective modern c++
-    template <typename E>
-    constexpr auto to_underlying(E e) noexcept
-    {
-        return static_cast<std::underlying_type_t<E>>(e);
-    }
-
-    // Note, state transition may depend on the server's response
-    // for now, don't do anything
+// from effective modern c++
+template<typename E>
+constexpr auto to_underlying(E e) noexcept {
+    return static_cast<std::underlying_type_t<E>>(e);
 }
+
+// Note, state transition may depend on the server's response
+// for now, don't do anything
+} // namespace nibashared
