@@ -2,8 +2,8 @@
 
 #include "global_defs.h"
 
-#include <vector>
 #include <nlohmann/json.hpp>
+#include <vector>
 
 namespace nibashared {
 
@@ -12,35 +12,34 @@ public:
     const cmdtype type = cmdtype::registeration;
 
     register_request() = default;
-    register_request(const std::string& id, const std::string& password);
+    register_request(const std::string &id, const std::string &password);
     bool validate(nibashared::sessionstate session);
     nlohmann::json create_response();
     nlohmann::json create_request();
-    void merge_response(const nlohmann::json& j);
-    void from_json(const nlohmann::json & j);
+    void merge_response(const nlohmann::json &j);
+    void from_json(const nlohmann::json &j);
 
     std::string id;
     std::string password;
     bool success = false;
 };
-
 
 class login_request {
 public:
     const cmdtype type = cmdtype::login;
 
     login_request() = default;
-    login_request(const std::string& id, const std::string& password);
+    login_request(const std::string &id, const std::string &password);
     bool validate(nibashared::sessionstate session);
     nlohmann::json create_response();
     nlohmann::json create_request();
-    void merge_response(const nlohmann::json& j);
-    void from_json(const nlohmann::json & j);
-    
+    void merge_response(const nlohmann::json &j);
+    void from_json(const nlohmann::json &j);
+
     std::string id;
     std::string password;
     bool success = false;
     std::vector<std::string> characters;
 };
 
-}
+} // namespace nibashared

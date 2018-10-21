@@ -17,19 +17,16 @@ namespace ssl = boost::asio::ssl; // from <boost/asio/ssl.hpp>
 
 namespace detail {
 
-    // The template argument is gratuituous, to
-    // allow the implementation to be header-only.
-    //
-    template<class = void>
-    void
-        load_root_certificates(ssl::context& ctx, boost::system::error_code& ec)
-    {
+// The template argument is gratuituous, to
+// allow the implementation to be header-only.
+//
+template<class = void>
+void load_root_certificates(ssl::context &ctx, boost::system::error_code &ec) {
 
+    // https://stackoverflow.com/questions/6452756/exception-running-boost-asio-ssl-example
 
-// https://stackoverflow.com/questions/6452756/exception-running-boost-asio-ssl-example
-
-        std::string const cert =
-R"(-----BEGIN CERTIFICATE-----
+    std::string const cert =
+        R"(-----BEGIN CERTIFICATE-----
 MIICtDCCAZwCCQC82WtqGSF5jDANBgkqhkiG9w0BAQsFADAcMQswCQYDVQQGEwJV
 UzENMAsGA1UECgwEbmliYTAeFw0xODEwMTIwNDM1MThaFw0yODEwMDkwNDM1MTha
 MBwxCzAJBgNVBAYTAlVTMQ0wCwYDVQQKDARuaWJhMIIBIjANBgkqhkiG9w0BAQEF
@@ -47,13 +44,12 @@ luOLJAzTRGJYImdk5DPBV9mp0K+HtA1+gIxb2AcFadXFfBGgiZKiZ+MWiRJx9X5+
 UaAKuOzw5yef9xSK6Ek2VdCtfvycTufe
 -----END CERTIFICATE-----)";
 
-        ctx.add_certificate_authority(
-            boost::asio::buffer(cert.data(), cert.size()), ec);
-        if (ec)
-            return;
-    }
+    ctx.add_certificate_authority(boost::asio::buffer(cert.data(), cert.size()), ec);
+    if (ec)
+        return;
+}
 
-} // detail
+} // namespace detail
 
 // Load the root certificates into an ssl::context
 //
@@ -63,21 +59,15 @@ UaAKuOzw5yef9xSK6Ek2VdCtfvycTufe
 // like a "normal" function.
 //
 
-inline
-void
-load_root_certificates(ssl::context& ctx, boost::system::error_code& ec)
-{
+inline void load_root_certificates(ssl::context &ctx, boost::system::error_code &ec) {
     detail::load_root_certificates(ctx, ec);
 }
 
-inline
-void
-load_root_certificates(ssl::context& ctx)
-{
+inline void load_root_certificates(ssl::context &ctx) {
     boost::system::error_code ec;
     detail::load_root_certificates(ctx, ec);
     if (ec)
-        throw boost::system::system_error{ ec };
+        throw boost::system::system_error{ec};
 }
 
 #endif

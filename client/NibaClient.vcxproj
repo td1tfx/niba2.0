@@ -29,7 +29,7 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -136,13 +136,11 @@
     <ClInclude Include="cert_loader.hpp" />
     <ClInclude Include="client_processor.h" />
     <ClInclude Include="client_session.h" />
-    <ClInclude Include="cmd_processor.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\message.cpp" />
     <ClCompile Include="client_processor.cpp" />
     <ClCompile Include="client_session.cpp" />
-    <ClCompile Include="cmd_processor.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
