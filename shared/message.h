@@ -22,7 +22,7 @@ struct message_register {
 
     message_register() = default;
     message_register(const std::string &id, const std::string &password);
-    bool validate(const nibashared::sessionstate& session);
+    bool validate(const nibashared::sessionstate &session);
     nlohmann::json create_response();
     nlohmann::json create_request();
     void merge_response(const nlohmann::json &j);
@@ -41,7 +41,7 @@ struct message_login {
 
     message_login() = default;
     message_login(const std::string &id, const std::string &password);
-    bool validate(const nibashared::sessionstate& session);
+    bool validate(const nibashared::sessionstate &session);
     nlohmann::json create_response();
     nlohmann::json create_request();
     void merge_response(const nlohmann::json &j);
@@ -59,8 +59,8 @@ struct message_fight {
     message_fight() = default;
     // TODO this should be changed, we shouldn't use enemyid to identify the enemy
     // or more validation is needed
-    message_fight(int enemyid); 
-    bool validate(const nibashared::sessionstate& session);
+    message_fight(int enemyid);
+    bool validate(const nibashared::sessionstate &session);
     nlohmann::json create_response();
     nlohmann::json create_request();
     void merge_response(const nlohmann::json &j);
@@ -69,6 +69,5 @@ struct message_fight {
     int enemyid;
     std::vector<int> generated;
 };
-
 
 } // namespace nibashared

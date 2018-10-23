@@ -1,8 +1,8 @@
 #include "server_processor.h"
 #include "db_accessor.h"
 #include "fight.h"
-#include "rng.h"
 #include "gamedata.h"
+#include "rng.h"
 
 #include <iostream>
 
@@ -33,8 +33,7 @@ void nibaserver::server_processor::process(nibashared::message_login &req) {
     std::cout << "login " << req.success << std::endl;
 }
 
-void nibaserver::server_processor::process(nibashared::message_fight & req)
-{
+void nibaserver::server_processor::process(nibashared::message_fight &req) {
     auto [self_fightable, enemy_fightable] = nibashared::prep_fight(session.charid, req.enemyid);
     nibashared::fight fight(std::move(self_fightable), std::move(enemy_fightable));
     nibashared::rng_server rng;
