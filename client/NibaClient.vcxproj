@@ -134,6 +134,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\shared\fight.h" />
+    <ClInclude Include="..\shared\rng.h" />
     <ClInclude Include="cert_loader.hpp" />
     <ClInclude Include="client_processor.h" />
     <ClInclude Include="client_session.h" />

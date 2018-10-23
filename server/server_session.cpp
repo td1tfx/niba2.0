@@ -59,8 +59,8 @@ void server_session::go() {
         }
         // unrecoverable error
         catch (std::exception &e) {
-            if (processor.get_session().id.has_value()) {
-                nibaserver::db_accessor::logout(processor.get_session().id.value());
+            if (processor.get_session().userid.has_value()) {
+                nibaserver::db_accessor::logout(processor.get_session().userid.value());
             }
             std::cerr << "session ended " << e.what() << std::endl;
         }
