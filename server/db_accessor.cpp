@@ -7,7 +7,7 @@ using namespace nibaserver;
 
 std::unordered_map<std::string, db_accessor::user> db_accessor::db_;
 
-const std::size_t HASH_SIZE = 32;
+constexpr std::size_t HASH_SIZE = 32;
 
 bool nibaserver::db_accessor::login(const std::string &id, const std::string &password) {
     auto iter = db_.find(id);

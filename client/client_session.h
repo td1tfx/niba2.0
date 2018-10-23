@@ -24,15 +24,23 @@ public:
     ~client_session();
 
     void handle_cmd(const std::string &input) {
-        std::vector<std::string> results;
-        boost::split(results, input, boost::is_any_of("\t "));
-        // password input handled by cmd_processor
-        if (results.size() == 3) {
-            if (results[0] == "register") {
-                return create_and_go<nibashared::register_request>(results[1], results[2]);
-            } else if (results[0] == "login") {
-                return create_and_go<nibashared::login_request>(results[1], results[2]);
+        try {
+            std::vector<std::string> results;
+            boost::split(results, input, boost::is_any_of("\t "));
+            // password input handled by cmd_processor
+            if (results.size() == 3) {
+                if (results[0] == "register") {
+                    return create_and_go<nibashared::message_register>(results[1], results[2]);
+                } else if (results[0] == "login") {
+                    return create_and_go<nibashared::message_login>(results[1], results[2]);
+                }
+            } else if (results.size() == 2) {
+                if (results[0] == "fight") {
+                    return create_and_go<nibashared::message_fight>(std::stoi(results[1]));
+                }
             }
+        } catch (...) {
+            // parsing failure whatever
         }
         std::cout << "incorrect command" << std::endl;
     }
