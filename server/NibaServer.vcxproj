@@ -131,8 +131,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\shared\fight.h" />
+    <ClInclude Include="..\shared\gamedata.h" />
     <ClInclude Include="..\shared\message.h" />
     <ClInclude Include="..\shared\global_defs.h" />
+    <ClInclude Include="..\shared\rng.h" />
     <ClInclude Include="cert_loader.hpp" />
     <ClInclude Include="db_accessor.h" />
     <ClInclude Include="request_dispatcher.h" />

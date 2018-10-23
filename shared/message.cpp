@@ -3,10 +3,10 @@
 using nlohmann::json;
 using namespace nibashared;
 
-register_request::register_request(const std::string &id, const std::string &password) :
+message_register::message_register(const std::string &id, const std::string &password) :
     id(id), password(password) {}
 
-bool register_request::validate(nibashared::sessionstate session) {
+bool message_register::validate(const nibashared::sessionstate &session) {
     // TODO: throw error with error code?
     if (session.state != nibashared::gamestate::prelogin)
         return false;
@@ -17,27 +17,27 @@ bool register_request::validate(nibashared::sessionstate session) {
     return true;
 }
 
-json register_request::create_response() {
+json message_register::create_response() {
     json j = {{"success", success}};
     return j;
 }
 
 // this is not used
-json register_request::create_request() {
+json message_register::create_request() {
     json j = {{"type", type}, {"id", id}, {"password", password}};
     return j;
 }
-void register_request::merge_response(const json &j) { j.at("success").get_to(success); }
+void message_register::merge_response(const json &j) { j.at("success").get_to(success); }
 
-void register_request::from_json(const json &j) {
+void message_register::from_request(const json &j) {
     j.at("id").get_to(id);
     j.at("password").get_to(password);
 }
 
-login_request::login_request(const std::string &id, const std::string &password) :
+message_login::message_login(const std::string &id, const std::string &password) :
     id(id), password(password) {}
 
-bool login_request::validate(nibashared::sessionstate session) {
+bool message_login::validate(const nibashared::sessionstate &session) {
     if (session.state != nibashared::gamestate::prelogin)
         return false;
 
@@ -47,22 +47,50 @@ bool login_request::validate(nibashared::sessionstate session) {
     return true;
 }
 
-json login_request::create_response() {
+json message_login::create_response() {
     json j = {{"success", success}, {"characters", characters}};
     return j;
 }
 
 // this is not used
-json login_request::create_request() {
+json message_login::create_request() {
     json j = {{"type", type}, {"id", id}, {"password", password}};
     return j;
 }
-void login_request::merge_response(const json &j) {
+void message_login::merge_response(const json &j) {
     j.at("success").get_to(success);
     j.at("characters").get_to(characters);
 }
 
-void login_request::from_json(const json &j) {
+void message_login::from_request(const json &j) {
     j.at("id").get_to(id);
     j.at("password").get_to(password);
+}
+
+nibashared::message_fight::message_fight(int enemyid) : enemyid(enemyid) {}
+
+bool nibashared::message_fight::validate(const nibashared::sessionstate &session) {
+    // TODO change this
+    if (session.state != nibashared::gamestate::selectchar)
+        return false;
+
+    // currently only support id=1
+    if (enemyid != 1)
+        return false;
+
+    return true;
+}
+
+nlohmann::json nibashared::message_fight::create_response() { return {{"generated", generated}}; }
+
+nlohmann::json nibashared::message_fight::create_request() {
+    return {{"type", type}, {"enemyid", enemyid}};
+}
+
+void nibashared::message_fight::merge_response(const nlohmann::json &j) {
+    j.at("generated").get_to(generated);
+}
+
+void nibashared::message_fight::from_request(const nlohmann::json &j) {
+    j.at("enemyid").get_to(enemyid);
 }
