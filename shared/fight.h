@@ -23,6 +23,8 @@ struct magic_ex {
 };
 
 constexpr int FIGHT_MAX_PROG = 1000;
+constexpr int DEFENCE_EXTENSION = 100;
+constexpr int INNER_BASE = 100;
 
 using fightable_magics = std::array<magic_ex, MAX_ACTIVE_MAGIC>;
 
@@ -57,7 +59,12 @@ public:
         if (accuracy <= rng(0, 99))
             return 0;
         // TODO: Niba, finish this
-        return static_cast<int>((rng(stats.attack_min, stats.attack_max) / 100.0 * multiplier));
+        int inner_damage = chosen_magic.inner_damage;
+        float physical_damage_reduction = defender.stats.defence *1.0 / (defender.stats.defence + DEFENCE_EXTENSION);
+        float inner_damage_multiplier = 1.0 + stats.inner_power / INNER_BASE;
+
+        return static_cast<int>((rng(stats.attack_min, stats.attack_max) / 100.0 * multiplier) *
+                                    (1.0 - damage_reduction) + inner_damage_multiplier * inner_damage);
     }
 
     int threat_calc() const { return stats.attack_min + stats.attack_max; }

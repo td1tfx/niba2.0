@@ -37,6 +37,7 @@ struct battlestats {
     int hp{0};
     int mp{0};
     int inner_power{0};
+    int defence{0};
 
     battlestats &operator+=(const battlestats &rhs) {
         attack_min += rhs.attack_min;
@@ -47,6 +48,7 @@ struct battlestats {
         hp += rhs.hp;
         mp += rhs.mp;
         inner_power += rhs.inner_power;
+        defence += rhs.defence;
         return *this;
     }
 };
@@ -82,10 +84,11 @@ struct magic {
     int active; // has CD?
     int cd;
     int multiplier; // in percentage
+    int inner_damage; // certain value
 
     battlestats stats;
 };
 
-constexpr magic DEFAULT_MAGIC{"default", 0, 1, 0, 100, {}};
+constexpr magic DEFAULT_MAGIC{"default", 0, 1, 0, 100, 100, {}};
 
 } // namespace nibashared
