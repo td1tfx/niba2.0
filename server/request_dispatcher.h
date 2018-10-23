@@ -24,10 +24,13 @@ public:
             auto cmd = static_cast<nibashared::cmdtype>(j.at("type").get<std::size_t>());
             switch (cmd) {
             case nibashared::cmdtype::registeration: {
-                return do_request<nibashared::register_request>(j);
+                return do_request<nibashared::message_register>(j);
             }
             case nibashared::cmdtype::login: {
-                return do_request<nibashared::login_request>(j);
+                return do_request<nibashared::message_login>(j);
+            }
+            case nibashared::cmdtype::fight: {
+                return do_request<nibashared::message_fight>(j);
             }
             }
             throw std::exception("invalid request");
@@ -45,7 +48,7 @@ private:
     template<typename request>
     std::string do_request(const nlohmann::json &json_request) {
         request req;
-        req.from_json(json_request);
+        req.from_request(json_request);
         if (!req.validate(processor_.get_session())) {
             throw std::exception("validation failure");
         }

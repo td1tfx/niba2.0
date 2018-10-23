@@ -8,8 +8,9 @@ class client_processor {
 public:
     client_processor();
     ~client_processor() = default;
-    void process(nibashared::register_request &req);
-    void process(nibashared::login_request &req);
+    void process(nibashared::message_register &req);
+    void process(nibashared::message_login &req);
+    void process(nibashared::message_fight &req);
     const nibashared::sessionstate &get_session();
 
     template<typename message>
