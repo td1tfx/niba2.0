@@ -72,7 +72,7 @@ int main(int argc, char *argv[]) {
             // Bind to the server address
             acceptor.bind(endpoint, ec);
             if (ec) {
-			    logger.log(str(boost::format("binding failure: %1%") % ec.message()), 
+                logger.log(str(boost::format("binding failure: %1%") % ec.message()), 
                     logging::trivial::error);
                 return;
             }
