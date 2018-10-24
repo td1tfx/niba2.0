@@ -1,6 +1,7 @@
 #pragma once
 
 #include "global_defs.h"
+#include "logger.h"
 
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/spawn.hpp>
@@ -14,6 +15,7 @@ namespace nibaserver {
 
 class server_session : public std::enable_shared_from_this<server_session> {
 public:
+    nibaserver::logger logger;
     server_session(boost::asio::io_context &ioc, boost::asio::ip::tcp::socket &&socket,
                    boost::asio::ssl::context &ctx);
     ~server_session() = default;

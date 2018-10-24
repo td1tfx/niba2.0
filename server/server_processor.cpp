@@ -13,10 +13,11 @@ server_processor::server_processor() { session.state = nibashared::gamestate::pr
 void nibaserver::server_processor::process(nibashared::message_register &req) {
     if (db_accessor::create_user(req.id, req.password)) {
         req.success = true;
+        logger.log(str(boost::format("User %1% has registered.") % req.id));
     } else {
         req.success = false;
+        logger.log(str(boost::format("User %1% failed to register.") % req.id), logging::trivial::warning);
     }
-    std::cout << "register " << req.success << std::endl;
 }
 
 void nibaserver::server_processor::process(nibashared::message_login &req) {
@@ -30,7 +31,7 @@ void nibaserver::server_processor::process(nibashared::message_login &req) {
     }
     // TODO change this later
     session.charid = 0;
-    std::cout << "login " << req.success << std::endl;
+    logger.log(str(boost::format("User %1% logged in.") % req.id));
 }
 
 void nibaserver::server_processor::process(nibashared::message_fight &req) {

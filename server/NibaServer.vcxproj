@@ -139,6 +139,7 @@
     <ClInclude Include="..\shared\rng.h" />
     <ClInclude Include="cert_loader.hpp" />
     <ClInclude Include="db_accessor.h" />
+    <ClInclude Include="logger.h" />
     <ClInclude Include="request_dispatcher.h" />
     <ClInclude Include="server_processor.h" />
     <ClInclude Include="server_session.h" />
@@ -146,6 +147,7 @@
   <ItemGroup>
     <ClCompile Include="..\shared\message.cpp" />
     <ClCompile Include="db_accessor.cpp" />
+    <ClCompile Include="logger.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="server_processor.cpp" />
     <ClCompile Include="server_session.cpp" />

@@ -9,3 +9,4 @@ client/x64/
 server/Debug/
 server/Release/
 server/x64/
+server/logs

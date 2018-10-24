@@ -30,6 +30,7 @@
 #include <vector>
 
 #include "cert_loader.hpp"
+#include "logger.h"
 #include "server_session.h"
 
 using tcp = boost::asio::ip::tcp;              // from <boost/asio/ip/tcp.hpp>
@@ -43,6 +44,9 @@ int main(int argc, char *argv[]) {
     // Single threaded
     auto const threads = std::max<int>(1, 1);
 
+    nibaserver::init_log();
+    nibaserver::logger logger;
+
     // The io_context is required for all I/O
     boost::asio::io_context ioc{threads};
 
@@ -52,38 +56,39 @@ int main(int argc, char *argv[]) {
     // This holds the self-signed certificate used by the server
     load_server_certificate(ctx);
 
+    logger.log("Here we go!");
     // Spawn a listening port
-    boost::asio::spawn(ioc, [&ioc, &address, &port, &ctx](boost::asio::yield_context yield) {
-        boost::system::error_code ec;
+    boost::asio::spawn(
+        ioc, [&ioc, &address, &port, &ctx, &logger](boost::asio::yield_context yield) {
+            boost::system::error_code ec;
 
-        // Open the acceptor
-        tcp::acceptor acceptor(ioc);
-        tcp::endpoint endpoint{address, port};
-        acceptor.open(endpoint.protocol());
+            // Open the acceptor
+            tcp::acceptor acceptor(ioc);
+            tcp::endpoint endpoint{address, port};
+            acceptor.open(endpoint.protocol());
 
-        // Allow address reuse
-        acceptor.set_option(boost::asio::socket_base::reuse_address(true));
+            // Allow address reuse
+            acceptor.set_option(boost::asio::socket_base::reuse_address(true));
+            // Bind to the server address
+            acceptor.bind(endpoint, ec);
+            if (ec) {
+			    logger.log(str(boost::format("binding failure: %1%") % ec.message()), 
+                    logging::trivial::error);
+                return;
+            }
 
-        // Bind to the server address
-        acceptor.bind(endpoint, ec);
-        if (ec) {
-            std::cerr << "binding failure"
-                      << ": " << ec.message() << "\n";
-            return;
-        }
+            // Start listening for connections
+            acceptor.listen(boost::asio::socket_base::max_listen_connections);
 
-        // Start listening for connections
-        acceptor.listen(boost::asio::socket_base::max_listen_connections);
-
-        for (;;) {
-            tcp::socket socket(ioc);
-            acceptor.async_accept(socket, yield);
-            std::cout << "got connection" << std::endl;
-            auto session = std::make_shared<server_session>(acceptor.get_executor().context(),
-                                                            std::move(socket), ctx);
-            session->go();
-        }
-    });
+            for (;;) {
+                tcp::socket socket(ioc);
+                acceptor.async_accept(socket, yield);
+                logger.log("got connection");
+                auto session = std::make_shared<server_session>(acceptor.get_executor().context(),
+                                                                std::move(socket), ctx);
+                session->go();
+            }
+        });
 
     ioc.run();
 
