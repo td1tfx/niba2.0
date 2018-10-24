@@ -84,7 +84,7 @@ void server_session::ping_timer(boost::system::error_code ec) {
             timer_.expires_after(std::chrono::seconds(15));
             // Now send the ping
             ws_.async_ping({}, [](boost::system::error_code ec) {});
-        } else {
+        } else if (ws_.is_open()) {
             logger.log("connection closing");
             ws_.next_layer().next_layer().cancel();
             return;

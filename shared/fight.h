@@ -60,8 +60,9 @@ public:
             return 0;
         // TODO: Niba, finish this
         int inner_damage = chosen_magic.inner_damage;
-        float physical_damage_reduction = defender.stats.defence *1.0 / (defender.stats.defence + DEFENCE_EXTENSION);
-        float inner_damage_multiplier = 1.0 + stats.inner_power / INNER_BASE;
+        auto physical_damage_reduction =
+            defender.stats.defence * 1.0 / (defender.stats.defence + DEFENCE_EXTENSION);
+        auto inner_damage_multiplier = 1.0 + stats.inner_power / INNER_BASE;
 
         return static_cast<int>((rng(stats.attack_min, stats.attack_max) / 100.0 * multiplier) *
                                     (1.0 - physical_damage_reduction) +
