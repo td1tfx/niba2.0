@@ -70,8 +70,6 @@ private:
     boost::asio::ip::tcp::resolver resolver_;
     boost::beast::websocket::stream<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>> ws_;
     boost::asio::steady_timer timer_;
-    // boost::asio::io_service::work work_;
-    std::thread worker_;
     client_processor processor_;
 };
 
