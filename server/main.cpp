@@ -56,7 +56,7 @@ int main(int argc, char *argv[]) {
     // This holds the self-signed certificate used by the server
     load_server_certificate(ctx);
 
-    logger.log("Here we go!");
+    BOOST_LOG_SEV(logger, sev::info) << "Server starts.";
     // Spawn a listening port
     boost::asio::spawn(
         ioc, [&ioc, &address, &port, &ctx, &logger](boost::asio::yield_context yield) {
@@ -72,8 +72,7 @@ int main(int argc, char *argv[]) {
             // Bind to the server address
             acceptor.bind(endpoint, ec);
             if (ec) {
-                logger.log(str(boost::format("binding failure: %1%") % ec.message()), 
-                    logging::trivial::error);
+                BOOST_LOG_SEV(logger, sev::error) << "Binding failure: " << ec.message();
                 return;
             }
 
@@ -83,7 +82,7 @@ int main(int argc, char *argv[]) {
             for (;;) {
                 tcp::socket socket(ioc);
                 acceptor.async_accept(socket, yield);
-                logger.log("got connection");
+                BOOST_LOG_SEV(logger, sev::info) << "Got connection";
                 auto session = std::make_shared<server_session>(acceptor.get_executor().context(),
                                                                 std::move(socket), ctx);
                 session->go();

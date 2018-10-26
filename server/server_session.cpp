@@ -62,7 +62,7 @@ void server_session::go() {
             if (processor.get_session().userid.has_value()) {
                 nibaserver::db_accessor::logout(processor.get_session().userid.value());
             }
-            this->logger.log("Session ended.");
+            BOOST_LOG_SEV(this->logger, sev::info) << "Session ended.";
         }
     });
 }
@@ -85,7 +85,7 @@ void server_session::ping_timer(boost::system::error_code ec) {
             // Now send the ping
             ws_.async_ping({}, [](boost::system::error_code ec) {});
         } else if (ws_.is_open()) {
-            logger.log("connection closing");
+            BOOST_LOG_SEV(logger, sev::info) << "Connection closing";
             ws_.next_layer().next_layer().cancel();
             return;
         }
