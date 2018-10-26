@@ -9,6 +9,7 @@
 using tcp = boost::asio::ip::tcp;              // from <boost/asio/ip/tcp.hpp>
 namespace ssl = boost::asio::ssl;              // from <boost/asio/ssl.hpp>
 namespace websocket = boost::beast::websocket; // from <boost/beast/websocket.hpp>
+namespace sev = boost::log::trivial;
 using namespace nibaserver;
 
 server_session::server_session(boost::asio::io_context &ioc, boost::asio::ip::tcp::socket &&socket,
@@ -62,7 +63,7 @@ void server_session::go() {
             if (processor.get_session().userid.has_value()) {
                 nibaserver::db_accessor::logout(processor.get_session().userid.value());
             }
-            BOOST_LOG_SEV(this->logger, sev::info) << "Session ended.";
+            BOOST_LOG_SEV(logger_, sev::info) << "Session ended, reason: " << e.what();
         }
     });
 }
@@ -85,7 +86,7 @@ void server_session::ping_timer(boost::system::error_code ec) {
             // Now send the ping
             ws_.async_ping({}, [](boost::system::error_code ec) {});
         } else if (ws_.is_open()) {
-            BOOST_LOG_SEV(logger, sev::info) << "Connection closing";
+            BOOST_LOG_SEV(logger_, sev::info) << "Connection closing";
             ws_.next_layer().next_layer().cancel();
             return;
         }

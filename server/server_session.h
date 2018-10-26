@@ -15,7 +15,6 @@ namespace nibaserver {
 
 class server_session : public std::enable_shared_from_this<server_session> {
 public:
-    nibaserver::logger logger;
     server_session(boost::asio::io_context &ioc, boost::asio::ip::tcp::socket &&socket,
                    boost::asio::ssl::context &ctx);
     ~server_session() = default;
@@ -29,7 +28,7 @@ private:
     boost::asio::ip::tcp::socket socket_;
     boost::beast::websocket::stream<boost::asio::ssl::stream<boost::asio::ip::tcp::socket &>> ws_;
     boost::asio::steady_timer timer_;
-
+    logger logger_;
     char ping_state_ = 0;
 };
 

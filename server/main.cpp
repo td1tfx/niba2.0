@@ -36,6 +36,7 @@
 using tcp = boost::asio::ip::tcp;              // from <boost/asio/ip/tcp.hpp>
 namespace ssl = boost::asio::ssl;              // from <boost/asio/ssl.hpp>
 namespace websocket = boost::beast::websocket; // from <boost/beast/websocket.hpp>
+namespace sev = boost::log::trivial;
 using namespace nibaserver;
 
 int main(int argc, char *argv[]) {
@@ -44,8 +45,8 @@ int main(int argc, char *argv[]) {
     // Single threaded
     auto const threads = std::max<int>(1, 1);
 
-    nibaserver::init_log();
-    nibaserver::logger logger;
+    init_log();
+    logger logger;
 
     // The io_context is required for all I/O
     boost::asio::io_context ioc{threads};

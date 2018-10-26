@@ -6,7 +6,6 @@
 namespace nibaserver {
 class server_processor {
 public:
-    nibaserver::logger logger;
     server_processor();
     ~server_processor() = default;
     void process(nibashared::message_register &req);
@@ -15,6 +14,7 @@ public:
     const nibashared::sessionstate &get_session();
 
 private:
-    nibashared::sessionstate session;
+    logger logger_;
+    nibashared::sessionstate session_;
 };
 } // namespace nibaserver
