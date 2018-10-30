@@ -95,13 +95,12 @@ void nibashared::message_fight::from_request(const nlohmann::json &j) {
     j.at("enemyid").get_to(enemyid);
 }
 
-nibashared::message_createchar::message_createchar(std::string && name, int gender, attributes && attrs) : 
-    name(name), gender{gender}, attrs{attrs}
-{
-}
+nibashared::message_createchar::message_createchar(std::string &&name, int gender,
+                                                   attributes &&attrs) :
+    name(name),
+    gender{gender}, attrs{attrs} {}
 
-bool nibashared::message_createchar::validate(const nibashared::sessionstate & session)
-{
+bool nibashared::message_createchar::validate(const nibashared::sessionstate &session) {
     if (session.state != nibashared::gamestate::createchar)
         return false;
     if (gender != 0 || gender != 1)
@@ -111,20 +110,10 @@ bool nibashared::message_createchar::validate(const nibashared::sessionstate & s
     return true;
 }
 
-nlohmann::json nibashared::message_createchar::create_response()
-{
-    return nlohmann::json();
-}
+nlohmann::json nibashared::message_createchar::create_response() { return nlohmann::json(); }
 
-nlohmann::json nibashared::message_createchar::create_request()
-{
-    return nlohmann::json();
-}
+nlohmann::json nibashared::message_createchar::create_request() { return nlohmann::json(); }
 
-void nibashared::message_createchar::merge_response(const nlohmann::json & j)
-{
-}
+void nibashared::message_createchar::merge_response(const nlohmann::json &j) {}
 
-void nibashared::message_createchar::from_request(const nlohmann::json & j)
-{
-}
+void nibashared::message_createchar::from_request(const nlohmann::json &j) {}

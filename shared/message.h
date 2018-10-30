@@ -74,7 +74,7 @@ struct message_createchar {
     const cmdtype type = cmdtype::createchar;
 
     message_createchar() = default;
-    message_createchar(std::string &&name, int gender, attributes&& attrs);
+    message_createchar(std::string &&name, int gender, attributes &&attrs);
     bool validate(const nibashared::sessionstate &session);
     nlohmann::json create_response();
     nlohmann::json create_request();
