@@ -1,7 +1,9 @@
 #pragma once
 #include "global_defs.h"
 #include "rng.h"
+#include "structs.h"
 #include <algorithm>
+#include <array>
 #include <boost/assert.hpp>
 #include <iostream>
 #include <optional>

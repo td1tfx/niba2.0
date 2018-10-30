@@ -21,7 +21,8 @@ void client_processor::process(nibashared::message_login &req) {
     if (req.success) {
         std::cout << "success" << std::endl;
         session.userid = req.id;
-        session.state = nibashared::gamestate::selectchar;
+        // TODO look up character db, if no char, then create one
+        session.state = nibashared::gamestate::createchar;
         std::cout << "your characters: " << std::endl;
         for (auto &c : req.characters) {
             std::cout << c << std::endl;

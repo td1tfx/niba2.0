@@ -30,9 +30,9 @@ public:
             // password input handled by cmd_processor
             if (results.size() == 3) {
                 if (results[0] == "register") {
-                    return create_and_go<nibashared::message_register>(results[1], results[2]);
+                    return create_and_go<nibashared::message_register>(std::move(results[1]), std::move(results[2]));
                 } else if (results[0] == "login") {
-                    return create_and_go<nibashared::message_login>(results[1], results[2]);
+                    return create_and_go<nibashared::message_login>(std::move(results[1]), std::move(results[2]));
                 }
             } else if (results.size() == 2) {
                 if (results[0] == "fight") {
