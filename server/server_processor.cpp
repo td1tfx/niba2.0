@@ -24,7 +24,7 @@ void nibaserver::server_processor::process(nibashared::message_register &req) {
 void nibaserver::server_processor::process(nibashared::message_login &req) {
     if (db_accessor::login(req.id, req.password)) {
         req.success = true;
-        session_.state = nibashared::gamestate::selectchar;
+        session_.state = nibashared::gamestate::createchar;
         session_.userid = req.id;
         req.characters = {"niba1", "niba2"};
     } else {
