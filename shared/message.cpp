@@ -17,15 +17,11 @@ bool message_register::validate(const nibashared::sessionstate &session) {
     return true;
 }
 
-json message_register::create_response() {
-    json j = {{"success", success}};
-    return j;
-}
+json message_register::create_response() { return {{"success", success}}; }
 
 // this is not used
 json message_register::create_request() {
-    json j = {{"type", type}, {"id", id}, {"password", password}};
-    return j;
+    return {{"type", type}, {"id", id}, {"password", password}};
 }
 void message_register::merge_response(const json &j) { j.at("success").get_to(success); }
 
@@ -47,15 +43,11 @@ bool message_login::validate(const nibashared::sessionstate &session) {
     return true;
 }
 
-json message_login::create_response() {
-    json j = {{"success", success}, {"characters", characters}};
-    return j;
-}
+json message_login::create_response() { return {{"success", success}, {"characters", characters}}; }
 
 // this is not used
 json message_login::create_request() {
-    json j = {{"type", type}, {"id", id}, {"password", password}};
-    return j;
+    return {{"type", type}, {"id", id}, {"password", password}};
 }
 void message_login::merge_response(const json &j) {
     j.at("success").get_to(success);
@@ -103,17 +95,32 @@ nibashared::message_createchar::message_createchar(std::string &&name, int gende
 bool nibashared::message_createchar::validate(const nibashared::sessionstate &session) {
     if (session.state != nibashared::gamestate::createchar)
         return false;
-    if (gender != 0 || gender != 1)
+    if (!(gender == 0 || gender == 1))
         return false;
     if (name.empty())
+        return false;
+    if (attrs.strength < 0 || attrs.dexterity < 0 || attrs.spirit < 0 || attrs.physique < 0)
+        return false;
+    if (attrs.strength + attrs.dexterity + attrs.spirit + attrs.physique > 5)
         return false;
     return true;
 }
 
-nlohmann::json nibashared::message_createchar::create_response() { return nlohmann::json(); }
+nlohmann::json nibashared::message_createchar::create_response() {
+    // TODO maybe return the character data as well
+    return {{"success", success}};
+}
 
-nlohmann::json nibashared::message_createchar::create_request() { return nlohmann::json(); }
+nlohmann::json nibashared::message_createchar::create_request() {
+    return {{"type", type}, {"name", name}, {"gender", gender}, {"attrs", attrs}};
+}
 
-void nibashared::message_createchar::merge_response(const nlohmann::json &j) {}
+void nibashared::message_createchar::merge_response(const nlohmann::json &j) {
+    j.at("success").get_to(success);
+}
 
-void nibashared::message_createchar::from_request(const nlohmann::json &j) {}
+void nibashared::message_createchar::from_request(const nlohmann::json &j) {
+    j.at("name").get_to(name);
+    j.at("gender").get_to(gender);
+    j.at("attrs").get_to(attrs);
+}

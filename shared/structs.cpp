@@ -4,15 +4,32 @@
 // ideally this should be generated
 
 void nibashared::to_json(nlohmann::json &j, const battlestats &stats) {
-    j = nlohmann::json{{"attack_min", stats.attack_min},
-                       {"attack_max", stats.attack_max},
-                       {"accuracy", stats.accuracy},
-                       {"evasion", stats.evasion},
-                       {"speed", stats.speed},
-                       {"hp", stats.hp},
-                       {"mp", stats.mp},
-                       {"inner_power", stats.inner_power},
-                       {"defence", stats.defence}};
+    j = nlohmann::json{
+        {"attack_min", stats.attack_min},
+        {"attack_max", stats.attack_max},
+        {"accuracy", stats.accuracy},
+        {"evasion", stats.evasion},
+        {"speed", stats.speed},
+        {"hp", stats.hp},
+        {"mp", stats.mp},
+        {"inner_power", stats.inner_power},
+        {"defence", stats.defence},
+        {"crit_chance", stats.crit_chance},
+        {"crit_damage", stats.crit_damage},
+        {"reduce_def", stats.reduce_def},
+        {"reduce_def_perc", stats.reduce_def_perc},
+        {"hp_regen", stats.hp_regen},
+        {"mp_regen", stats.mp_regen},
+        {"gold_res", stats.gold_res},
+        {"wood_res", stats.wood_res},
+        {"water_res", stats.water_res},
+        {"fire_res", stats.fire_res},
+        {"earth_res", stats.earth_res},
+        {"hp_on_hit", stats.hp_on_hit},
+        {"hp_steal", stats.hp_steal},
+        {"mp_on_hit", stats.mp_on_hit},
+        {"mp_steal", stats.mp_steal},
+    };
 }
 
 void nibashared::from_json(const nlohmann::json &j, battlestats &stats) {
@@ -24,7 +41,21 @@ void nibashared::from_json(const nlohmann::json &j, battlestats &stats) {
     j.at("hp").get_to(stats.hp);
     j.at("mp").get_to(stats.mp);
     j.at("inner_power").get_to(stats.inner_power);
-    j.at("defence").get_to(stats.defence);
+    j.at("crit_chance").get_to(stats.crit_chance);
+    j.at("crit_damage").get_to(stats.crit_damage);
+    j.at("reduce_def").get_to(stats.reduce_def);
+    j.at("reduce_def_perc").get_to(stats.reduce_def_perc);
+    j.at("hp_regen").get_to(stats.hp_regen);
+    j.at("mp_regen").get_to(stats.mp_regen);
+    j.at("gold_res").get_to(stats.gold_res);
+    j.at("wood_res").get_to(stats.wood_res);
+    j.at("water_res").get_to(stats.water_res);
+    j.at("fire_res").get_to(stats.fire_res);
+    j.at("earth_res").get_to(stats.earth_res);
+    j.at("hp_on_hit").get_to(stats.hp_on_hit);
+    j.at("hp_steal").get_to(stats.hp_steal);
+    j.at("mp_on_hit").get_to(stats.mp_on_hit);
+    j.at("mp_steal").get_to(stats.mp_steal);
 }
 
 void nibashared::to_json(nlohmann::json &j, const attributes &attr) {

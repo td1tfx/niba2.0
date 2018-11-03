@@ -3,6 +3,7 @@
 #include "client_processor.h"
 #include "global_defs.h"
 #include "message.h"
+#include "structs.h"
 
 #include <thread>
 
@@ -37,6 +38,11 @@ public:
             } else if (results.size() == 2) {
                 if (results[0] == "fight") {
                     return create_and_go<nibashared::message_fight>(std::stoi(results[1]));
+                }
+            } else if (results.size() == 7) {
+                if (results[0] == "create") {
+                    return create_and_go<nibashared::message_createchar>(std::move(results[1]), std::stoi(results[2]),
+                        nibashared::attributes{std::stoi(results[3]), std::stoi(results[4]), std::stoi(results[5]), std::stoi(results[6])});
                 }
             }
         } catch (...) {

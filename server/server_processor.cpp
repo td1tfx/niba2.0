@@ -43,4 +43,20 @@ void nibaserver::server_processor::process(nibashared::message_fight &req) {
     req.generated = std::move(rng.generated);
 }
 
+void nibaserver::server_processor::process(nibashared::message_createchar &req) {
+    if (!session_.userid) {
+        req.success = false;
+        return;
+    }
+    // players have an id of -1? or auto increment?
+    nibashared::character c{req.name, -1, c.attrs, {}, {-1, -1, -1, -1, -1}};
+    if (db_accessor::create_char(*(session_.userid), std::move(c))) {
+        req.success = true;
+        session_.state = nibashared::gamestate::ingame;
+        BOOST_LOG(logger_) << "User " << *(session_.userid) << " created an character " << req.name;
+    } else {
+        req.success = false;
+    }
+}
+
 const nibashared::sessionstate &nibaserver::server_processor::get_session() { return session_; }

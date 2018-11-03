@@ -5,15 +5,30 @@
 namespace nibashared {
 
 struct battlestats {
+    int hp{0};
+    int mp{0};
     int attack_min{0};
     int attack_max{0};
+    int inner_power{0};
     int accuracy{0};
     int evasion{0};
     int speed{0};
-    int hp{0};
-    int mp{0};
-    int inner_power{0};
     int defence{0};
+    int crit_chance{0};
+    int crit_damage{0};
+    int reduce_def{0};
+    int reduce_def_perc{0};
+    int hp_regen{0};
+    int mp_regen{0};
+    int gold_res{0};
+    int wood_res{0};
+    int water_res{0};
+    int fire_res{0};
+    int earth_res{0};
+    int hp_on_hit{0};
+    int hp_steal{0};
+    int mp_on_hit{0};
+    int mp_steal{0};
 
     // this is inlined
     battlestats &operator+=(const battlestats &rhs) {
@@ -26,6 +41,20 @@ struct battlestats {
         mp += rhs.mp;
         inner_power += rhs.inner_power;
         defence += rhs.defence;
+        crit_chance += rhs.crit_chance;
+        crit_damage += rhs.crit_damage;
+        reduce_def += rhs.reduce_def;
+        reduce_def_perc += rhs.reduce_def_perc;
+        hp_regen += rhs.hp_regen;
+        mp_regen += rhs.mp_regen;
+        gold_res += rhs.gold_res;
+        wood_res += rhs.wood_res;
+        water_res += rhs.water_res;
+        fire_res += rhs.fire_res;
+        earth_res += rhs.earth_res;
+        hp_on_hit += rhs.hp_on_hit;
+        hp_steal += rhs.hp_steal;
+
         return *this;
     }
 };

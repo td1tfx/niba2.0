@@ -32,6 +32,9 @@ public:
             case nibashared::cmdtype::fight: {
                 return do_request<nibashared::message_fight>(j);
             }
+            case nibashared::cmdtype::createchar: {
+                return do_request<nibashared::message_createchar>(j);
+            }
             }
             throw std::exception("invalid request");
         }
