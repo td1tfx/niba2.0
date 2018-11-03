@@ -139,12 +139,14 @@
   <ItemGroup>
     <ClInclude Include="..\shared\fight.h" />
     <ClInclude Include="..\shared\rng.h" />
+    <ClInclude Include="..\shared\structs.h" />
     <ClInclude Include="cert_loader.hpp" />
     <ClInclude Include="client_processor.h" />
     <ClInclude Include="client_session.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\message.cpp" />
+    <ClCompile Include="..\shared\structs.cpp" />
     <ClCompile Include="client_processor.cpp" />
     <ClCompile Include="client_session.cpp" />
     <ClCompile Include="main.cpp" />

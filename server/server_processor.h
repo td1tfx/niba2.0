@@ -11,6 +11,7 @@ public:
     void process(nibashared::message_register &req);
     void process(nibashared::message_login &req);
     void process(nibashared::message_fight &req);
+    void process(nibashared::message_createchar &req);
     const nibashared::sessionstate &get_session();
 
 private:

@@ -6,6 +6,7 @@
 using namespace nibaserver;
 
 std::unordered_map<std::string, db_accessor::user> db_accessor::db_;
+std::unordered_map<std::string, nibashared::character> db_accessor::char_tbl_;
 
 constexpr std::size_t HASH_SIZE = 32;
 
@@ -77,6 +78,25 @@ bool nibaserver::db_accessor::create_user(const std::string &id, const std::stri
     u.logged_in = false;
 
     db_[id] = u;
+
+    return true;
+}
+
+std::optional<nibashared::character> nibaserver::db_accessor::get_char(const std::string & id)
+{
+    auto iter = char_tbl_.find(id);
+    if (iter == char_tbl_.end()) return {};
+    return iter->second;
+}
+
+bool nibaserver::db_accessor::create_char(const std::string & id, nibashared::character && character)
+{
+    // this is bad if we have a mutex
+    auto c = get_char(id);
+    if (c) {
+        return false;
+    }
+    char_tbl_[id] = std::move(character);
 
     return true;
 }
