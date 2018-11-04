@@ -1,7 +1,5 @@
-https://github.com/Microsoft/vcpkg
+see CMakeList.txt
 
-install boost (for Beast, Coroutine)
+Boost 1.68.0, OpenSSL, nlohmann_json(https://github.com/nlohmann/json)
 
-install libpq, libpqxx (for postgres c++ api)
-
-install nlohmann-json (for json parsing)
+Planning to use mariadb and amy(https://github.com/liancheng/amy)
