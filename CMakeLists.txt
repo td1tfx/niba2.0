@@ -7,7 +7,7 @@ set(CMAKE_CXX_COMPILER $ENV{CXX})
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
-SET(Boost_USE_STATIC_LIBS ON)
+set(Boost_USE_STATIC_LIBS ON)
 
 add_compile_definitions(BOOST_COROUTINES_NO_DEPRECATION_WARNING)
 
@@ -24,7 +24,6 @@ include_directories(shared/)
 
 add_executable(niba-server ${SERVER_SRC_LIST} ${SHARED_SRC_LIST})
 add_executable(niba-client ${CLIENT_SRC_LIST} ${SHARED_SRC_LIST})
-
 
 target_link_libraries(niba-server
     Boost::system
