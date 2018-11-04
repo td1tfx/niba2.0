@@ -36,7 +36,7 @@ public:
                 return do_request<nibashared::message_createchar>(j);
             }
             }
-            throw std::exception("invalid request");
+            throw std::runtime_error("invalid request");
         }
         // return whatever error message, I don't care
         catch (std::exception &e) {
@@ -53,7 +53,7 @@ private:
         request req;
         req.from_request(json_request);
         if (!req.validate(processor_.get_session())) {
-            throw std::exception("validation failure");
+            throw std::runtime_error("validation failure");
         }
         processor_.process(req);
         return req.create_response().dump();

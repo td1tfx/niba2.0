@@ -1,6 +1,7 @@
 #pragma once
 #include "global_defs.h"
 #include "message.h"
+#include <iostream>
 #include <nlohmann/json.hpp>
 
 namespace nibaclient {
@@ -20,7 +21,7 @@ public:
             auto merge_j = nlohmann::json::parse(merger);
             if (merge_j.find("error") != merge_j.end()) {
                 std::string err = merge_j["error"].get<std::string>();
-                throw std::exception(err.c_str());
+                throw std::runtime_error(err.c_str());
             }
             m.merge_response(merge_j);
             process(m);
