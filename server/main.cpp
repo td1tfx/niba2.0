@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
     (void)argv;
 
     auto const address = boost::asio::ip::make_address("0.0.0.0");
-    auto const port = static_cast<unsigned short>(19999);
+    constexpr unsigned short port = 19999;
     // Single threaded
     auto const threads = std::max<int>(1, 1);
 
@@ -61,37 +61,38 @@ int main(int argc, char *argv[]) {
     load_server_certificate(ctx);
 
     BOOST_LOG_SEV(logger, sev::info) << "Server starts.";
-    // Spawn a listening port
-    boost::asio::spawn(
-        ioc, [&ioc, &address, &port, &ctx, &logger](boost::asio::yield_context yield) {
-            boost::system::error_code ec;
 
-            // Open the acceptor
-            tcp::acceptor acceptor(ioc);
-            tcp::endpoint endpoint{address, port};
-            acceptor.open(endpoint.protocol());
+    // Spawn a listening port, note as per clang, &port is not required in capture list as its
+    // a constexpr
+    boost::asio::spawn(ioc, [&ioc, &address, &ctx, &logger](boost::asio::yield_context yield) {
+        boost::system::error_code ec;
 
-            // Allow address reuse
-            acceptor.set_option(boost::asio::socket_base::reuse_address(true));
-            // Bind to the server address
-            acceptor.bind(endpoint, ec);
-            if (ec) {
-                BOOST_LOG_SEV(logger, sev::error) << "Binding failure: " << ec.message();
-                return;
-            }
+        // Open the acceptor
+        tcp::acceptor acceptor(ioc);
+        tcp::endpoint endpoint{address, port};
+        acceptor.open(endpoint.protocol());
 
-            // Start listening for connections
-            acceptor.listen(boost::asio::socket_base::max_listen_connections);
+        // Allow address reuse
+        acceptor.set_option(boost::asio::socket_base::reuse_address(true));
+        // Bind to the server address
+        acceptor.bind(endpoint, ec);
+        if (ec) {
+            BOOST_LOG_SEV(logger, sev::error) << "Binding failure: " << ec.message();
+            return;
+        }
 
-            for (;;) {
-                tcp::socket socket(ioc);
-                acceptor.async_accept(socket, yield);
-                BOOST_LOG_SEV(logger, sev::info) << "Got connection";
-                auto session = std::make_shared<server_session>(acceptor.get_executor().context(),
-                                                                std::move(socket), ctx);
-                session->go();
-            }
-        });
+        // Start listening for connections
+        acceptor.listen(boost::asio::socket_base::max_listen_connections);
+
+        for (;;) {
+            tcp::socket socket(ioc);
+            acceptor.async_accept(socket, yield);
+            BOOST_LOG_SEV(logger, sev::info) << "Got connection";
+            auto session = std::make_shared<server_session>(acceptor.get_executor().context(),
+                                                            std::move(socket), ctx);
+            session->go();
+        }
+    });
 
     ioc.run();
 
