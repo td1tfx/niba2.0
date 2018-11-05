@@ -29,6 +29,8 @@ class rng_client {
 public:
     rng_client(std::vector<int> &&precomputed) : precomputed_(precomputed){};
     int operator()(int lower, int upper) {
+        (void)lower;
+        (void)upper;
         BOOST_ASSERT(internal_idx_ < precomputed_.size());
         return precomputed_[internal_idx_++];
     }

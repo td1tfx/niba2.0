@@ -11,7 +11,7 @@ enum class cmdtype : std::size_t {
     login = 0,
     registeration = 1,
     createchar = 2,
-    start = 3,
+    // start = 3,
     fight = 4,
 
     LAST
