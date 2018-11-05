@@ -35,6 +35,9 @@ namespace websocket = boost::beast::websocket; // from <boost/beast/websocket.hp
 //------------------------------------------------------------------------------
 
 int main(int argc, char **argv) {
+    (void)argc;
+    (void)argv;
+
     std::string host = "localhost";
     std::string port = "19999";
 

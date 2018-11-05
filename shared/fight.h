@@ -34,8 +34,8 @@ using fightable_magics = std::array<magic_ex, MAX_ACTIVE_MAGIC>;
 class fightable {
 public:
     battlestats stats;
-    int idx;  // idx within all_
-    int team; // takes value 0 or 1
+    std::size_t idx; // idx within all_
+    int team;        // takes value 0 or 1
     int progress{0};
 
     // Note here the person may not have full 5 magics

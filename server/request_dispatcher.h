@@ -35,8 +35,9 @@ public:
             case nibashared::cmdtype::createchar: {
                 return do_request<nibashared::message_createchar>(j);
             }
+            default:
+                throw std::runtime_error("invalid request");
             }
-            throw std::runtime_error("invalid request");
         }
         // return whatever error message, I don't care
         catch (std::exception &e) {

@@ -40,6 +40,9 @@ namespace sev = boost::log::trivial;
 using namespace nibaserver;
 
 int main(int argc, char *argv[]) {
+    (void)argc;
+    (void)argv;
+
     auto const address = boost::asio::ip::make_address("0.0.0.0");
     auto const port = static_cast<unsigned short>(19999);
     // Single threaded

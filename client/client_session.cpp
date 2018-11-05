@@ -39,6 +39,7 @@ void nibaclient::client_session::ping_timer(boost::system::error_code ec) {
             timer_.expires_after(std::chrono::seconds(5));
             // Now send the ping
             ws_.async_pong({}, [](boost::system::error_code ec) {
+                (void)ec;
                 // std::cout << "ping sent" << std::endl;
             });
         }
