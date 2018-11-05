@@ -154,8 +154,10 @@ public:
             for (auto idx : alive) {
                 auto &p = all_.at(idx);
                 p.progress += p.stats.speed * ticks;
-                std::for_each(p.magics.begin(), p.magics.end(),
-                              [ticks](auto &mex) { mex.cooldown(ticks); });
+                // clang has some problems dealing with lambdas and structured bindings
+                for (auto& mex : p.magics) {
+                    mex.cooldown(ticks);
+                }
                 // maybe optimization: maintain a priority list (heap) of top threats
                 if (p.team != attacker.team) {
                     threat_idx_p threat{p.threat_calc(), idx};
