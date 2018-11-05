@@ -155,7 +155,7 @@ public:
                 auto &p = all_.at(idx);
                 p.progress += p.stats.speed * ticks;
                 // clang has some problems dealing with lambdas and structured bindings
-                for (auto& mex : p.magics) {
+                for (auto &mex : p.magics) {
                     mex.cooldown(ticks);
                 }
                 // maybe optimization: maintain a priority list (heap) of top threats
