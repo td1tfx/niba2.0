@@ -31,13 +31,14 @@ void client_processor::process(nibashared::message_login &req) {
 
 void nibaclient::client_processor::process(nibashared::message_fight &req) {
     nibashared::rng_client rng(std::move(req.generated));
-    auto [self_fightable, enemy_fightable] = nibashared::prep_fight(session.charid, req.enemyid);
+    auto [self_fightable, enemy_fightable] =
+        nibashared::prep_fight(1, 2);
+    // session.charid, req.enemyid
     nibashared::fight fight(std::move(self_fightable), std::move(enemy_fightable));
     std::cout << fight.go(rng) << " wins" << std::endl;
 }
 
-void nibaclient::client_processor::process(nibashared::message_createchar & req)
-{
+void nibaclient::client_processor::process(nibashared::message_createchar &req) {
     if (req.success) {
         std::cout << "success" << std::endl;
         session.state = nibashared::gamestate::ingame;

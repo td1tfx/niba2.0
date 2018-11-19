@@ -61,9 +61,7 @@ struct battlestats {
 void to_json(nlohmann::json &j, const battlestats &stats);
 void from_json(const nlohmann::json &j, battlestats &stats);
 
-constexpr std::size_t MAX_ACTIVE_MAGIC = 5;
-
-using character_magic_ids = std::array<int, MAX_ACTIVE_MAGIC>;
+using character_magic_ids = std::vector<int>;
 
 struct attributes {
     int strength;
@@ -77,13 +75,13 @@ void from_json(const nlohmann::json &j, attributes &attr);
 // a character
 struct character {
     std::string name;
-    int id; // definitely unique
+    int character_id; // definitely unique
 
     // attributes
     attributes attrs;
 
-    // we don't really need this in our database
-    battlestats stats;
+    // officially removed battlestats from character
+    // fightable is where battlestats matters
 
     // since we will be passing this around
     // it's probably a better idea to use ids
@@ -105,7 +103,7 @@ struct magic {
     int multiplier;   // in percentage
     int inner_damage; // certain value
 
-    battlestats stats;
+    battlestats stats{};
 };
 void to_json(nlohmann::json &j, const magic &magic);
 void from_json(const nlohmann::json &j, magic &magic);
