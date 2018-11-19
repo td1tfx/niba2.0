@@ -9,6 +9,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 set(Boost_USE_STATIC_LIBS ON)
+# TODO flag this
+set(CMAKE_BUILD_TYPE Debug)
 
 add_compile_definitions(BOOST_COROUTINES_NO_DEPRECATION_WARNING)
 
@@ -47,3 +49,6 @@ target_link_libraries(niba-client
     Boost::regex
     Threads::Threads 
     nlohmann_json::nlohmann_json)
+
+configure_file(staticdata/character.json character.json COPYONLY)
+configure_file(staticdata/magic.json magic.json COPYONLY)

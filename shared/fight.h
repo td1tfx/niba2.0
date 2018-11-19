@@ -2,8 +2,8 @@
 #include "global_defs.h"
 #include "rng.h"
 #include "structs.h"
+#include "gamedata.h"
 #include <algorithm>
-#include <array>
 #include <boost/assert.hpp>
 #include <iostream>
 #include <optional>
@@ -14,13 +14,9 @@ namespace nibashared {
 
 struct magic_ex {
     int cd{0};
-    std::optional<magic> real_magic{};
+    magic real_magic{};
 
-    void heatup() {
-        if (real_magic.has_value()) {
-            cd = real_magic.value().cd;
-        }
-    }
+    void heatup() { cd = real_magic.cd; }
     void cooldown(int ticks) { cd = std::max(cd - ticks, 0); }
 };
 
@@ -28,12 +24,12 @@ constexpr int FIGHT_MAX_PROG = 1000;
 constexpr int DEFENCE_EXTENSION = 100;
 constexpr int INNER_BASE = 100;
 
-using fightable_magics = std::array<magic_ex, MAX_ACTIVE_MAGIC>;
+using fightable_magics = std::vector<magic_ex>;
 
 // composition over inheritance
 class fightable {
 public:
-    battlestats stats;
+    battlestats stats{};
     std::size_t idx; // idx within all_
     int team;        // takes value 0 or 1
     int progress{0};
@@ -52,7 +48,6 @@ public:
         return (FIGHT_MAX_PROG - progress + stats.speed - 1) / stats.speed;
     }
 
-    // TODO: make this rng templated
     template<typename RNG>
     int damage_calc(const magic &chosen_magic, const fightable &defender, RNG &rng) const {
         int multiplier = chosen_magic.multiplier;
@@ -60,7 +55,6 @@ public:
             static_cast<int>(stats.accuracy * (100.0 / (stats.accuracy + defender.stats.accuracy)));
         if (accuracy <= rng(0, 99))
             return 0;
-        // TODO: Niba, finish this
         int inner_damage = chosen_magic.inner_damage;
         auto physical_damage_reduction =
             defender.stats.defence * 1.0 / (defender.stats.defence + DEFENCE_EXTENSION);
@@ -77,7 +71,7 @@ public:
     std::optional<std::size_t> pick_magic_idx() {
         // potential optimization: precompute the sequence of magics
         for (std::size_t i = 0; i < magics.size(); i++) {
-            if (magics[i].real_magic.has_value() && magics[i].cd == 0) {
+            if (magics[i].cd == 0) {
                 return i;
             }
         }
@@ -100,9 +94,7 @@ public:
         for (std::size_t i = 0; i < all_.size(); i++) {
             all_.at(i).idx = i;
             for (auto &m : all_.at(i).magics) {
-                if (m.real_magic) {
-                    all_.at(i).stats += (*m.real_magic).stats;
-                }
+                all_.at(i).stats += m.real_magic.stats;
             }
         }
         // sort by speed, use the 'arbitrary' idx to break tie
@@ -176,7 +168,7 @@ public:
             if (chosen_magic_idx) {
                 auto &chosen_magicex = attacker.magics[(*chosen_magic_idx)];
                 chosen_magicex.heatup();
-                dmg = attacker.damage_calc(*(chosen_magicex.real_magic), defender, rng);
+                dmg = attacker.damage_calc(chosen_magicex.real_magic, defender, rng);
             } else {
                 dmg = attacker.damage_calc(DEFAULT_MAGIC, defender, rng);
             }
@@ -199,5 +191,51 @@ private:
     std::size_t enemies_;
     std::vector<fightable> all_;
 };
+
+// will move this elsewhere
+battlestats stats_computer(attributes attr) {
+    battlestats stats{};
+    stats.attack_min = attr.strength * 2;
+    stats.attack_max = attr.strength * 2;
+    stats.evasion = attr.dexterity;
+    stats.speed = attr.dexterity;
+    stats.accuracy = attr.dexterity;
+    stats.hp = 5 * attr.physique;
+    stats.defence = attr.physique;
+    stats.mp = 5 * attr.spirit;
+    stats.inner_power = attr.spirit;
+    return stats;
+}
+
+// this is temporary
+std::pair<std::vector<fightable>, std::vector<fightable>>
+prep_fight(int id_me, int id_you) {
+    std::cout << "prep " << id_me << " " << id_you << std::endl;
+    // refactor this
+    auto self = staticdata::get().character(id_me);
+    auto you = staticdata::get().character(id_you);
+
+    std::vector<fightable> self_fightable{{}};
+    std::vector<fightable> enemy_fightable{{}};
+    self_fightable.back().stats = stats_computer(self.attrs);
+    enemy_fightable.back().stats = stats_computer(you.attrs);
+
+    fightable_magics my_magics;
+    for (auto &magic_id : self.active_magic) {
+        std::cout << "magic " << magic_id << std::endl;
+        // I try to not have constructor in my structs, so here 0 is for cd=0
+        my_magics.push_back({0, staticdata::get().magic(magic_id)});
+    }
+    fightable_magics your_magics;
+    for (auto &magic_id : you.active_magic) {
+        std::cout << "magic " << magic_id << std::endl;
+        your_magics.push_back({0, staticdata::get().magic(magic_id)});
+    }
+
+    self_fightable.back().magics = std::move(my_magics);
+    enemy_fightable.back().magics = std::move(your_magics);
+
+    return {self_fightable, enemy_fightable};
+}
 
 } // namespace nibashared

@@ -1,0 +1,27 @@
+[
+    {
+        "character_id": 1,
+        "name": "泥巴蛋",
+        "strength": 25,
+        "dexterity": 35,
+        "physique": 30,
+        "spirit": 30,
+        "fk_character_id": 1,
+        "active_magic": [
+            1
+        ]
+    },
+    {
+        "character_id": 2,
+        "name": "机器猫",
+        "strength": 20,
+        "dexterity": 40,
+        "physique": 20,
+        "spirit": 40,
+        "fk_character_id": 2,
+        "active_magic": [
+            2,
+            1
+        ]
+    }
+]
