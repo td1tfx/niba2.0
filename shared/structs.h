@@ -108,6 +108,6 @@ struct magic {
 void to_json(nlohmann::json &j, const magic &magic);
 void from_json(const nlohmann::json &j, magic &magic);
 
-const static magic DEFAULT_MAGIC{u8"default", 0, 1, 0, 100, 0, {}};
+const static magic DEFAULT_MAGIC{u8"default", 0, 1, 0, 100, 100, {}};
 
 }; // namespace nibashared

@@ -29,8 +29,6 @@ using fightable_magics = std::vector<magic_ex>;
 // composition over inheritance
 class fightable {
 public:
-    std::string char_name;
-    int char_id;
     battlestats stats{};
     std::size_t idx; // idx within all_
     int team;        // takes value 0 or 1
@@ -171,16 +169,12 @@ public:
                 auto &chosen_magicex = attacker.magics[(*chosen_magic_idx)];
                 chosen_magicex.heatup();
                 dmg = attacker.damage_calc(chosen_magicex.real_magic, defender, rng);
-                std::cout << attacker.char_name << " uses magic " << *chosen_magic_idx << chosen_magicex.real_magic.name << " dealt " << dmg << " on " << defender.char_name << std::endl;
             } else {
                 dmg = attacker.damage_calc(DEFAULT_MAGIC, defender, rng);
-                std::cout << attacker.char_name << " uses magic " << DEFAULT_MAGIC.name << " dealt " << dmg << " on " << defender.char_name << std::endl;
             }
 
             defender.stats.hp -= dmg;
-
-            std::cout << defender.char_name << " hp remains " << defender.stats.hp << std::endl;
-
+            std::cout << attacker.idx << " dealt " << dmg << " on " << defender.idx << std::endl;
 
             if (defender.stats.hp <= 0) {
                 team_alive_count[defender.team] -= 1;
@@ -224,22 +218,17 @@ prep_fight(int id_me, int id_you) {
     std::vector<fightable> self_fightable{{}};
     std::vector<fightable> enemy_fightable{{}};
     self_fightable.back().stats = stats_computer(self.attrs);
-    self_fightable.back().char_name = self.name;
-    self_fightable.back().char_id = self.character_id;
     enemy_fightable.back().stats = stats_computer(you.attrs);
-    enemy_fightable.back().char_name = you.name;
-    enemy_fightable.back().char_id = you.character_id;
-
 
     fightable_magics my_magics;
     for (auto &magic_id : self.active_magic) {
-        std::cout << self.name << " has magic " << magic_id << std::endl;
+        std::cout << "magic " << magic_id << std::endl;
         // I try to not have constructor in my structs, so here 0 is for cd=0
         my_magics.push_back({0, staticdata::get().magic(magic_id)});
     }
     fightable_magics your_magics;
     for (auto &magic_id : you.active_magic) {
-        std::cout << you.name << " has magic " << magic_id << std::endl;
+        std::cout << "magic " << magic_id << std::endl;
         your_magics.push_back({0, staticdata::get().magic(magic_id)});
     }
 
