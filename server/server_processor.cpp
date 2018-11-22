@@ -36,7 +36,7 @@ void nibaserver::server_processor::process(nibashared::message_login &req) {
 }
 
 void nibaserver::server_processor::process(nibashared::message_fight &req) {
-    auto [self_fightable, enemy_fightable] = nibashared::prep_fight(1, 3);
+    auto [self_fightable, enemy_fightable] = nibashared::prep_fight(1, 2);
     // session_.charid, req.enemyid
     nibashared::fight fight(std::move(self_fightable), std::move(enemy_fightable));
     nibashared::rng_server rng;
