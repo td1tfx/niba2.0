@@ -75,19 +75,15 @@ void nibashared::from_json(const nlohmann::json &j, attributes &attr) {
 void nibashared::to_json(nlohmann::json &j, const character &character) {
     j = nlohmann::json{{"name", character.name},
                        {"character_id", character.character_id},
-                       {"active_magic", character.active_magic}};
-    // TODO decide how we want to serialize a character
-    nlohmann::json attrs_j = character.attrs;
-    j.merge_patch(attrs_j);
+                       {"active_magic", character.active_magic},
+                       {"attrs", character.attrs}};
 }
 
 void nibashared::from_json(const nlohmann::json &j, character &character) {
     j.at("name").get_to(character.name);
     j.at("character_id").get_to(character.character_id);
     j.at("active_magic").get_to(character.active_magic);
-    // j.at("attrs").get_to(character.attrs);
-    // excessive tags are ignored
-    j.get_to(character.attrs);
+    j.at("attrs").get_to(character.attrs);
 }
 
 void nibashared::to_json(nlohmann::json &j, const magic &magic) {
@@ -96,9 +92,8 @@ void nibashared::to_json(nlohmann::json &j, const magic &magic) {
                        {"active", magic.active},
                        {"cd", magic.cd},
                        {"inner_damage", magic.inner_damage},
-                       {"multiplier", magic.multiplier}};
-    nlohmann::json stats_j = magic.stats;
-    j.merge_patch(stats_j);
+                       {"multiplier", magic.multiplier},
+                       {"stats", magic.stats}};
 }
 
 void nibashared::from_json(const nlohmann::json &j, magic &magic) {
@@ -108,5 +103,5 @@ void nibashared::from_json(const nlohmann::json &j, magic &magic) {
     j.at("cd").get_to(magic.cd);
     j.at("multiplier").get_to(magic.multiplier);
     j.at("inner_damage").get_to(magic.inner_damage);
-    j.get_to(magic.stats);
+    j.at("stats").get_to(magic.stats);
 }
