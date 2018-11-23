@@ -1,0 +1,4 @@
+/home/tfx/niba2.0/CMakeFiles/rebuild_cache.dir
+/home/tfx/niba2.0/CMakeFiles/niba-server.dir
+/home/tfx/niba2.0/CMakeFiles/edit_cache.dir
+/home/tfx/niba2.0/CMakeFiles/niba-client.dir
