@@ -15,9 +15,9 @@ build/
 CMakeFiles/
 CMakeCache.txt
 Makefile
-Character.json
+./character.json
 cmake_install.cmake
-magic.json
+./magic.json
 niba-client
 niba-server
 logs/
