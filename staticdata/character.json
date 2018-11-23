@@ -1,27 +1,78 @@
 [
     {
         "character_id": 1,
-        "name": "泥巴蛋",
-        "strength": 25,
-        "dexterity": 35,
-        "physique": 30,
-        "spirit": 30,
+        "name": "野兔",
+        "strength": 3,
+        "dexterity": 11,
+        "physique": 3,
+        "spirit": 6,
         "fk_character_id": 1,
         "active_magic": [
-            1
+            1,
+            4
         ]
     },
     {
         "character_id": 2,
-        "name": "机器猫",
-        "strength": 20,
-        "dexterity": 40,
-        "physique": 20,
-        "spirit": 40,
+        "name": "野猪",
+        "strength": 11,
+        "dexterity": 12,
+        "physique": 17,
+        "spirit": 7,
         "fk_character_id": 2,
         "active_magic": [
             2,
-            1
+            1,
+            4
+        ]
+    },
+    {
+        "character_id": 3,
+        "name": "山鸡",
+        "strength": 5,
+        "dexterity": 8,
+        "physique": 5,
+        "spirit": 2,
+        "fk_character_id": 3,
+        "active_magic": [
+            1,
+            4
+        ]
+    },
+    {
+        "character_id": 4,
+        "name": "野猪王",
+        "strength": 20,
+        "dexterity": 15,
+        "physique": 50,
+        "spirit": 10,
+        "fk_character_id": 4,
+        "active_magic": [
+            4
+        ]
+    },
+    {
+        "character_id": 5,
+        "name": "地痞",
+        "strength": 12,
+        "dexterity": 15,
+        "physique": 11,
+        "spirit": 7,
+        "fk_character_id": 5,
+        "active_magic": [
+            4
+        ]
+    },
+    {
+        "character_id": 6,
+        "name": "无赖",
+        "strength": 11,
+        "dexterity": 15,
+        "physique": 13,
+        "spirit": 9,
+        "fk_character_id": null,
+        "active_magic": [
+            4
         ]
     }
 ]
