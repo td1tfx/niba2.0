@@ -102,6 +102,7 @@ struct magic {
     int cd;
     int multiplier;   // in percentage
     int inner_damage; // certain value
+    int mp_cost;
 
     battlestats stats{};
 };

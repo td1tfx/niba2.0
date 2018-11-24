@@ -1,8 +1,8 @@
 #pragma once
+#include "gamedata.h"
 #include "global_defs.h"
 #include "rng.h"
 #include "structs.h"
-#include "gamedata.h"
 #include <algorithm>
 #include <boost/assert.hpp>
 #include <iostream>
@@ -73,7 +73,7 @@ public:
     std::optional<std::size_t> pick_magic_idx() {
         // potential optimization: precompute the sequence of magics
         for (std::size_t i = 0; i < magics.size(); i++) {
-            if (magics[i].cd == 0) {
+            if (magics[i].cd == 0 && magics[i].real_magic.mp_cost < stats.mp) {
                 return i;
             }
         }
@@ -171,16 +171,19 @@ public:
                 auto &chosen_magicex = attacker.magics[(*chosen_magic_idx)];
                 chosen_magicex.heatup();
                 dmg = attacker.damage_calc(chosen_magicex.real_magic, defender, rng);
-                std::cout << attacker.char_name << " uses magic " << *chosen_magic_idx << chosen_magicex.real_magic.name << " dealt " << dmg << " on " << defender.char_name << std::endl;
+                attacker.stats.mp -= chosen_magicex.real_magic.mp_cost;
+                CPRINT(attacker.char_name << " uses magic " << *chosen_magic_idx
+                                          << chosen_magicex.real_magic.name << " dealt " << dmg
+                                          << " on " << defender.char_name);
             } else {
                 dmg = attacker.damage_calc(DEFAULT_MAGIC, defender, rng);
-                std::cout << attacker.char_name << " uses magic " << DEFAULT_MAGIC.name << " dealt " << dmg << " on " << defender.char_name << std::endl;
+                CPRINT(attacker.char_name << " uses magic " << DEFAULT_MAGIC.name << " dealt "
+                                          << dmg << " on " << defender.char_name);
             }
 
             defender.stats.hp -= dmg;
 
-            std::cout << defender.char_name << " hp remains " << defender.stats.hp << std::endl;
-
+            CPRINT(defender.char_name << " hp remains " << defender.stats.hp);
 
             if (defender.stats.hp <= 0) {
                 team_alive_count[defender.team] -= 1;
@@ -188,7 +191,7 @@ public:
             attacker.progress = 0;
             alive.clear();
         }
-        std::cout << team_alive_count[0] << " " << team_alive_count[1] << std::endl;
+        CPRINT(team_alive_count[0] << " " << team_alive_count[1]);
         return team_alive_count[1] == 0 ? 0 : 1;
     }
 
@@ -214,9 +217,8 @@ battlestats stats_computer(attributes attr) {
 }
 
 // this is temporary
-std::pair<std::vector<fightable>, std::vector<fightable>>
-prep_fight(int id_me, int id_you) {
-    std::cout << "prep " << id_me << " " << id_you << std::endl;
+std::pair<std::vector<fightable>, std::vector<fightable>> prep_fight(int id_me, int id_you) {
+    CPRINT("prep " << id_me << " " << id_you);
     // refactor this
     auto self = staticdata::get().character(id_me);
     auto you = staticdata::get().character(id_you);
@@ -230,16 +232,15 @@ prep_fight(int id_me, int id_you) {
     enemy_fightable.back().char_name = you.name;
     enemy_fightable.back().char_id = you.character_id;
 
-
     fightable_magics my_magics;
     for (auto &magic_id : self.active_magic) {
-        std::cout << self.name << " has magic " << magic_id << std::endl;
+        CPRINT(self.name << " has magic " << magic_id);
         // I try to not have constructor in my structs, so here 0 is for cd=0
         my_magics.push_back({0, staticdata::get().magic(magic_id)});
     }
     fightable_magics your_magics;
     for (auto &magic_id : you.active_magic) {
-        std::cout << you.name << " has magic " << magic_id << std::endl;
+        CPRINT(you.name << " has magic " << magic_id);
         your_magics.push_back({0, staticdata::get().magic(magic_id)});
     }
 

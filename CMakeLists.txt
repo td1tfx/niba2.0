@@ -28,6 +28,8 @@ include_directories(shared/)
 add_executable(niba-server ${SERVER_SRC_LIST} ${SHARED_SRC_LIST})
 add_executable(niba-client ${CLIENT_SRC_LIST} ${SHARED_SRC_LIST})
 
+target_compile_definitions(niba-client PUBLIC NIBACLIENT)
+
 target_link_libraries(niba-server
     ${OPENSSL_CRYPTO_LIBRARY}
     ${OPENSSL_SSL_LIBRARY}
