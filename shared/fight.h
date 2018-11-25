@@ -55,16 +55,35 @@ public:
         int multiplier = chosen_magic.multiplier;
         int accuracy =
             static_cast<int>(stats.accuracy * (100.0 / (stats.accuracy + defender.stats.accuracy)));
-        if (accuracy <= rng(0, 99))
+        if (accuracy <= rng(0, 99)){
+            CPRINT("the attack was evaded!");
             return 0;
+        }
         int inner_damage = chosen_magic.inner_damage;
         auto physical_damage_reduction =
             defender.stats.defence * 1.0 / (defender.stats.defence + DEFENCE_EXTENSION);
         auto inner_damage_multiplier = 1.0 + stats.inner_power / INNER_BASE;
+        float inner_damage_reduction;
+        switch (chosen_magic.inner_property){
+            case 0: inner_damage_reduction = defender.stats.gold_res/100.0;
+            break;
+            case 1: inner_damage_reduction = defender.stats.wood_res/100.0;
+            break;
+            case 2: inner_damage_reduction = defender.stats.water_res/100.0;
+            break;
+            case 3: inner_damage_reduction = defender.stats.fire_res/100.0;
+            break;
+            case 4: inner_damage_reduction = defender.stats.earth_res/100.0;
+            break;
+            default: inner_damage_reduction = 1.0;
+            break;            
+        }
+        
+         
 
         return static_cast<int>((rng(stats.attack_min, stats.attack_max) / 100.0 * multiplier) *
                                     (1.0 - physical_damage_reduction) +
-                                inner_damage_multiplier * inner_damage);
+                                inner_damage_multiplier * inner_damage*(1.0-inner_damage_reduction));
     }
 
     int threat_calc() const { return stats.attack_min + stats.attack_max; }
