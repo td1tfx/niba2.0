@@ -8,7 +8,7 @@
         "fk_stats_id": 1,
         "cd": 150,
         "mp_cost": 0,
-        "inner_property": 0,
+        "inner_property": 1,
         "stats_id": 1,
         "stats": {
             "stats_id": 1,
@@ -48,7 +48,7 @@
         "fk_stats_id": 1,
         "cd": 130,
         "mp_cost": 0,
-        "inner_property": 0,
+        "inner_property": 3,
         "stats_id": 1,
         "stats": {
             "stats_id": 1,
@@ -88,7 +88,7 @@
         "fk_stats_id": 1,
         "cd": 200,
         "mp_cost": 0,
-        "inner_property": 0,
+        "inner_property": 1,
         "stats_id": 1,
         "stats": {
             "stats_id": 1,
@@ -128,7 +128,7 @@
         "fk_stats_id": 1,
         "cd": 200,
         "mp_cost": 0,
-        "inner_property": 0,
+        "inner_property": 4,
         "stats_id": 1,
         "stats": {
             "stats_id": 1,
@@ -160,7 +160,7 @@
         }
     },
     {
-        "magic_id": 6,
+        "magic_id": 5,
         "name": "六合拳",
         "active": true,
         "multiplier": 30,
@@ -168,7 +168,7 @@
         "fk_stats_id": 1,
         "cd": 220,
         "mp_cost": 0,
-        "inner_property": 0,
+        "inner_property": 1,
         "stats_id": 1,
         "stats": {
             "stats_id": 1,

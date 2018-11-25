@@ -63,17 +63,17 @@ public:
         auto physical_damage_reduction =
             defender.stats.defence * 1.0 / (defender.stats.defence + DEFENCE_EXTENSION);
         auto inner_damage_multiplier = 1.0 + stats.inner_power / INNER_BASE;
-        float inner_damage_reduction;
+        double inner_damage_reduction;
         switch (chosen_magic.inner_property){
-            case 0: inner_damage_reduction = defender.stats.gold_res/100.0;
+            case property::gold : inner_damage_reduction = defender.stats.gold_res/100.0;
             break;
-            case 1: inner_damage_reduction = defender.stats.wood_res/100.0;
+            case property::wood: inner_damage_reduction = defender.stats.wood_res/100.0;
             break;
-            case 2: inner_damage_reduction = defender.stats.water_res/100.0;
+            case property::water: inner_damage_reduction = defender.stats.water_res/100.0;
             break;
-            case 3: inner_damage_reduction = defender.stats.fire_res/100.0;
+            case property::fire: inner_damage_reduction = defender.stats.fire_res/100.0;
             break;
-            case 4: inner_damage_reduction = defender.stats.earth_res/100.0;
+            case property::earth: inner_damage_reduction = defender.stats.earth_res/100.0;
             break;
             default: inner_damage_reduction = 1.0;
             break;            
