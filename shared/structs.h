@@ -112,13 +112,13 @@ struct magic {
     int multiplier;   // in percentage
     int inner_damage; // certain value
     int mp_cost;
-    property inner_property;
+    int inner_property;
 
     battlestats stats{};
 };
 void to_json(nlohmann::json &j, const magic &magic);
 void from_json(const nlohmann::json &j, magic &magic);
 
-const static magic DEFAULT_MAGIC{u8"default", 0, 1, 0, 100, 0, 0, {}};
+const static magic DEFAULT_MAGIC{u8"default", 0, 1, 0, 100, 0, 0, 0, {}};
 
 }; // namespace nibashared

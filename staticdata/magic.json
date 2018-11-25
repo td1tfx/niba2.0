@@ -8,6 +8,7 @@
         "fk_stats_id": 1,
         "cd": 150,
         "mp_cost": 0,
+        "inner_property": 0,
         "stats_id": 1,
         "stats": {
             "stats_id": 1,
@@ -47,6 +48,7 @@
         "fk_stats_id": 1,
         "cd": 130,
         "mp_cost": 0,
+        "inner_property": 0,
         "stats_id": 1,
         "stats": {
             "stats_id": 1,
@@ -86,6 +88,7 @@
         "fk_stats_id": 1,
         "cd": 200,
         "mp_cost": 0,
+        "inner_property": 0,
         "stats_id": 1,
         "stats": {
             "stats_id": 1,
@@ -125,6 +128,7 @@
         "fk_stats_id": 1,
         "cd": 200,
         "mp_cost": 0,
+        "inner_property": 0,
         "stats_id": 1,
         "stats": {
             "stats_id": 1,
@@ -164,6 +168,7 @@
         "fk_stats_id": 1,
         "cd": 220,
         "mp_cost": 0,
+        "inner_property": 0,
         "stats_id": 1,
         "stats": {
             "stats_id": 1,
