@@ -3,9 +3,16 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
+#include <iostream>
 #include <optional>
 #include <string>
 #include <string_view>
+
+#ifdef NIBACLIENT
+#define CPRINT(x) std::cout << x << std::endl;
+#else
+#define CPRINT(X)
+#endif
 
 namespace nibashared {
 
