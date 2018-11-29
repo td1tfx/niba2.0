@@ -12,7 +12,35 @@
         "active_magic": [
             1,
             4
-        ]
+        ],
+        "stats": {
+            "stats_id": 1,
+            "description": "空属性",
+            "hp": 0,
+            "mp": 0,
+            "attack_min": 0,
+            "attack_max": 0,
+            "inner_power": 0,
+            "accuracy": 0,
+            "evasion": 0,
+            "speed": 0,
+            "defence": 0,
+            "crit_chance": 0,
+            "crit_damage": 0,
+            "reduce_def": 0,
+            "reduce_def_perc": 0,
+            "hp_regen": 0,
+            "mp_regen": 0,
+            "gold_res": 0,
+            "wood_res": 0,
+            "water_res": 0,
+            "fire_res": 0,
+            "earth_res": 0,
+            "hp_on_hit": 0,
+            "hp_steal": 0,
+            "mp_on_hit": 0,
+            "mp_steal": 0
+        }
     },
     {
         "character_id": 2,
@@ -28,7 +56,35 @@
             2,
             1,
             4
-        ]
+        ],
+        "stats": {
+            "stats_id": 1,
+            "description": "空属性",
+            "hp": 0,
+            "mp": 0,
+            "attack_min": 0,
+            "attack_max": 0,
+            "inner_power": 0,
+            "accuracy": 0,
+            "evasion": 0,
+            "speed": 0,
+            "defence": 0,
+            "crit_chance": 0,
+            "crit_damage": 0,
+            "reduce_def": 0,
+            "reduce_def_perc": 0,
+            "hp_regen": 0,
+            "mp_regen": 0,
+            "gold_res": 0,
+            "wood_res": 0,
+            "water_res": 0,
+            "fire_res": 0,
+            "earth_res": 0,
+            "hp_on_hit": 0,
+            "hp_steal": 0,
+            "mp_on_hit": 0,
+            "mp_steal": 0
+        }
     },
     {
         "character_id": 3,
@@ -43,7 +99,35 @@
         "active_magic": [
             1,
             4
-        ]
+        ],
+        "stats": {
+            "stats_id": 1,
+            "description": "空属性",
+            "hp": 0,
+            "mp": 0,
+            "attack_min": 0,
+            "attack_max": 0,
+            "inner_power": 0,
+            "accuracy": 0,
+            "evasion": 0,
+            "speed": 0,
+            "defence": 0,
+            "crit_chance": 0,
+            "crit_damage": 0,
+            "reduce_def": 0,
+            "reduce_def_perc": 0,
+            "hp_regen": 0,
+            "mp_regen": 0,
+            "gold_res": 0,
+            "wood_res": 0,
+            "water_res": 0,
+            "fire_res": 0,
+            "earth_res": 0,
+            "hp_on_hit": 0,
+            "hp_steal": 0,
+            "mp_on_hit": 0,
+            "mp_steal": 0
+        }
     },
     {
         "character_id": 4,
@@ -57,7 +141,35 @@
         "fk_character_id": 4,
         "active_magic": [
             4
-        ]
+        ],
+        "stats": {
+            "stats_id": 1,
+            "description": "空属性",
+            "hp": 0,
+            "mp": 0,
+            "attack_min": 0,
+            "attack_max": 0,
+            "inner_power": 0,
+            "accuracy": 0,
+            "evasion": 0,
+            "speed": 0,
+            "defence": 0,
+            "crit_chance": 0,
+            "crit_damage": 0,
+            "reduce_def": 0,
+            "reduce_def_perc": 0,
+            "hp_regen": 0,
+            "mp_regen": 0,
+            "gold_res": 0,
+            "wood_res": 0,
+            "water_res": 0,
+            "fire_res": 0,
+            "earth_res": 0,
+            "hp_on_hit": 0,
+            "hp_steal": 0,
+            "mp_on_hit": 0,
+            "mp_steal": 0
+        }
     },
     {
         "character_id": 5,
@@ -71,7 +183,35 @@
         "fk_character_id": 5,
         "active_magic": [
             4
-        ]
+        ],
+        "stats": {
+            "stats_id": 1,
+            "description": "空属性",
+            "hp": 0,
+            "mp": 0,
+            "attack_min": 0,
+            "attack_max": 0,
+            "inner_power": 0,
+            "accuracy": 0,
+            "evasion": 0,
+            "speed": 0,
+            "defence": 0,
+            "crit_chance": 0,
+            "crit_damage": 0,
+            "reduce_def": 0,
+            "reduce_def_perc": 0,
+            "hp_regen": 0,
+            "mp_regen": 0,
+            "gold_res": 0,
+            "wood_res": 0,
+            "water_res": 0,
+            "fire_res": 0,
+            "earth_res": 0,
+            "hp_on_hit": 0,
+            "hp_steal": 0,
+            "mp_on_hit": 0,
+            "mp_steal": 0
+        }
     },
     {
         "character_id": 6,
@@ -85,6 +225,118 @@
         "fk_character_id": 6,
         "active_magic": [
             4
-        ]
+        ],
+        "stats": {
+            "stats_id": 1,
+            "description": "空属性",
+            "hp": 0,
+            "mp": 0,
+            "attack_min": 0,
+            "attack_max": 0,
+            "inner_power": 0,
+            "accuracy": 0,
+            "evasion": 0,
+            "speed": 0,
+            "defence": 0,
+            "crit_chance": 0,
+            "crit_damage": 0,
+            "reduce_def": 0,
+            "reduce_def_perc": 0,
+            "hp_regen": 0,
+            "mp_regen": 0,
+            "gold_res": 0,
+            "wood_res": 0,
+            "water_res": 0,
+            "fire_res": 0,
+            "earth_res": 0,
+            "hp_on_hit": 0,
+            "hp_steal": 0,
+            "mp_on_hit": 0,
+            "mp_steal": 0
+        }
+    },
+    {
+        "character_id": 7,
+        "name": "八卦门弃徒",
+        "attrs": {
+            "strength": 11,
+            "dexterity": 14,
+            "physique": 11,
+            "spirit": 15
+        },
+        "fk_character_id": 7,
+        "active_magic": [
+            3
+        ],
+        "stats": {
+            "stats_id": 1,
+            "description": "空属性",
+            "hp": 0,
+            "mp": 0,
+            "attack_min": 0,
+            "attack_max": 0,
+            "inner_power": 0,
+            "accuracy": 0,
+            "evasion": 0,
+            "speed": 0,
+            "defence": 0,
+            "crit_chance": 0,
+            "crit_damage": 0,
+            "reduce_def": 0,
+            "reduce_def_perc": 0,
+            "hp_regen": 0,
+            "mp_regen": 0,
+            "gold_res": 0,
+            "wood_res": 0,
+            "water_res": 0,
+            "fire_res": 0,
+            "earth_res": 0,
+            "hp_on_hit": 0,
+            "hp_steal": 0,
+            "mp_on_hit": 0,
+            "mp_steal": 0
+        }
+    },
+    {
+        "character_id": 8,
+        "name": "六合门弃徒",
+        "attrs": {
+            "strength": 7,
+            "dexterity": 14,
+            "physique": 13,
+            "spirit": 16
+        },
+        "fk_character_id": 8,
+        "active_magic": [
+            5
+        ],
+        "stats": {
+            "stats_id": 1,
+            "description": "空属性",
+            "hp": 0,
+            "mp": 0,
+            "attack_min": 0,
+            "attack_max": 0,
+            "inner_power": 0,
+            "accuracy": 0,
+            "evasion": 0,
+            "speed": 0,
+            "defence": 0,
+            "crit_chance": 0,
+            "crit_damage": 0,
+            "reduce_def": 0,
+            "reduce_def_perc": 0,
+            "hp_regen": 0,
+            "mp_regen": 0,
+            "gold_res": 0,
+            "wood_res": 0,
+            "water_res": 0,
+            "fire_res": 0,
+            "earth_res": 0,
+            "hp_on_hit": 0,
+            "hp_steal": 0,
+            "mp_on_hit": 0,
+            "mp_steal": 0
+        }
     }
 ]

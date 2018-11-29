@@ -79,9 +79,8 @@ struct character {
 
     // attributes
     attributes attrs;
-
-    // officially removed battlestats from character
-    // fightable is where battlestats matters
+    // also allow stats
+    battlestats stats;
 
     // since we will be passing this around
     // it's probably a better idea to use ids
