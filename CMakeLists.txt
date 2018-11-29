@@ -39,6 +39,7 @@ target_link_libraries(niba-server
     Boost::log
     Boost::regex
     Threads::Threads
+    pq
     nlohmann_json::nlohmann_json)
 
 target_link_libraries(niba-client

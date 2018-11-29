@@ -21,7 +21,7 @@ server_session::server_session(boost::asio::io_context &ioc, boost::asio::ip::tc
 void server_session::go() {
     auto self(shared_from_this());
     boost::asio::spawn(ioc_, [this, self](boost::asio::yield_context yield) {
-        nibaserver::server_processor processor;
+        nibaserver::server_processor processor(ioc_, yield);
         try {
             // start pinging
             // auto ping
@@ -61,7 +61,7 @@ void server_session::go() {
         // unrecoverable error
         catch (std::exception &e) {
             if (processor.get_session().userid.has_value()) {
-                nibaserver::db_accessor::logout(processor.get_session().userid.value());
+                nibaserver::db_accessor::logout(ioc_, yield, processor.get_session().userid.value());
             }
             BOOST_LOG_SEV(logger_, sev::info) << "Session ended, reason: " << e.what();
         }
