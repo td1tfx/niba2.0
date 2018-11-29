@@ -76,7 +76,8 @@ void nibashared::to_json(nlohmann::json &j, const character &character) {
     j = nlohmann::json{{"name", character.name},
                        {"character_id", character.character_id},
                        {"active_magic", character.active_magic},
-                       {"attrs", character.attrs}};
+                       {"attrs", character.attrs},
+                       {"stats", character.stats}};
 }
 
 void nibashared::from_json(const nlohmann::json &j, character &character) {
@@ -84,6 +85,7 @@ void nibashared::from_json(const nlohmann::json &j, character &character) {
     j.at("character_id").get_to(character.character_id);
     j.at("active_magic").get_to(character.active_magic);
     j.at("attrs").get_to(character.attrs);
+    j.at("stats").get_to(character.stats);
 }
 
 void nibashared::to_json(nlohmann::json &j, const magic &magic) {
