@@ -86,5 +86,33 @@
         "active_magic": [
             4
         ]
+    },
+    {
+        "character_id": 7,
+        "name": "八卦门弃徒",
+        "attrs": {
+            "strength": 11,
+            "dexterity": 14,
+            "physique": 11,
+            "spirit": 15
+        },
+        "fk_character_id": 7,
+        "active_magic": [
+            3
+        ]
+    },
+    {
+        "character_id": 8,
+        "name": "六合门弃徒",
+        "attrs": {
+            "strength": 7,
+            "dexterity": 14,
+            "physique": 13,
+            "spirit": 16
+        },
+        "fk_character_id": 8,
+        "active_magic": [
+            5
+        ]
     }
 ]

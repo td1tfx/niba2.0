@@ -94,7 +94,8 @@ void nibashared::to_json(nlohmann::json &j, const magic &magic) {
                        {"inner_damage", magic.inner_damage},
                        {"multiplier", magic.multiplier},
                        {"stats", magic.stats},
-                       {"mp_cost", magic.mp_cost}};
+                       {"mp_cost", magic.mp_cost},
+                       {"inner_property", magic.inner_property}};
 }
 
 void nibashared::from_json(const nlohmann::json &j, magic &magic) {
@@ -106,4 +107,5 @@ void nibashared::from_json(const nlohmann::json &j, magic &magic) {
     j.at("inner_damage").get_to(magic.inner_damage);
     j.at("stats").get_to(magic.stats);
     j.at("mp_cost").get_to(magic.mp_cost);
+    j.at("inner_property").get_to(magic.inner_property);
 }
