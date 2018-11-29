@@ -210,7 +210,8 @@ public:
 
             defender.char_data.stats.hp -= dmg;
 
-            CPRINT(defender.char_data.name << " hp remains " << defender.char_data.stats.hp << std::endl);
+            CPRINT(defender.char_data.name << " hp remains " << defender.char_data.stats.hp
+                                           << std::endl);
 
             if (defender.char_data.stats.hp <= 0) {
                 team_alive_count[defender.team] -= 1;
