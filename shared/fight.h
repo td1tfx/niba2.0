@@ -21,8 +21,8 @@ struct magic_ex {
 };
 
 constexpr int FIGHT_MAX_PROG = 1000;
-constexpr int DEFENCE_EXTENSION = 100;
-constexpr int INNER_BASE = 100;
+constexpr double DEFENCE_EXTENSION = 100;
+constexpr double INNER_BASE = 100;
 
 using fightable_magics = std::vector<magic_ex>;
 
@@ -50,21 +50,50 @@ public:
 
     template<typename RNG>
     int damage_calc(const magic &chosen_magic, const fightable &defender, RNG &rng) const {
-        int multiplier = chosen_magic.multiplier;
         int accuracy = static_cast<int>(
             char_data.stats.accuracy *
             (100.0 / (char_data.stats.accuracy + defender.char_data.stats.accuracy)));
-        if (accuracy <= rng(0, 99))
+        if (accuracy <= rng(0, 99)) {
+            CPRINT("the attack was evaded!");
             return 0;
-        int inner_damage = chosen_magic.inner_damage;
-        auto physical_damage_reduction = defender.char_data.stats.defence * 1.0 /
-                                         (defender.char_data.stats.defence + DEFENCE_EXTENSION);
-        auto inner_damage_multiplier = 1.0 + char_data.stats.inner_power / INNER_BASE;
+        }
 
+        int physical_damage = rng(char_data.stats.attack_min, char_data.stats.attack_max);
+        double physical_damage_multiplier = chosen_magic.multiplier / 100.0;
+        double physical_damage_reduction = defender.char_data.stats.defence /
+                                           (defender.char_data.stats.defence + DEFENCE_EXTENSION);
+
+        int inner_damage = chosen_magic.inner_damage;
+        double inner_damage_multiplier = 1 + char_data.stats.inner_power / INNER_BASE;
+        double inner_damage_reduction;
+        switch (chosen_magic.inner_property) {
+        case property::gold:
+            inner_damage_reduction = defender.char_data.stats.gold_res / 100.0;
+            break;
+        case property::wood:
+            inner_damage_reduction = defender.char_data.stats.wood_res / 100.0;
+            break;
+        case property::water:
+            inner_damage_reduction = defender.char_data.stats.water_res / 100.0;
+            break;
+        case property::fire:
+            inner_damage_reduction = defender.char_data.stats.fire_res / 100.0;
+            break;
+        case property::earth:
+            inner_damage_reduction = defender.char_data.stats.earth_res / 100.0;
+            break;
+        default:
+            inner_damage_reduction = 1.0;
+            break;
+        }
+        CPRINT("the attack landed!")
+        CPRINT("physical " << physical_damage << " " << physical_damage_multiplier << " "
+                           << physical_damage_reduction);
+        CPRINT("inner " << inner_damage << " " << inner_damage_multiplier << " "
+                        << inner_damage_reduction);
         return static_cast<int>(
-            (rng(char_data.stats.attack_min, char_data.stats.attack_max) / 100.0 * multiplier) *
-                (1.0 - physical_damage_reduction) +
-            inner_damage_multiplier * inner_damage);
+            physical_damage * physical_damage_multiplier * (1 - physical_damage_reduction) +
+            inner_damage * inner_damage_multiplier * (1 - inner_damage_reduction));
     }
 
     int threat_calc() const { return char_data.stats.attack_min + char_data.stats.attack_max; }
@@ -110,7 +139,7 @@ public:
     // the test client will have the set of numbers received from server
     template<typename RNG>
     int go(RNG &rng) {
-
+        CPRINT("fight begins" << std::endl);
         std::size_t team_alive_count[]{friends_, enemies_};
         std::vector<std::size_t> alive;
         alive.reserve(all_.size());
@@ -181,7 +210,7 @@ public:
 
             defender.char_data.stats.hp -= dmg;
 
-            CPRINT(defender.char_data.name << " hp remains " << defender.char_data.stats.hp);
+            CPRINT(defender.char_data.name << " hp remains " << defender.char_data.stats.hp << std::endl);
 
             if (defender.char_data.stats.hp <= 0) {
                 team_alive_count[defender.team] -= 1;
