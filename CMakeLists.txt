@@ -54,3 +54,4 @@ target_link_libraries(niba-client
 
 configure_file(staticdata/character.json character.json COPYONLY)
 configure_file(staticdata/magic.json magic.json COPYONLY)
+configure_file(staticdata/equipment.json equipment.json COPYONLY)

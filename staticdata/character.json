@@ -8,11 +8,11 @@
             "physique": 3,
             "spirit": 6
         },
-        "fk_character_id": 1,
         "active_magic": [
             1,
             4
         ],
+        "equipments": [],
         "stats": {
             "stats_id": 1,
             "description": "空属性",
@@ -51,12 +51,12 @@
             "physique": 17,
             "spirit": 7
         },
-        "fk_character_id": 2,
         "active_magic": [
             2,
             1,
             4
         ],
+        "equipments": [],
         "stats": {
             "stats_id": 1,
             "description": "空属性",
@@ -95,11 +95,11 @@
             "physique": 5,
             "spirit": 2
         },
-        "fk_character_id": 3,
         "active_magic": [
             1,
             4
         ],
+        "equipments": [],
         "stats": {
             "stats_id": 1,
             "description": "空属性",
@@ -138,10 +138,10 @@
             "physique": 50,
             "spirit": 10
         },
-        "fk_character_id": 4,
         "active_magic": [
             4
         ],
+        "equipments": [],
         "stats": {
             "stats_id": 1,
             "description": "空属性",
@@ -180,9 +180,11 @@
             "physique": 11,
             "spirit": 7
         },
-        "fk_character_id": 5,
         "active_magic": [
             4
+        ],
+        "equipments": [
+            1
         ],
         "stats": {
             "stats_id": 1,
@@ -222,10 +224,10 @@
             "physique": 13,
             "spirit": 9
         },
-        "fk_character_id": 6,
         "active_magic": [
             4
         ],
+        "equipments": [],
         "stats": {
             "stats_id": 1,
             "description": "空属性",
@@ -264,10 +266,10 @@
             "physique": 11,
             "spirit": 15
         },
-        "fk_character_id": 7,
         "active_magic": [
             3
         ],
+        "equipments": [],
         "stats": {
             "stats_id": 1,
             "description": "空属性",
@@ -306,10 +308,10 @@
             "physique": 13,
             "spirit": 16
         },
-        "fk_character_id": 8,
         "active_magic": [
             5
         ],
+        "equipments": [],
         "stats": {
             "stats_id": 1,
             "description": "空属性",

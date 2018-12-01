@@ -16,11 +16,13 @@ public:
     static staticdata &get();
     const nibashared::character &character(int id);
     const nibashared::magic &magic(int id);
+    const nibashared::equipment &equipment(int id);
 
 private:
     staticdata();
     std::unordered_map<int, nibashared::character> characters_;
     std::unordered_map<int, nibashared::magic> magics_;
+    std::unordered_map<int, nibashared::equipment> equipments_;
 };
 
 } // namespace nibashared

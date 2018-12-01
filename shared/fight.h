@@ -252,12 +252,18 @@ fightable setup_fightable(int id) {
     fight_character.char_data = raw_character;
     fight_character.char_data.stats += stats_computer(raw_character.attrs);
     for (auto magic_id : raw_character.active_magic) {
-        CPRINT(raw_character.name << " has magic " << magic_id);
         auto magic = staticdata::get().magic(magic_id);
+        CPRINT(raw_character.name << " has magic " << magic.name);
         fight_character.char_data.stats += magic.stats;
         // I try to not have constructor in my structs, so here 0 is for cd=0
         fight_character.magics.push_back({0, std::move(magic)});
     }
+    for (auto equip_id : raw_character.equipments) {
+        auto equipment = staticdata::get().equipment(equip_id);
+        CPRINT(raw_character.name << " has item " << equipment.name);
+        fight_character.char_data.stats += equipment.stats;
+    }
+
     return fight_character;
 }
 
