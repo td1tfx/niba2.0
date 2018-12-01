@@ -14,14 +14,20 @@ staticdata::staticdata() {
     try {
         std::ifstream char_fin("character.json");
         nlohmann::json serialized_chars = nlohmann::json::parse(char_fin);
-        for (auto& element : serialized_chars) {
+        for (auto &element : serialized_chars) {
             characters_[element["character_id"]] = element;
         }
 
         std::ifstream magic_fin("magic.json");
         nlohmann::json serialized_magic = nlohmann::json::parse(magic_fin);
-        for (auto& element : serialized_magic) {
+        for (auto &element : serialized_magic) {
             magics_[element["magic_id"]] = element;
+        }
+
+        std::ifstream equipment_fin("equipment.json");
+        nlohmann::json serialized_equipment = nlohmann::json::parse(equipment_fin);
+        for (auto &element : serialized_equipment) {
+            equipments_[element["equipment_id"]] = element;
         }
 
     } catch (std::exception &e) {
@@ -36,3 +42,5 @@ staticdata::staticdata() {
 const character &staticdata::character(int id) { return characters_.at(id); }
 
 const magic &staticdata::magic(int id) { return magics_.at(id); }
+
+const equipment &staticdata::equipment(int id) { return equipments_.at(id); }

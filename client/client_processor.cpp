@@ -32,7 +32,7 @@ void client_processor::process(nibashared::message_login &req) {
 void nibaclient::client_processor::process(nibashared::message_fight &req) {
     nibashared::rng_client rng(std::move(req.generated));
     auto [self_fightable, enemy_fightable] =
-        nibashared::prep_fight(7, 8);
+        nibashared::prep_fight(5, 7);
     // session.charid, req.enemyid
     nibashared::fight fight(std::move(self_fightable), std::move(enemy_fightable));
     std::cout << fight.go(rng) << " wins" << std::endl;
