@@ -18,19 +18,6 @@ namespace nibaserver {
 
 class db_accessor {
 public:
-    struct user {
-        bool logged_in;
-        // int salt; // do it later
-        std::vector<char> salt;
-        std::vector<char> hashed_password;
-        // not the best database representation perhaps
-        std::optional<std::string> char_name;
-        user() {
-            salt.resize(32, 0);
-            hashed_password.resize(32, 0);
-        }
-    };
-
     static bool login(boost::asio::io_context &ioc, boost::asio::yield_context &yield,
         const std::string &id, const std::string &password);
 
