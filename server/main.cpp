@@ -32,6 +32,7 @@
 #include "cert_loader.hpp"
 #include "logger.h"
 #include "server_session.h"
+#include "db_accessor.h"
 
 using tcp = boost::asio::ip::tcp;              // from <boost/asio/ip/tcp.hpp>
 namespace ssl = boost::asio::ssl;              // from <boost/asio/ssl.hpp>
@@ -64,7 +65,26 @@ int main(int argc, char *argv[]) {
 
     // Spawn a listening port, note as per clang, &port is not required in capture list as its
     // a constexpr
-    boost::asio::spawn(ioc, [&ioc, &address, &ctx, &logger](boost::asio::yield_context yield) {
+
+    auto connection_info = ozo::make_connection_info("host=127.0.0.1 port=5432 dbname=niba");
+
+    ozo::connection_pool_config connection_pool_config;
+
+    // Maximum limit for number of stored connections
+    connection_pool_config.capacity = 5000;
+    // Maximum limit for number of waiting requests for connection
+    connection_pool_config.queue_capacity = 50000;
+    // Maximum time duration to store unused open connection
+    connection_pool_config.idle_timeout = std::chrono::seconds(60);
+
+    // Creating connection pool from connection_info as the underlying ConnectionSource
+    auto connection_pool = ozo::make_connection_pool(connection_info, connection_pool_config);
+    ozo::connection_pool_timeouts timeouts;
+    timeouts.connect = std::chrono::seconds(10);
+    timeouts.queue = std::chrono::seconds(10);
+    const auto connector = ozo::make_connector(connection_pool, ioc, timeouts);
+
+    boost::asio::spawn(ioc, [&ioc, &address, &ctx, &connector, &logger](boost::asio::yield_context yield) {
         boost::system::error_code ec;
 
         // Open the acceptor
@@ -88,8 +108,9 @@ int main(int argc, char *argv[]) {
             tcp::socket socket(ioc);
             acceptor.async_accept(socket, yield);
             BOOST_LOG_SEV(logger, sev::info) << "Got connection";
+            nibaserver::db_accessor db(connector);
             auto session = std::make_shared<server_session>(acceptor.get_executor().context(),
-                                                            std::move(socket), ctx);
+                                                            std::move(socket), ctx, db);
             session->go();
         }
     });

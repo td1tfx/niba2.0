@@ -13,15 +13,15 @@ namespace sev = boost::log::trivial;
 using namespace nibaserver;
 
 server_session::server_session(boost::asio::io_context &ioc, boost::asio::ip::tcp::socket &&socket,
-                               boost::asio::ssl::context &ctx) :
+                               boost::asio::ssl::context &ctx, nibaserver::db_accessor &db) :
     ioc_(ioc),
     socket_(std::move(socket)), ws_(socket_, ctx),
-    timer_(socket_.get_executor().context(), (std::chrono::steady_clock::time_point::max)()) {}
+    timer_(socket_.get_executor().context(), (std::chrono::steady_clock::time_point::max)()), db_(db) {}
 
 void server_session::go() {
     auto self(shared_from_this());
     boost::asio::spawn(ioc_, [this, self](boost::asio::yield_context yield) {
-        nibaserver::server_processor processor(ioc_, yield);
+        nibaserver::server_processor processor(yield, db_);
         try {
             // start pinging
             // auto ping
@@ -61,7 +61,7 @@ void server_session::go() {
         // unrecoverable error
         catch (std::exception &e) {
             if (processor.get_session().userid.has_value()) {
-                nibaserver::db_accessor::logout(ioc_, yield, processor.get_session().userid.value());
+                db_.logout(yield, processor.get_session().userid.value());
             }
             BOOST_LOG_SEV(logger_, sev::info) << "Session ended, reason: " << e.what();
         }

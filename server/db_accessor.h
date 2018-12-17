@@ -9,6 +9,7 @@
 #include <boost/asio/spawn.hpp>
 #include <ozo/request.h>
 #include <ozo/connection_info.h>
+#include <ozo/connection_pool.h>
 #include <ozo/shortcuts.h>
 #include <ozo/execute.h>
 #include <ozo/connection.h>
@@ -18,22 +19,25 @@ namespace nibaserver {
 
 class db_accessor {
 public:
-    static bool login(boost::asio::io_context &ioc, boost::asio::yield_context &yield,
+    db_accessor(const ozo::connector<ozo::connection_pool<ozo::connection_info<>>, ozo::connection_pool_timeouts> &conn);
+    ~db_accessor() = default;
+    bool login(boost::asio::yield_context yield,
         const std::string &id, const std::string &password);
 
-    static bool logout(boost::asio::io_context &ioc, boost::asio::yield_context &yield, const std::string &id);
+    bool logout(boost::asio::yield_context yield, const std::string &id);
     
-    static bool create_user(boost::asio::io_context &ioc, boost::asio::yield_context &yield,
+    bool create_user(boost::asio::yield_context yield,
         const std::string &id, const std::string &password);
 
     // NOTE no save char functions yet
-    static std::optional<nibashared::character> get_char(const std::string &id);
-    static bool create_char(const std::string &id, nibashared::character&& character);
+    std::optional<nibashared::character> get_char(const std::string &id);
+    bool create_char(const std::string &id, nibashared::character&& character);
 
 private:
     // TODO: add mutex, but whatever, probably have a db running before that
-    static logger logger_;
-    static std::unordered_map<std::string, nibashared::character> char_tbl_;
+    logger logger_;
+    std::unordered_map<std::string, nibashared::character> char_tbl_;
+    const ozo::connector<ozo::connection_pool<ozo::connection_info<>>, ozo::connection_pool_timeouts> &conn_;
 };
 
 } // namespace nibaserver

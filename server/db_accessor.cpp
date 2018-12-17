@@ -7,17 +7,19 @@ using namespace nibaserver;
 using namespace ozo::literals;
 namespace sev = boost::log::trivial;
 
-std::unordered_map<std::string, nibashared::character> db_accessor::char_tbl_;
-
 constexpr std::size_t HASH_SIZE = 32;
 static auto conn_info = ozo::make_connection_info("host=127.0.0.1 port=5432 dbname=niba");
-nibaserver::logger db_accessor::logger_ = logger();
 
-bool nibaserver::db_accessor::login(boost::asio::io_context &ioc, boost::asio::yield_context &yield,
+db_accessor::db_accessor(const ozo::connector<ozo::connection_pool<ozo::connection_info<>>, ozo::connection_pool_timeouts> &conn)
+    : conn_(conn) {
+    logger_ = logger();
+}
+
+bool db_accessor::login(boost::asio::yield_context yield,
     const std::string &id, const std::string &password) {
     ozo::error_code ec{};
     ozo::rows_of<ozo::pg::name, std::vector<char>, std::vector<char>, bool> user_credential;
-    auto conn = ozo::request(ozo::make_connector(conn_info, ioc),
+    auto conn = ozo::request(conn_,
                              "SELECT username, hashed_password, salt, logged_in FROM user_id WHERE username="_SQL + id,
                              ozo::into(user_credential), yield[ec]);
     if (ec) {
@@ -55,7 +57,7 @@ bool nibaserver::db_accessor::login(boost::asio::io_context &ioc, boost::asio::y
         if (logged_in)
             return false;
 
-        ozo::execute(conn, "UPDATE user_id SET logged_in = true WHERE username="_SQL + id , yield[ec]);
+        ozo::execute(conn_, "UPDATE user_id SET logged_in = true WHERE username="_SQL + id , yield[ec]);
         if (ec) {
             BOOST_LOG_SEV(db_accessor::logger_, sev::error) << ec.message() << " | " << ozo::error_message(conn)
                 << " | " << ozo::get_error_context(conn);
@@ -66,9 +68,9 @@ bool nibaserver::db_accessor::login(boost::asio::io_context &ioc, boost::asio::y
     return false;
 }
 
-bool nibaserver::db_accessor::logout(boost::asio::io_context &ioc, boost::asio::yield_context &yield, const std::string &id) {
+bool db_accessor::logout(boost::asio::yield_context yield, const std::string &id) {
     ozo::error_code ec{};
-    auto conn = ozo::execute(ozo::make_connector(conn_info, ioc),
+    auto conn = ozo::execute(conn_,
         "UPDATE user_id SET logged_in = false WHERE username="_SQL + id , yield[ec]);
     if (ec) {
         BOOST_LOG_SEV(db_accessor::logger_, sev::error) << ec.message() << " | " << ozo::error_message(conn)
@@ -78,7 +80,7 @@ bool nibaserver::db_accessor::logout(boost::asio::io_context &ioc, boost::asio::
     return true;
 }
 
-bool nibaserver::db_accessor::create_user(boost::asio::io_context &ioc, boost::asio::yield_context &yield, 
+bool db_accessor::create_user(boost::asio::yield_context yield,
     const std::string &id, const std::string &password) {
     std::vector<char> salt(32, 0);
     std::vector<char> hashed_password(32, 0);
@@ -102,7 +104,7 @@ bool nibaserver::db_accessor::create_user(boost::asio::io_context &ioc, boost::a
         return false;
 
     ozo::error_code ec{};
-    auto conn = ozo::execute(ozo::make_connector(conn_info, ioc),
+    auto conn = ozo::execute(conn_,
         "INSERT INTO user_id (username, hashed_password, salt) VALUES ("_SQL
             + id + ","_SQL + hashed_password + ","_SQL + salt + ")"_SQL, yield[ec]);
     if (ec) {
@@ -121,7 +123,7 @@ std::optional<nibashared::character> nibaserver::db_accessor::get_char(const std
     return iter->second;
 }
 
-bool nibaserver::db_accessor::create_char(const std::string & id, nibashared::character && character)
+bool db_accessor::create_char(const std::string & id, nibashared::character && character)
 {
     // this is bad if we have a mutex
     auto c = get_char(id);
