@@ -26,7 +26,7 @@ public:
             m.merge_response(merge_j);
             process(m);
         } catch (std::exception &e) {
-            std::cout << e.what() << std::endl;
+            std::cout << "Client server communication failed: " << e.what() << std::endl;
         }
     }
 

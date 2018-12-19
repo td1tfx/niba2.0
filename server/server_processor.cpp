@@ -50,7 +50,7 @@ void nibaserver::server_processor::process(nibashared::message_createchar &req) 
         return;
     }
     // players have an id of -1? or auto increment?
-    nibashared::character c{req.name, -1, req.attrs, {}, {}};
+    nibashared::character c{req.name, -1, req.attrs, {}, {}, {}};
     if (db_accessor::create_char(*(session_.userid), std::move(c))) {
         req.success = true;
         session_.state = nibashared::gamestate::ingame;

@@ -21,10 +21,13 @@ nibaclient::client_session::client_session(std::string const &host, std::string 
     ping_timer({});
 }
 
-nibaclient::client_session::~client_session() {
+nibaclient::client_session::~client_session() { close(); }
+
+void nibaclient::client_session::close() {
     if (ws_.is_open()) {
         ws_.close(websocket::close_code::normal);
     }
+    timer_.cancel();
 }
 
 void nibaclient::client_session::ping_timer(boost::system::error_code ec) {
