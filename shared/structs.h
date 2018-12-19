@@ -133,4 +133,4 @@ struct equipment {
 void to_json(nlohmann::json &j, const equipment &equipment);
 void from_json(const nlohmann::json &j, equipment &equipment);
 
-}; // namespace nibashared
+} // namespace nibashared
