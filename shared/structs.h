@@ -82,7 +82,6 @@ struct attributes {
 void to_json(nlohmann::json &j, const attributes &attr);
 void from_json(const nlohmann::json &j, attributes &attr);
 
-
 using magic_ids = std::vector<int>;
 using equipment_ids = std::vector<int>;
 // a character
@@ -119,7 +118,15 @@ struct magic {
 void to_json(nlohmann::json &j, const magic &magic);
 void from_json(const nlohmann::json &j, magic &magic);
 
-const static magic DEFAULT_MAGIC{u8"default", 0, 1, 0, 100, 0, 0, property::gold, {}};
+const static magic DEFAULT_MAGIC{.name = u8"default",
+                                 .id = 0,
+                                 .active = 1,
+                                 .cd = 0,
+                                 .multiplier = 100,
+                                 .inner_damage = 0,
+                                 .mp_cost = 0,
+                                 .inner_property = property::gold,
+                                 .stats = {}};
 
 struct equipment {
     int equipment_id;

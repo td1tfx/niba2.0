@@ -54,8 +54,10 @@ public:
                 if (results[0] == "create") {
                     return create_and_go<nibashared::message_createchar>(
                         std::move(results[1]), std::stoi(results[2]),
-                        nibashared::attributes{std::stoi(results[3]), std::stoi(results[4]),
-                                               std::stoi(results[5]), std::stoi(results[6])});
+                        nibashared::attributes{.strength = std::stoi(results[3]),
+                                               .dexterity = std::stoi(results[4]),
+                                               .physique = std::stoi(results[5]),
+                                               .spirit = std::stoi(results[6])});
                 }
             }
         } catch (...) {

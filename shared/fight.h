@@ -230,7 +230,7 @@ private:
 };
 
 // will move this elsewhere
-battlestats stats_computer(attributes attr) {
+battlestats stats_computer(const attributes &attr) {
     battlestats stats{};
     stats.attack_min = attr.strength * 2;
     stats.attack_max = attr.strength * 2;
@@ -241,7 +241,7 @@ battlestats stats_computer(attributes attr) {
     stats.defence = attr.physique;
     stats.mp = 5 * attr.spirit;
     stats.inner_power = attr.spirit;
-    return stats;
+    return stats; // RVO
 }
 
 // this is temporary
@@ -255,29 +255,26 @@ fightable setup_fightable(int id) {
         auto magic = staticdata::get().magic(magic_id);
         CPRINT(raw_character.name << " has magic " << magic.name);
         fight_character.char_data.stats += magic.stats;
-        // I try to not have constructor in my structs, so here 0 is for cd=0
-        fight_character.magics.push_back({0, std::move(magic)});
+        // NOTE, aggregation initialization is copy... well fine
+        // also push_back is complaining designated initialization for reasons I don't understand
+        fight_character.magics.emplace_back(magic_ex{.cd = 0, .real_magic = magic});
     }
     for (auto equip_id : raw_character.equipments) {
         auto equipment = staticdata::get().equipment(equip_id);
         CPRINT(raw_character.name << " has item " << equipment.name);
         fight_character.char_data.stats += equipment.stats;
     }
-
-    return fight_character;
+    return fight_character; // RVO
 }
 
 // this is temporary
 std::pair<std::vector<fightable>, std::vector<fightable>> prep_fight(int id_me, int id_you) {
     CPRINT("prep " << id_me << " " << id_you);
-    // refactor this
-    auto self = staticdata::get().character(id_me);
-    auto you = staticdata::get().character(id_you);
-
-    std::vector<fightable> self_fightable = {setup_fightable(id_me)};
-    std::vector<fightable> enemy_fightable = {setup_fightable(id_you)};
-
-    return {self_fightable, enemy_fightable};
+    // initializer list do not like moves
+    std::pair<std::vector<fightable>, std::vector<fightable>> ret;
+    ret.first.push_back(setup_fightable(id_me));
+    ret.second.push_back(setup_fightable(id_you));
+    return ret; // RVO
 }
 
 } // namespace nibashared
