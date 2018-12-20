@@ -28,7 +28,7 @@ add_executable(niba-client ${CLIENT_SRC_LIST} ${SHARED_SRC_LIST})
 
 target_compile_definitions(niba-client PUBLIC NIBACLIENT)
 
-target_link_libraries(niba-server
+set(LINK_LIBS 
     ${OPENSSL_CRYPTO_LIBRARY}
     ${OPENSSL_SSL_LIBRARY}
     Boost::system
@@ -37,19 +37,11 @@ target_link_libraries(niba-server
     Boost::log
     Boost::regex
     Threads::Threads
-    nlohmann_json::nlohmann_json)
+    nlohmann_json::nlohmann_json  
+)
 
-target_link_libraries(niba-client
-    ${OPENSSL_CRYPTO_LIBRARY}
-    ${OPENSSL_SSL_LIBRARY}
-    Boost::system
-    Boost::context
-    Boost::coroutine
-    Boost::log
-    Boost::regex
-    Threads::Threads 
-    nlohmann_json::nlohmann_json)
+target_link_libraries(niba-server ${LINK_LIBS})
+target_link_libraries(niba-client ${LINK_LIBS})
 
-configure_file(staticdata/character.json character.json COPYONLY)
-configure_file(staticdata/magic.json magic.json COPYONLY)
-configure_file(staticdata/equipment.json equipment.json COPYONLY)
+file(GLOB STATIC_DATA "staticdata/*.json")
+file(COPY ${STATIC_DATA} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
