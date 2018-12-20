@@ -65,7 +65,7 @@ int main(int argc, char **argv) {
                 break;
             }
         }
-        ioc.post([&client_session, line]() { client_session.handle_cmd("exit"); });
+        ioc.post([&client_session]() { client_session.handle_cmd("exit"); });
     })
         .detach();
 
