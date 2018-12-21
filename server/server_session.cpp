@@ -92,6 +92,7 @@ void server_session::go() {
             // wait on the timer
             boost::system::error_code ec;
             timer_.async_wait(yield[ec]);
+            // we need this != check, need to experiment more
             if (ec && ec != boost::asio::error::operation_aborted)
                 break;
         }
