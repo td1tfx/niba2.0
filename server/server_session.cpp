@@ -18,15 +18,17 @@ server_session::server_session(boost::asio::io_context &ioc, boost::asio::ip::tc
     strand_(ioc_), socket_(std::move(socket)), ws_(socket_, ctx),
     timer_(socket_.get_executor().context(), (std::chrono::steady_clock::time_point::max)()) {}
 
+server_session::~server_session() { BOOST_LOG_SEV(logger_, sev::info) << "Session destructed"; }
+
 void server_session::go() {
     // 2 coroutines - use same strand
     auto self1(shared_from_this());
     boost::asio::spawn(strand_, [this, self1](boost::asio::yield_context yield) {
         nibaserver::server_processor processor;
         try {
-
-            ws_.control_callback([this, self1](boost::beast::websocket::frame_type kind,
-                                               boost::beast::string_view payload) {
+            // control callback is not a completion handler!
+            ws_.control_callback([this](boost::beast::websocket::frame_type kind,
+                                        boost::beast::string_view payload) {
                 // control frames here are pongs
                 boost::ignore_unused(kind, payload);
                 ping_state_ = pingstate::responsive; // responsive
@@ -60,14 +62,17 @@ void server_session::go() {
             if (processor.get_session().userid.has_value()) {
                 nibaserver::db_accessor::logout(processor.get_session().userid.value());
             }
+            close_down_ = true;
             timer_.cancel();
-            BOOST_LOG_SEV(logger_, sev::info) << "Session ended, reason: " << e.what();
+            BOOST_LOG_SEV(logger_, sev::info) << "Session ending, reason: " << e.what();
         }
     });
 
     auto self2(shared_from_this());
     boost::asio::spawn(strand_, [this, self2](boost::asio::yield_context yield) {
         for (;;) {
+            if (close_down_)
+                break;
             // check it has expired
             if (timer_.expiry() <= std::chrono::steady_clock::now()) {
                 if (ws_.is_open() && ping_state_ == pingstate::responsive) {
@@ -81,14 +86,16 @@ void server_session::go() {
                     // ping state is onhold - no activity in last 15 seconds
                     BOOST_LOG_SEV(logger_, sev::info) << "Connection closing due to ping timeout";
                     ws_.next_layer().next_layer().cancel();
-                    return;
+                    break;
                 }
             }
             // wait on the timer
             boost::system::error_code ec;
             timer_.async_wait(yield[ec]);
             if (ec && ec != boost::asio::error::operation_aborted)
-                return;
+                break;
         }
+        timer_.cancel();
+        BOOST_LOG_SEV(logger_, sev::info) << "ping coroutine exiting";
     });
 }
