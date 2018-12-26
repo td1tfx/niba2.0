@@ -17,7 +17,7 @@ namespace nibaserver {
 class server_session : public std::enable_shared_from_this<server_session> {
 public:
     server_session(boost::asio::io_context &ioc, boost::asio::ip::tcp::socket &&socket,
-                   boost::asio::ssl::context &ctx, nibaserver::db_accessor &db);
+                   boost::asio::ssl::context &ctx, nibaserver::db_accessor &&db);
     ~server_session() = default;
     void go();
 

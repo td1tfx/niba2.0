@@ -13,7 +13,9 @@
 #include <ozo/shortcuts.h>
 #include <ozo/execute.h>
 #include <ozo/connection.h>
-// just a in-memory map for now
+//#include <ozo/type_traits.h>
+
+//OZO_PG_DEFINE_TYPE_AND_ARRAY(std::vector<char>, "bytea", BYTEAOID, 1001, ozo::dynamic_size)
 
 namespace nibaserver {
 
@@ -21,12 +23,12 @@ class db_accessor {
 public:
     db_accessor(const ozo::connector<ozo::connection_pool<ozo::connection_info<>>, ozo::connection_pool_timeouts> &conn);
     ~db_accessor() = default;
-    bool login(boost::asio::yield_context yield,
+    bool login(boost::asio::yield_context &yield,
         const std::string &id, const std::string &password);
 
-    bool logout(boost::asio::yield_context yield, const std::string &id);
+    bool logout(boost::asio::yield_context &yield, const std::string &id);
     
-    bool create_user(boost::asio::yield_context yield,
+    bool create_user(boost::asio::yield_context &yield,
         const std::string &id, const std::string &password);
 
     // NOTE no save char functions yet

@@ -110,7 +110,7 @@ int main(int argc, char *argv[]) {
             BOOST_LOG_SEV(logger, sev::info) << "Got connection";
             nibaserver::db_accessor db(connector);
             auto session = std::make_shared<server_session>(acceptor.get_executor().context(),
-                                                            std::move(socket), ctx, db);
+                                                            std::move(socket), ctx, std::move(db));
             session->go();
         }
     });

@@ -8,7 +8,7 @@
 namespace nibaserver {
 class server_processor {
 public:
-    server_processor(boost::asio::yield_context yield, nibaserver::db_accessor &db);
+    server_processor(boost::asio::yield_context &yield, nibaserver::db_accessor &db);
     ~server_processor() = default;
     void process(nibashared::message_register &req);
     void process(nibashared::message_login &req);
@@ -19,7 +19,7 @@ public:
 private:
     logger logger_;
     nibashared::sessionstate session_;
-    boost::asio::yield_context yield_;
+    boost::asio::yield_context &yield_;
     nibaserver::db_accessor &db_;
 };
 } // namespace nibaserver

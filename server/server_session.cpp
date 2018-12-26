@@ -13,7 +13,7 @@ namespace sev = boost::log::trivial;
 using namespace nibaserver;
 
 server_session::server_session(boost::asio::io_context &ioc, boost::asio::ip::tcp::socket &&socket,
-                               boost::asio::ssl::context &ctx, nibaserver::db_accessor &db) :
+                               boost::asio::ssl::context &ctx, nibaserver::db_accessor &&db) :
     ioc_(ioc),
     socket_(std::move(socket)), ws_(socket_, ctx),
     timer_(socket_.get_executor().context(), (std::chrono::steady_clock::time_point::max)()), db_(db) {}
