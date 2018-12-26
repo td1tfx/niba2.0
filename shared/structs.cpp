@@ -76,14 +76,18 @@ void nibashared::to_json(nlohmann::json &j, const character &character) {
     j = nlohmann::json{{"name", character.name},
                        {"character_id", character.character_id},
                        {"active_magic", character.active_magic},
-                       {"attrs", character.attrs}};
+                       {"equipments", character.equipments},
+                       {"attrs", character.attrs},
+                       {"stats", character.stats}};
 }
 
 void nibashared::from_json(const nlohmann::json &j, character &character) {
     j.at("name").get_to(character.name);
     j.at("character_id").get_to(character.character_id);
     j.at("active_magic").get_to(character.active_magic);
+    j.at("equipments").get_to(character.equipments);
     j.at("attrs").get_to(character.attrs);
+    j.at("stats").get_to(character.stats);
 }
 
 void nibashared::to_json(nlohmann::json &j, const magic &magic) {
@@ -94,7 +98,8 @@ void nibashared::to_json(nlohmann::json &j, const magic &magic) {
                        {"inner_damage", magic.inner_damage},
                        {"multiplier", magic.multiplier},
                        {"stats", magic.stats},
-                       {"mp_cost", magic.mp_cost}};
+                       {"mp_cost", magic.mp_cost},
+                       {"inner_property", magic.inner_property}};
 }
 
 void nibashared::from_json(const nlohmann::json &j, magic &magic) {
@@ -106,4 +111,27 @@ void nibashared::from_json(const nlohmann::json &j, magic &magic) {
     j.at("inner_damage").get_to(magic.inner_damage);
     j.at("stats").get_to(magic.stats);
     j.at("mp_cost").get_to(magic.mp_cost);
+    j.at("inner_property").get_to(magic.inner_property);
+}
+
+void nibashared::to_json(nlohmann::json &j, const equipment &equipment) {
+    j = nlohmann::json{
+        {"equipment_id", equipment.equipment_id},
+        {"name", equipment.name},
+        {"description", equipment.description},
+        {"type", equipment.type},
+        {"stats", equipment.stats},
+        {"item_level", equipment.item_level},
+        {"required_level", equipment.required_level},
+    };
+}
+
+void nibashared::from_json(const nlohmann::json &j, equipment &equipment) {
+    j.at("equipment_id").get_to(equipment.equipment_id);
+    j.at("name").get_to(equipment.name);
+    j.at("description").get_to(equipment.description);
+    j.at("type").get_to(equipment.type);
+    j.at("stats").get_to(equipment.stats);
+    j.at("item_level").get_to(equipment.item_level);
+    j.at("required_level").get_to(equipment.required_level);
 }

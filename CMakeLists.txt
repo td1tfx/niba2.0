@@ -4,13 +4,11 @@ cmake_minimum_required(VERSION 3.11)
 
 set(CMAKE_VERBOSE_MAKEFILE on)
 set(CMAKE_CXX_COMPILER $ENV{CXX})
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_FLAGS "-Wall -Wextra")
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -Werror -pedantic-errors -Wunreachable-code -Wuninitialized")
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 set(Boost_USE_STATIC_LIBS ON)
-# TODO flag this
-set(CMAKE_BUILD_TYPE Debug)
 
 add_compile_definitions(BOOST_COROUTINES_NO_DEPRECATION_WARNING)
 add_compile_definitions(BOOST_HANA_CONFIG_ENABLE_STRING_UDL)
@@ -38,7 +36,7 @@ target_include_directories(niba-server PRIVATE
 
 target_compile_definitions(niba-client PUBLIC NIBACLIENT)
 
-target_link_libraries(niba-server
+set(LINK_LIBS 
     ${OPENSSL_CRYPTO_LIBRARY}
     ${OPENSSL_SSL_LIBRARY}
     Boost::system
@@ -47,19 +45,10 @@ target_link_libraries(niba-server
     Boost::log
     Boost::regex
     Threads::Threads
-    ${PostgreSQL_LIBRARIES}
     nlohmann_json::nlohmann_json)
 
-target_link_libraries(niba-client
-    ${OPENSSL_CRYPTO_LIBRARY}
-    ${OPENSSL_SSL_LIBRARY}
-    Boost::system
-    Boost::context
-    Boost::coroutine
-    Boost::log
-    Boost::regex
-    Threads::Threads 
-    nlohmann_json::nlohmann_json)
+target_link_libraries(niba-server ${LINK_LIBS} ${PostgreSQL_LIBRARIES})
+target_link_libraries(niba-client ${LINK_LIBS})
 
-configure_file(staticdata/character.json character.json COPYONLY)
-configure_file(staticdata/magic.json magic.json COPYONLY)
+file(GLOB STATIC_DATA "staticdata/*.json")
+file(COPY ${STATIC_DATA} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

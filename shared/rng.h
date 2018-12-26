@@ -27,7 +27,7 @@ private:
 //
 class rng_client {
 public:
-    rng_client(std::vector<int> &&precomputed) : precomputed_(precomputed){};
+    rng_client(std::vector<int> &&precomputed) : precomputed_(std::move(precomputed)){};
     int operator()(int lower, int upper) {
         (void)lower;
         (void)upper;

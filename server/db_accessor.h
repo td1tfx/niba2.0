@@ -14,7 +14,6 @@
 #include <ozo/execute.h>
 #include <ozo/connection.h>
 
-
 namespace nibaserver {
 
 class db_accessor {

@@ -35,11 +35,11 @@ void nibaserver::server_processor::process(nibashared::message_login &req) {
     }
     // TODO change this later
     session_.charid = 0;
-    BOOST_LOG_SEV(logger_, sev::info) << "User " << req.id << " logged in.";
+    BOOST_LOG_SEV(logger_, sev::info) << "User " << req.id << " logging in is " << req.success;
 }
 
 void nibaserver::server_processor::process(nibashared::message_fight &req) {
-    auto [self_fightable, enemy_fightable] = nibashared::prep_fight(1, 3);
+    auto [self_fightable, enemy_fightable] = nibashared::prep_fight(5, 7);
     // session_.charid, req.enemyid
     nibashared::fight fight(std::move(self_fightable), std::move(enemy_fightable));
     nibashared::rng_server rng;
@@ -53,7 +53,7 @@ void nibaserver::server_processor::process(nibashared::message_createchar &req) 
         return;
     }
     // players have an id of -1? or auto increment?
-    nibashared::character c{req.name, -1, req.attrs, {}};
+    nibashared::character c{req.name, -1, req.attrs, {}, {}, {}};
     if (db_.create_char(*(session_.userid), std::move(c))) {
         req.success = true;
         session_.state = nibashared::gamestate::ingame;
