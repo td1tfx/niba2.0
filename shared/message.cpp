@@ -4,7 +4,7 @@ using nlohmann::json;
 using namespace nibashared;
 
 message_register::message_register(std::string &&id, std::string &&password) :
-    id(id), password(password) {}
+    id(std::move(id)), password(std::move(password)) {}
 
 bool message_register::validate(const nibashared::sessionstate &session) {
     // TODO: throw error with error code?
@@ -31,7 +31,7 @@ void message_register::from_request(const json &j) {
 }
 
 message_login::message_login(std::string &&id, std::string &&password) :
-    id(id), password(password) {}
+    id(std::move(id)), password(std::move(password)) {}
 
 bool message_login::validate(const nibashared::sessionstate &session) {
     if (session.state != nibashared::gamestate::prelogin)
@@ -89,8 +89,8 @@ void nibashared::message_fight::from_request(const nlohmann::json &j) {
 
 nibashared::message_createchar::message_createchar(std::string &&name, int gender,
                                                    attributes &&attrs) :
-    name(name),
-    gender{gender}, attrs{attrs} {}
+    name(std::move(name)),
+    gender{gender}, attrs{std::move(attrs)} {}
 
 bool nibashared::message_createchar::validate(const nibashared::sessionstate &session) {
     if (session.state != nibashared::gamestate::createchar)

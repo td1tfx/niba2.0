@@ -4,6 +4,18 @@
 
 namespace nibashared {
 
+enum class property { gold = 0, wood = 1, water = 2, fire = 3, earth = 4 };
+enum class equipmenttype {
+    head = 0,
+    armor = 1,
+    boots = 2,
+    gloves = 3,
+    belt = 4,
+    amulet = 5,
+    ring = 6,
+    weapon = 7
+};
+
 struct battlestats {
     int hp{0};
     int mp{0};
@@ -61,17 +73,17 @@ struct battlestats {
 void to_json(nlohmann::json &j, const battlestats &stats);
 void from_json(const nlohmann::json &j, battlestats &stats);
 
-using character_magic_ids = std::vector<int>;
-
 struct attributes {
-    int strength;
-    int dexterity;
-    int physique;
-    int spirit;
+    int strength{0};
+    int dexterity{0};
+    int physique{0};
+    int spirit{0};
 };
 void to_json(nlohmann::json &j, const attributes &attr);
 void from_json(const nlohmann::json &j, attributes &attr);
 
+using magic_ids = std::vector<int>;
+using equipment_ids = std::vector<int>;
 // a character
 struct character {
     std::string name;
@@ -79,17 +91,13 @@ struct character {
 
     // attributes
     attributes attrs;
-
-    // officially removed battlestats from character
-    // fightable is where battlestats matters
+    // also allow stats
+    battlestats stats;
 
     // since we will be passing this around
     // it's probably a better idea to use ids
-    character_magic_ids active_magic;
-
-    // add something like from_db_json, or compose something
-    // to make it work better
-    // TODO equipments
+    equipment_ids equipments;
+    magic_ids active_magic;
 };
 void to_json(nlohmann::json &j, const character &character);
 void from_json(const nlohmann::json &j, character &character);
@@ -103,12 +111,33 @@ struct magic {
     int multiplier;   // in percentage
     int inner_damage; // certain value
     int mp_cost;
+    property inner_property;
 
     battlestats stats{};
 };
 void to_json(nlohmann::json &j, const magic &magic);
 void from_json(const nlohmann::json &j, magic &magic);
 
-const static magic DEFAULT_MAGIC{u8"default", 0, 1, 0, 100, 0, {}};
+const static magic DEFAULT_MAGIC{.name = u8"default",
+                                 .id = 0,
+                                 .active = 1,
+                                 .cd = 0,
+                                 .multiplier = 100,
+                                 .inner_damage = 0,
+                                 .mp_cost = 0,
+                                 .inner_property = property::gold,
+                                 .stats = {}};
 
-}; // namespace nibashared
+struct equipment {
+    int equipment_id;
+    std::string name;
+    std::string description;
+    equipmenttype type;
+    battlestats stats{};
+    int item_level;
+    int required_level;
+};
+void to_json(nlohmann::json &j, const equipment &equipment);
+void from_json(const nlohmann::json &j, equipment &equipment);
+
+} // namespace nibashared
