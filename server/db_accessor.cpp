@@ -4,24 +4,44 @@
 #include <openssl/sha.h>
 
 using namespace nibaserver;
-
-std::unordered_map<std::string, db_accessor::user> db_accessor::db_;
-std::unordered_map<std::string, nibashared::character> db_accessor::char_tbl_;
+using namespace ozo::literals;
+namespace sev = boost::log::trivial;
 
 constexpr std::size_t HASH_SIZE = 32;
+logger loggger_ = logger();
+db_accessor::db_accessor(const ozo::connector<ozo::connection_pool<ozo::connection_info<>>, ozo::connection_pool_timeouts> &conn)
+    : conn_(conn) {
+    logger_ = logger();
+}
 
-bool nibaserver::db_accessor::login(const std::string &id, const std::string &password) {
-    auto iter = db_.find(id);
-    if (iter == db_.end())
+bool db_accessor::login(boost::asio::yield_context &yield,
+    const std::string &id, const std::string &password) {
+    ozo::error_code ec{};
+    ozo::rows_of<ozo::pg::name, ozo::pg::bytea, ozo::pg::bytea, bool> user_credential;
+    auto conn = ozo::request(conn_,
+                             "SELECT username, hashed_password, salt, logged_in FROM user_id WHERE username="_SQL + id,
+                             ozo::into(user_credential), yield[ec]);
+    if (ec) {
+        BOOST_LOG_SEV(db_accessor::logger_, sev::error) << ec.message() << " | " << ozo::error_message(conn)
+            << " | " << ozo::get_error_context(conn);
         return false;
+    }
+
+    if (user_credential.size() == 0) {
+        // this username does not exist in the database
+        return false;
+    }
+
+    auto &[username, hashed_password, salt, logged_in] = user_credential.at(0);
+
 
     unsigned char buffer[HASH_SIZE] = {0};
     memcpy(buffer, password.data(), (std::min)(HASH_SIZE, password.size()));
     for (std::size_t i = 0; i < HASH_SIZE; i++) {
-        buffer[i] ^= iter->second.salt[i];
+        buffer[i] ^= salt.get()[i];
     }
 
-    unsigned char digest[HASH_SIZE] = {0};
+    std::vector<char> digest(HASH_SIZE, 0);
     SHA256_CTX context;
     if (!SHA256_Init(&context))
         return false;
@@ -29,40 +49,51 @@ bool nibaserver::db_accessor::login(const std::string &id, const std::string &pa
     if (!SHA256_Update(&context, (unsigned char *)buffer, HASH_SIZE))
         return false;
 
-    if (!SHA256_Final(digest, &context))
+    if (!SHA256_Final((unsigned char *)&digest[0], &context))
         return false;
 
-    if (memcmp(digest, iter->second.hashed_password, HASH_SIZE) == 0) {
-        if (iter->second.logged_in)
+    if (memcmp((unsigned char *)&digest[0], (unsigned char *)&hashed_password.get()[0], HASH_SIZE) == 0) {
+        if (logged_in)
             return false;
-        iter->second.logged_in = true;
+
+        ozo::execute(conn_, "UPDATE user_id SET logged_in = true WHERE username="_SQL + id , yield[ec]);
+        if (ec) {
+            BOOST_LOG_SEV(db_accessor::logger_, sev::error) << ec.message() << " | " << ozo::error_message(conn)
+                << " | " << ozo::get_error_context(conn);
+            return false;
+        }
         return true;
     }
-
     return false;
 }
 
-bool nibaserver::db_accessor::logout(const std::string &id) {
-    auto iter = db_.find(id);
-    if (iter == db_.end())
+bool db_accessor::logout(boost::asio::yield_context &yield, const std::string &id) {
+    ozo::error_code ec{};
+    auto conn = ozo::execute(conn_,
+        "UPDATE user_id SET logged_in = false WHERE username="_SQL + id , yield[ec]);
+    if (ec) {
+        BOOST_LOG_SEV(db_accessor::logger_, sev::error) << ec.message() << " | " << ozo::error_message(conn)
+            << " | " << ozo::get_error_context(conn);
         return false;
-    iter->second.logged_in = false;
+    }
     return true;
 }
 
-bool nibaserver::db_accessor::create_user(const std::string &id, const std::string &password) {
-    auto iter = db_.find(id);
-    if (iter != db_.end())
-        return false;
-
-    db_accessor::user u;
-    if (RAND_bytes(u.salt, HASH_SIZE) != 1)
+bool db_accessor::create_user(boost::asio::yield_context &yield,
+    const std::string &id, const std::string &password) {
+    std::vector<char> salt(32, 0);
+    std::vector<char> hashed_password(32, 0);
+    //ozo::pg::bytea salt;
+    //ozo::pg::bytea hashed_password;
+    //salt.get().resize(32,0);
+    //hashed_password.get().resize(32,0);
+    if (RAND_bytes((unsigned char *)&salt[0], HASH_SIZE) != 1)
         return false;
 
     unsigned char buffer[HASH_SIZE] = {0};
     memcpy(buffer, password.data(), (std::min)(HASH_SIZE, password.size()));
     for (std::size_t i = 0; i < HASH_SIZE; i++) {
-        buffer[i] ^= u.salt[i];
+        buffer[i] ^= salt[i];
     }
 
     SHA256_CTX context;
@@ -72,12 +103,18 @@ bool nibaserver::db_accessor::create_user(const std::string &id, const std::stri
     if (!SHA256_Update(&context, (unsigned char *)buffer, HASH_SIZE))
         return false;
 
-    if (!SHA256_Final(u.hashed_password, &context))
+    if (!SHA256_Final((unsigned char *)&hashed_password[0], &context))
         return false;
 
-    u.logged_in = false;
-
-    db_[id] = u;
+    ozo::error_code ec{};
+    auto conn = ozo::execute(conn_,
+        "INSERT INTO user_id (username, hashed_password, salt) VALUES ("_SQL
+            + id + ","_SQL + hashed_password + ","_SQL + salt + ")"_SQL, yield[ec]);
+    if (ec) {
+        BOOST_LOG_SEV(loggger_, sev::error) << ec.message() << " | " << ozo::error_message(conn)
+            << " | " << ozo::get_error_context(conn);
+        return false;
+    }
 
     return true;
 }
@@ -89,7 +126,7 @@ std::optional<nibashared::character> nibaserver::db_accessor::get_char(const std
     return iter->second;
 }
 
-bool nibaserver::db_accessor::create_char(const std::string & id, nibashared::character && character)
+bool db_accessor::create_char(const std::string & id, nibashared::character && character)
 {
     // this is bad if we have a mutex
     auto c = get_char(id);

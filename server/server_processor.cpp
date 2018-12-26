@@ -9,10 +9,13 @@
 using namespace nibaserver;
 namespace sev = boost::log::trivial;
 
-server_processor::server_processor() { session_.state = nibashared::gamestate::prelogin; }
+server_processor::server_processor( boost::asio::yield_context &yield, nibaserver::db_accessor &db)
+    : yield_(yield), db_(db) {
+    session_.state = nibashared::gamestate::prelogin;
+}
 
 void nibaserver::server_processor::process(nibashared::message_register &req) {
-    if (db_accessor::create_user(req.id, req.password)) {
+    if (db_.create_user(yield_, req.id, req.password)) {
         req.success = true;
         BOOST_LOG_SEV(logger_, sev::info) << "User " << req.id << " has registered.";
     } else {
@@ -22,7 +25,7 @@ void nibaserver::server_processor::process(nibashared::message_register &req) {
 }
 
 void nibaserver::server_processor::process(nibashared::message_login &req) {
-    if (db_accessor::login(req.id, req.password)) {
+    if (db_.login(yield_, req.id, req.password)) {
         req.success = true;
         session_.state = nibashared::gamestate::createchar;
         session_.userid = req.id;
@@ -51,7 +54,7 @@ void nibaserver::server_processor::process(nibashared::message_createchar &req) 
     }
     // players have an id of -1? or auto increment?
     nibashared::character c{req.name, -1, req.attrs, {}, {}, {}};
-    if (db_accessor::create_char(*(session_.userid), std::move(c))) {
+    if (db_.create_char(*(session_.userid), std::move(c))) {
         req.success = true;
         session_.state = nibashared::gamestate::ingame;
         BOOST_LOG(logger_) << "User " << *(session_.userid) << " created an character " << req.name;
