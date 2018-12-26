@@ -13,10 +13,10 @@ namespace sev = boost::log::trivial;
 using namespace nibaserver;
 
 server_session::server_session(boost::asio::io_context &ioc, boost::asio::ip::tcp::socket &&socket,
-                               boost::asio::ssl::context &ctx) :
+                               boost::asio::ssl::context &ctx, nibaserver::db_accessor &&db) :
     ioc_(ioc),
     strand_(ioc_), socket_(std::move(socket)), ws_(socket_, ctx),
-    timer_(socket_.get_executor().context(), (std::chrono::steady_clock::time_point::max)()) {}
+    timer_(socket_.get_executor().context(), (std::chrono::steady_clock::time_point::max)()), db_(db) {}
 
 server_session::~server_session() { BOOST_LOG_SEV(logger_, sev::info) << "Session destructed"; }
 
@@ -24,7 +24,7 @@ void server_session::go() {
     // 2 coroutines - use same strand
     auto self1(shared_from_this());
     boost::asio::spawn(strand_, [this, self1](boost::asio::yield_context yield) {
-        nibaserver::server_processor processor;
+        nibaserver::server_processor processor(yield, db_);
         try {
             // control callback is not a completion handler!
             ws_.control_callback([this](boost::beast::websocket::frame_type kind,
@@ -60,7 +60,7 @@ void server_session::go() {
         // unrecoverable error
         catch (std::exception &e) {
             if (processor.get_session().userid.has_value()) {
-                nibaserver::db_accessor::logout(processor.get_session().userid.value());
+                db_.logout(yield, processor.get_session().userid.value());
             }
             close_down_ = true;
             timer_.cancel();

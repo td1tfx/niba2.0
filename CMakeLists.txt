@@ -11,6 +11,7 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 set(Boost_USE_STATIC_LIBS ON)
 
 add_compile_definitions(BOOST_COROUTINES_NO_DEPRECATION_WARNING)
+add_compile_definitions(BOOST_HANA_CONFIG_ENABLE_STRING_UDL)
 
 find_package(Boost 1.68.0 REQUIRED COMPONENTS system context coroutine log regex)
 find_package(nlohmann_json 3.3.0 REQUIRED)
@@ -37,7 +38,8 @@ set(LINK_LIBS
     Boost::log
     Boost::regex
     Threads::Threads
-    nlohmann_json::nlohmann_json  
+    pq
+    nlohmann_json::nlohmann_json 
 )
 
 target_link_libraries(niba-server ${LINK_LIBS})
