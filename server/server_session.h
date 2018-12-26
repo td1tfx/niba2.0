@@ -1,8 +1,8 @@
 #pragma once
 
+#include "db_accessor.h"
 #include "global_defs.h"
 #include "logger.h"
-#include "db_accessor.h"
 
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/spawn.hpp>
@@ -13,8 +13,6 @@
 #include <boost/beast/websocket/ssl.hpp>
 
 namespace nibaserver {
-
-
 
 class server_session : public std::enable_shared_from_this<server_session> {
 public:

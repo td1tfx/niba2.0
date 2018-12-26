@@ -33,7 +33,7 @@ public:
     bool create_char(const std::string &id, nibashared::character&& character);
 
 private:
-    // TODO: add mutex, but whatever, probably have a db running before that
+    // TODO: move char_tbl_ into db
     logger logger_;
     std::unordered_map<std::string, nibashared::character> char_tbl_;
     const ozo::connector<ozo::connection_pool<ozo::connection_info<>>, ozo::connection_pool_timeouts> &conn_;
