@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 jobs=$(nproc --all)
-type=Release
+# Release
+type=RelWithDebInfo
 
 while getopts ':j:d' option
 do
