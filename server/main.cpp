@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
     // Spawn a listening port, note as per clang, &port is not required in capture list as its
     // a constexpr
 
-    auto connection_info = ozo::make_connection_info("host=127.0.0.1 port=5432 dbname=niba");
+    auto connection_info = ozo::make_connection_info("host=127.0.0.1 port=5432 dbname=niba user=postgres");
 
     ozo::connection_pool_config connection_pool_config;
 

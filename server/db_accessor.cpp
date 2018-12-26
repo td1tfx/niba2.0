@@ -107,9 +107,11 @@ bool db_accessor::create_user(boost::asio::yield_context &yield,
         return false;
 
     ozo::error_code ec{};
+    ozo::pg::bytea salt_bytea(std::move(salt));
+    ozo::pg::bytea pswd_bytea(std::move(hashed_password));
     auto conn = ozo::execute(conn_,
         "INSERT INTO user_id (username, hashed_password, salt) VALUES ("_SQL
-            + id + ","_SQL + hashed_password + ","_SQL + salt + ")"_SQL, yield[ec]);
+            + id + ","_SQL + pswd_bytea + ","_SQL + salt_bytea + ")"_SQL, yield[ec]);
     if (ec) {
         BOOST_LOG_SEV(loggger_, sev::error) << ec.message() << " | " << ozo::error_message(conn)
             << " | " << ozo::get_error_context(conn);

@@ -19,6 +19,7 @@ find_package(Boost 1.68.0 REQUIRED COMPONENTS system context coroutine log regex
 find_package(nlohmann_json 3.3.0 REQUIRED)
 find_package(OpenSSL 1.1.0 REQUIRED)
 find_package(Threads REQUIRED)
+find_package(PostgreSQL 10 REQUIRED)
 
 file(GLOB SHARED_SRC_LIST shared/*.cpp)
 file(GLOB SERVER_SRC_LIST server/*.cpp)
@@ -28,6 +29,12 @@ include_directories(shared/)
 
 add_executable(niba-server ${SERVER_SRC_LIST} ${SHARED_SRC_LIST})
 add_executable(niba-client ${CLIENT_SRC_LIST} ${SHARED_SRC_LIST})
+
+target_include_directories(niba-server PRIVATE 
+    ${PostgreSQL_INCLUDE_DIRS}
+    ozo/include/ 
+    ozo/contrib/resource_pool/include
+)
 
 target_compile_definitions(niba-client PUBLIC NIBACLIENT)
 
@@ -40,7 +47,7 @@ target_link_libraries(niba-server
     Boost::log
     Boost::regex
     Threads::Threads
-    pq
+    ${PostgreSQL_LIBRARIES}
     nlohmann_json::nlohmann_json)
 
 target_link_libraries(niba-client
