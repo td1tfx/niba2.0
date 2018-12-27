@@ -16,7 +16,8 @@ server_session::server_session(boost::asio::io_context &ioc, boost::asio::ip::tc
                                boost::asio::ssl::context &ctx, nibaserver::db_accessor &&db) :
     ioc_(ioc),
     strand_(ioc_), socket_(std::move(socket)), ws_(socket_, ctx),
-    timer_(socket_.get_executor().context(), (std::chrono::steady_clock::time_point::max)()), db_(db) {}
+    timer_(socket_.get_executor().context(), (std::chrono::steady_clock::time_point::max)()),
+    db_(std::move(db)) {}
 
 server_session::~server_session() { BOOST_LOG_SEV(logger_, sev::info) << "Session destructed"; }
 
@@ -59,44 +60,50 @@ void server_session::go() {
         }
         // unrecoverable error
         catch (std::exception &e) {
+            // moving this logging line to the end will cause crashes
+            BOOST_LOG_SEV(logger_, sev::info) << "Session ending, reason: " << e.what();
             if (processor.get_session().userid.has_value()) {
                 db_.logout(yield, processor.get_session().userid.value());
             }
             close_down_ = true;
-            timer_.cancel();
-            BOOST_LOG_SEV(logger_, sev::info) << "Session ending, reason: " << e.what();
+            boost::system::error_code ec;
+            timer_.cancel(ec);
         }
     });
 
     auto self2(shared_from_this());
     boost::asio::spawn(strand_, [this, self2](boost::asio::yield_context yield) {
-        for (;;) {
-            if (close_down_)
-                break;
-            // check it has expired
-            if (timer_.expiry() <= std::chrono::steady_clock::now()) {
-                if (ws_.is_open() && ping_state_ == pingstate::responsive) {
-                    ping_state_ = pingstate::onhold;
-                    timer_.expires_after(std::chrono::seconds(TIMEOUT));
-                    // Now send the ping
-                    boost::system::error_code ec;
-                    ws_.async_ping({}, yield[ec]);
-                    // we don't care about ec here
-                } else if (ws_.is_open()) {
-                    // ping state is onhold - no activity in last 15 seconds
-                    BOOST_LOG_SEV(logger_, sev::info) << "Connection closing due to ping timeout";
-                    ws_.next_layer().next_layer().cancel();
+        boost::system::error_code ec;
+        try {
+            for (;;) {
+                if (close_down_)
                     break;
+                // check it has expired
+                if (timer_.expiry() <= std::chrono::steady_clock::now()) {
+                    if (ws_.is_open() && ping_state_ == pingstate::responsive) {
+                        ping_state_ = pingstate::onhold;
+                        timer_.expires_after(std::chrono::seconds(TIMEOUT));
+                        // Now send the ping
+                        ws_.async_ping({}, yield[ec]);
+                        // we don't care about ec here
+                    } else if (ws_.is_open()) {
+                        // ping state is onhold - no activity in last 15 seconds
+                        BOOST_LOG_SEV(logger_, sev::info)
+                            << "Connection closing due to ping timeout";
+                        ws_.next_layer().next_layer().cancel(ec);
+                        break;
+                    }
                 }
+                // wait on the timer
+                timer_.async_wait(yield[ec]);
+                // we need this != check, need to experiment more
+                if (ec && ec != boost::asio::error::operation_aborted)
+                    break;
             }
-            // wait on the timer
-            boost::system::error_code ec;
-            timer_.async_wait(yield[ec]);
-            // we need this != check, need to experiment more
-            if (ec && ec != boost::asio::error::operation_aborted)
-                break;
+            timer_.cancel(ec);
+            BOOST_LOG_SEV(logger_, sev::info) << "ping coroutine exiting";
+        } catch (std::exception &e) {
+            BOOST_LOG_SEV(logger_, sev::info) << "Ping timer exception, reason: " << e.what();
         }
-        timer_.cancel();
-        BOOST_LOG_SEV(logger_, sev::info) << "ping coroutine exiting";
     });
 }

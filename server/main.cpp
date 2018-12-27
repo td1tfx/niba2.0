@@ -30,9 +30,9 @@
 #include <vector>
 
 #include "cert_loader.hpp"
+#include "db_accessor.h"
 #include "logger.h"
 #include "server_session.h"
-#include "db_accessor.h"
 
 using tcp = boost::asio::ip::tcp;              // from <boost/asio/ip/tcp.hpp>
 namespace ssl = boost::asio::ssl;              // from <boost/asio/ssl.hpp>
@@ -66,14 +66,15 @@ int main(int argc, char *argv[]) {
     // Spawn a listening port, note as per clang, &port is not required in capture list as its
     // a constexpr
 
-    auto connection_info = ozo::make_connection_info("host=127.0.0.1 port=5432 dbname=niba");
+    auto connection_info =
+        ozo::make_connection_info("host=127.0.0.1 port=5432 dbname=niba user=postgres");
 
     ozo::connection_pool_config connection_pool_config;
 
     // Maximum limit for number of stored connections
-    connection_pool_config.capacity = 5000;
+    connection_pool_config.capacity = 100;
     // Maximum limit for number of waiting requests for connection
-    connection_pool_config.queue_capacity = 50000;
+    connection_pool_config.queue_capacity = 5000;
     // Maximum time duration to store unused open connection
     connection_pool_config.idle_timeout = std::chrono::seconds(60);
 
@@ -84,7 +85,8 @@ int main(int argc, char *argv[]) {
     timeouts.queue = std::chrono::seconds(10);
     const auto connector = ozo::make_connector(connection_pool, ioc, timeouts);
 
-    boost::asio::spawn(ioc, [&ioc, &address, &ctx, &connector, &logger](boost::asio::yield_context yield) {
+    boost::asio::spawn(ioc, [&ioc, &address, &ctx, &connector,
+                             &logger](boost::asio::yield_context yield) {
         boost::system::error_code ec;
 
         // Open the acceptor

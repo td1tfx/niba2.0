@@ -13,16 +13,13 @@
 #include <ozo/shortcuts.h>
 #include <ozo/execute.h>
 #include <ozo/connection.h>
-//#include <ozo/type_traits.h>
-
-//OZO_PG_DEFINE_TYPE_AND_ARRAY(std::vector<char>, "bytea", BYTEAOID, 1001, ozo::dynamic_size)
 
 namespace nibaserver {
 
 class db_accessor {
 public:
     db_accessor(const ozo::connector<ozo::connection_pool<ozo::connection_info<>>, ozo::connection_pool_timeouts> &conn);
-    ~db_accessor() = default;
+    // ~db_accessor() = default;
     bool login(boost::asio::yield_context &yield,
         const std::string &id, const std::string &password);
 
@@ -36,7 +33,7 @@ public:
     bool create_char(const std::string &id, nibashared::character&& character);
 
 private:
-    // TODO: add mutex, but whatever, probably have a db running before that
+    // TODO: move char_tbl_ into db
     logger logger_;
     std::unordered_map<std::string, nibashared::character> char_tbl_;
     const ozo::connector<ozo::connection_pool<ozo::connection_info<>>, ozo::connection_pool_timeouts> &conn_;

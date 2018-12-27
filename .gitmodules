@@ -1,0 +1,3 @@
+[submodule "ozo"]
+	path = ozo
+	url = https://github.com/yandex/ozo.git
