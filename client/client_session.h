@@ -27,14 +27,14 @@ public:
     ~client_session();
 
     void handle_cmd(const std::string &input) {
-        if (input == "exit") {
-            std::cout << "goodbye" << std::endl;
-            // this might not be the last command... but works for tests
-            close();
-            ioc_.stop();
-            return;
-        }
         try {
+            if (input == "exit") {
+                std::cout << "goodbye" << std::endl;
+                // this might not be the last command... but works for tests
+                close();
+                ioc_.stop();
+                return;
+            }
             std::vector<std::string> results;
             boost::split(results, input, boost::is_any_of("\t "));
             // password input handled by cmd_processor

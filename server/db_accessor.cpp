@@ -38,11 +38,6 @@ bool db_accessor::login(boost::asio::yield_context &yield, const std::string &id
     auto &[username, hashed_password, salt, logged_in] = user_credential.at(0);
     const auto &raw_hashed_password = hashed_password.get();
     const auto &raw_salt = salt.get();
-    // std::cout << "salt dump login" << std::endl;
-    // for (char c : raw_salt) {
-    //     std::cout << int(c) << ' ';
-    // }
-    // std::cout << std::endl;
 
     unsigned char buffer[HASH_SIZE] = {0};
     memcpy(buffer, password.data(), (std::min)(HASH_SIZE, password.size()));
@@ -100,11 +95,6 @@ bool db_accessor::create_user(boost::asio::yield_context &yield, const std::stri
     std::vector<char> hashed_password(HASH_SIZE, 0);
     if (RAND_bytes((unsigned char *)&salt[0], HASH_SIZE) != 1)
         return false;
-    // std::cout << "salt dump create" << std::endl;
-    // for (char c : salt) {
-    //     std::cout << int(c) << ' ';
-    // }
-    // std::cout << std::endl;
 
     unsigned char buffer[HASH_SIZE] = {0};
     memcpy(buffer, password.data(), (std::min)(HASH_SIZE, password.size()));
@@ -125,12 +115,6 @@ bool db_accessor::create_user(boost::asio::yield_context &yield, const std::stri
     ozo::error_code ec{};
     ozo::pg::bytea salt_bytea(std::move(salt));
     ozo::pg::bytea pswd_bytea(std::move(hashed_password));
-
-    // std::cout << "salt pre insertion" << std::endl;
-    // for (std::size_t i = 0; i < HASH_SIZE; i++) {
-    //     std::cout << int(salt_bytea.get().at(i)) << ' ';
-    // }
-    // std::cout << std::endl;
 
     auto conn = ozo::execute(conn_,
                              "INSERT INTO user_id (username, hashed_password, salt) VALUES ("_SQL +
