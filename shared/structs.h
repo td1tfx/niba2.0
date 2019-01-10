@@ -1,20 +1,14 @@
+// this file is generated, see structs.yaml and gen_structs.py
+
 #pragma once
-#include <array>
+
+#include "global_defs.h"
 #include <nlohmann/json.hpp>
 
 namespace nibashared {
 
-enum class property { gold = 0, wood = 1, water = 2, fire = 3, earth = 4 };
-enum class equipmenttype {
-    head = 0,
-    armor = 1,
-    boots = 2,
-    gloves = 3,
-    belt = 4,
-    amulet = 5,
-    ring = 6,
-    weapon = 7
-};
+using magic_ids = std::vector<int>;
+using equipment_ids = std::vector<int>;
 
 struct battlestats {
     int hp{0};
@@ -42,16 +36,15 @@ struct battlestats {
     int mp_on_hit{0};
     int mp_steal{0};
 
-    // this is inlined
     battlestats &operator+=(const battlestats &rhs) {
+        hp += rhs.hp;
+        mp += rhs.mp;
         attack_min += rhs.attack_min;
         attack_max += rhs.attack_max;
+        inner_power += rhs.inner_power;
         accuracy += rhs.accuracy;
         evasion += rhs.evasion;
         speed += rhs.speed;
-        hp += rhs.hp;
-        mp += rhs.mp;
-        inner_power += rhs.inner_power;
         defence += rhs.defence;
         crit_chance += rhs.crit_chance;
         crit_damage += rhs.crit_damage;
@@ -66,12 +59,13 @@ struct battlestats {
         earth_res += rhs.earth_res;
         hp_on_hit += rhs.hp_on_hit;
         hp_steal += rhs.hp_steal;
-
+        mp_on_hit += rhs.mp_on_hit;
+        mp_steal += rhs.mp_steal;
         return *this;
     }
 };
-void to_json(nlohmann::json &j, const battlestats &stats);
-void from_json(const nlohmann::json &j, battlestats &stats);
+void to_json(nlohmann::json &j, const battlestats &battlestats);
+void from_json(const nlohmann::json &j, battlestats &battlestats);
 
 struct attributes {
     int strength{0};
@@ -79,23 +73,14 @@ struct attributes {
     int physique{0};
     int spirit{0};
 };
-void to_json(nlohmann::json &j, const attributes &attr);
-void from_json(const nlohmann::json &j, attributes &attr);
+void to_json(nlohmann::json &j, const attributes &attributes);
+void from_json(const nlohmann::json &j, attributes &attributes);
 
-using magic_ids = std::vector<int>;
-using equipment_ids = std::vector<int>;
-// a character
 struct character {
     std::string name;
-    int character_id; // definitely unique
-
-    // attributes
+    int character_id;
     attributes attrs;
-    // also allow stats
     battlestats stats;
-
-    // since we will be passing this around
-    // it's probably a better idea to use ids
     equipment_ids equipments;
     magic_ids active_magic;
 };
@@ -104,29 +89,17 @@ void from_json(const nlohmann::json &j, character &character);
 
 struct magic {
     std::string name;
-    int id;
-
-    int active; // has CD?
+    int magic_id;
+    int active;
     int cd;
-    int multiplier;   // in percentage
-    int inner_damage; // certain value
+    int multiplier;
+    int inner_damage;
     int mp_cost;
     property inner_property;
-
     battlestats stats{};
 };
 void to_json(nlohmann::json &j, const magic &magic);
 void from_json(const nlohmann::json &j, magic &magic);
-
-const static magic DEFAULT_MAGIC{.name = u8"default",
-                                 .id = 0,
-                                 .active = 1,
-                                 .cd = 0,
-                                 .multiplier = 100,
-                                 .inner_damage = 0,
-                                 .mp_cost = 0,
-                                 .inner_property = property::gold,
-                                 .stats = {}};
 
 struct equipment {
     int equipment_id;
