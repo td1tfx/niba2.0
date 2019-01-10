@@ -1,21 +1,26 @@
 #!/usr/bin/env bash
 
 set -e
-python3 shared/gen_structs.py shared/structs.yaml shared/structs.h shared/structs.cpp
 
 jobs=$(nproc --all)
 # Release
 type=RelWithDebInfo
+gen=false
 
-while getopts ':j:d' option
+while getopts ':j:dg' option
 do
     case $option in
         j) jobs=$OPTARG;;
         d) type=Debug;;
+        g) gen=true;;
         \? ) echo "Unknown option" >&2; exit 1;;
     esac
 done
 shift $((OPTIND -1))
+
+if [ $gen = true ]; then
+    python3 shared/gen_structs.py shared/structs.yaml shared/structs.h shared/structs.cpp
+fi
 
 rm -rf build
 mkdir build
