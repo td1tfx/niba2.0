@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+set -e
+python3 shared/gen_structs.py shared/structs.yaml shared/structs.h shared/structs.cpp
+
 jobs=$(nproc --all)
 # Release
 type=RelWithDebInfo

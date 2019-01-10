@@ -1,12 +1,9 @@
 #pragma once
 
-#include <algorithm>
-#include <array>
-#include <cstdint>
 #include <iostream>
 #include <optional>
 #include <string>
-#include <string_view>
+#include <vector>
 
 #ifdef NIBACLIENT
 #define CPRINT(x) std::cout << x << std::endl;
@@ -30,10 +27,16 @@ struct sessionstate {
     int charid{-1};
 };
 
-// from effective modern c++
-template<typename E>
-constexpr auto to_underlying(E e) noexcept {
-    return static_cast<std::underlying_type_t<E>>(e);
-}
+enum class property { gold = 0, wood = 1, water = 2, fire = 3, earth = 4 };
+enum class equipmenttype {
+    head = 0,
+    armor = 1,
+    boots = 2,
+    gloves = 3,
+    belt = 4,
+    amulet = 5,
+    ring = 6,
+    weapon = 7
+};
 
 } // namespace nibashared

@@ -20,6 +20,16 @@ struct magic_ex {
     void cooldown(int ticks) { cd = std::max(cd - ticks, 0); }
 };
 
+const static magic DEFAULT_MAGIC{.name = u8"default",
+                                 .magic_id = 0,
+                                 .active = 1,
+                                 .cd = 0,
+                                 .multiplier = 100,
+                                 .inner_damage = 0,
+                                 .mp_cost = 0,
+                                 .inner_property = property::gold,
+                                 .stats = {}};
+
 constexpr int FIGHT_MAX_PROG = 1000;
 constexpr double DEFENCE_EXTENSION = 100;
 constexpr double INNER_BASE = 100;
