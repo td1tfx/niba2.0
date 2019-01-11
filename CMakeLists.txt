@@ -4,9 +4,9 @@ cmake_minimum_required(VERSION 3.11)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_CXX_COMPILER $ENV{CXX})
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_FLAGS "-Wall -Wextra -Werror -pedantic-errors -Wunreachable-code -Wuninitialized")
+set(CMAKE_CXX_FLAGS "-Wall -Werror -Wextra -Wno-gnu-string-literal-operator-template -Wunreachable-code -Wuninitialized")
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 set(Boost_USE_STATIC_LIBS ON)
 
