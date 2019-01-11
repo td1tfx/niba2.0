@@ -2,6 +2,7 @@
 #include "db_accessor.h"
 #include "request_dispatcher.h"
 #include "server_processor.h"
+#include "util.h"
 
 #include <boost/asio/spawn.hpp>
 #include <boost/beast/http.hpp>
@@ -49,13 +50,20 @@ void server_session::go() {
                 // recv request
                 std::string request_str;
                 auto buffer = boost::asio::dynamic_buffer(request_str);
+                nibautil::stopwatch stopwatch_next_request;
                 ws_.async_read(buffer, yield);
+                BOOST_LOG_SEV(logger_, sev::info)
+                    << "idled for " << stopwatch_next_request.elapsed_ms() << "ms";                
+                // check how long the request itself is processed
+                nibautil::stopwatch stopwatch;
                 // reset ping state, and timer as well
                 ping_state_ = pingstate::responsive;
                 timer_.expires_after(std::chrono::seconds(TIMEOUT));
                 // process request and send out response
                 std::string response = dispatcher.dispatch(request_str);
                 ws_.async_write(boost::asio::buffer(response), yield);
+                BOOST_LOG_SEV(logger_, sev::info)
+                    << "request processed in " << stopwatch.elapsed_ms() << "ms";
             }
         }
         // unrecoverable error
