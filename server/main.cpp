@@ -109,6 +109,8 @@ int main(int argc, char *argv[]) {
         for (;;) {
             tcp::socket socket(ioc);
             acceptor.async_accept(socket, yield);
+            tcp::no_delay option(true);
+            socket.set_option(option);
             BOOST_LOG_SEV(logger, sev::info) << "Got connection";
             nibaserver::db_accessor db(connector);
             auto session = std::make_shared<server_session>(acceptor.get_executor().context(),

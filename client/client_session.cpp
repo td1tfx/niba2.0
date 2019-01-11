@@ -15,6 +15,8 @@ nibaclient::client_session::client_session(std::string const &host, std::string 
     // everything can be sync because this client has no ui anyway
     auto const results = resolver_.resolve(host_, port_);
     boost::asio::connect(ws_.next_layer().next_layer(), results.begin(), results.end());
+    tcp::no_delay option(true);
+    ws_.next_layer().next_layer().set_option(option);
     ws_.next_layer().handshake(ssl::stream_base::client);
     ws_.handshake(host_, "/");
     timer_.expires_after(std::chrono::seconds(5));
