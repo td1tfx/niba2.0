@@ -11,6 +11,7 @@ CLIENTS = 500
 
 server = subprocess.Popen([dir_path + '/niba-server'], cwd=dir_path)
 time.sleep(1)
+
 def run_client(input_bytes):
     proc = subprocess.Popen([dir_path + '/niba-client'],
                             stdin=subprocess.PIPE,
