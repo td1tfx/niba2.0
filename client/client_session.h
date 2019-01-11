@@ -4,10 +4,7 @@
 #include "global_defs.h"
 #include "message.h"
 #include "structs.h"
-
-#include <chrono>
-#include <ratio>
-#include <thread>
+#include "util.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/asio/connect.hpp>
@@ -75,14 +72,12 @@ private:
             std::cout << "command validation failed" << std::endl;
         } else {
             std::string request_str = message.create_request().dump();
-            auto t1 = std::chrono::high_resolution_clock::now();
+            nibautil::stopwatch stopwatch;
             ws_.write(boost::asio::buffer(request_str));
             std::string response_str;
             auto buffer = boost::asio::dynamic_buffer(response_str);
             ws_.read(buffer);
-            auto t2 = std::chrono::high_resolution_clock::now();
-            std::chrono::duration<double, std::milli> fp_ms = t2 - t1;
-            std::cerr << fp_ms.count() << std::endl;
+            std::cerr << stopwatch.elapsed_ms() << std::endl;
             processor_.dispatch(message, response_str);
         }
     }
