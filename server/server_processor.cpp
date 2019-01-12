@@ -3,7 +3,6 @@
 #include "fight.h"
 #include "gamedata.h"
 #include "rng.h"
-#include "util.h"
 
 #include <iostream>
 
