@@ -32,6 +32,47 @@ void nibaclient::client_session::close() {
     timer_.cancel();
 }
 
+void nibaclient::client_session::handle_cmd(const std::string &input) {
+    try {
+        if (input == "exit") {
+            std::cout << "goodbye" << std::endl;
+            // this might not be the last command... but works for tests
+            close();
+            ioc_.stop();
+            return;
+        }
+        std::vector<std::string> results;
+        boost::split(results, input, boost::is_any_of("\t "));
+        // password input handled by cmd_processor
+        if (results.size() == 3) {
+            if (results[0] == "register") {
+                return create_and_go<nibashared::message_register>(std::move(results[1]),
+                                                                    std::move(results[2]));
+            } else if (results[0] == "login") {
+                return create_and_go<nibashared::message_login>(std::move(results[1]),
+                                                                std::move(results[2]));
+            }
+        } else if (results.size() == 2) {
+            if (results[0] == "fight") {
+                return create_and_go<nibashared::message_fight>(std::stoi(results[1]));
+            }
+        } else if (results.size() == 7) {
+            if (results[0] == "create") {
+                return create_and_go<nibashared::message_createchar>(
+                    std::move(results[1]), std::stoi(results[2]),
+                    nibashared::attributes{.strength = std::stoi(results[3]),
+                                            .dexterity = std::stoi(results[4]),
+                                            .physique = std::stoi(results[5]),
+                                            .spirit = std::stoi(results[6])});
+            }
+        }
+    } catch (...) {
+        // parsing failure whatever
+    }
+    std::cout << "incorrect command" << std::endl;
+}
+
+
 void nibaclient::client_session::ping_timer(boost::system::error_code ec) {
     if (ec && ec != boost::asio::error::operation_aborted)
         return;

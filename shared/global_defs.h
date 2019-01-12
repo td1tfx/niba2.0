@@ -3,7 +3,6 @@
 #include <iostream>
 #include <optional>
 #include <string>
-#include <vector>
 
 #ifdef NIBACLIENT
 #define CPRINT(x) std::cout << x << std::endl;
