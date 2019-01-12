@@ -1,12 +1,16 @@
+#!/usr/bin/env python3
+
 import subprocess
 import os
 import time
+import sys
 
 dir_path = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'build'))
 
 # TODO: make it argparse
-# looks like the runtime/system is restricting to ~512 open handles per process on my wsl + arch + python3.7 setup
-CLIENTS = 2000
+clients = 100
+if len(sys.argv) > 1:
+    clients = int(sys.argv[1])
 
 server = subprocess.Popen([dir_path + '/niba-server'], cwd=dir_path)
 time.sleep(1)
@@ -32,7 +36,7 @@ try:
 
     start = time.time()
 
-    for i in range(CLIENTS):
+    for i in range(clients):
         proc = run_client(input_bytes % (i, i, i))
         procs.append(proc)
 
@@ -57,7 +61,7 @@ try:
         # print(avg, 'ms')
         total += avg
 
-    print('average wait per request', total / CLIENTS, 'ms')
+    print('average wait per request', total / clients, 'ms')
     print('overall', end - start, 's')
 
 except Exception as e:
