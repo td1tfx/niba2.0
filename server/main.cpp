@@ -20,14 +20,12 @@
 #include <boost/beast/websocket.hpp>
 #include <boost/beast/websocket/ssl.hpp>
 
-#include <algorithm>
 #include <cstdlib>
-#include <functional>
 #include <iostream>
 #include <memory>
 #include <string>
-#include <thread>
-#include <vector>
+// #include <thread>
+// #include <vector>
 
 #include "cert_loader.hpp"
 #include "db_accessor.h"
@@ -66,8 +64,7 @@ int main(int argc, char *argv[]) {
     // Spawn a listening port, note as per clang, &port is not required in capture list as its
     // a constexpr
 
-    auto connection_info =
-        ozo::make_connection_info("dbname=niba user=postgres");
+    auto connection_info = ozo::make_connection_info("dbname=niba user=postgres");
 
     ozo::connection_pool_config connection_pool_config;
 

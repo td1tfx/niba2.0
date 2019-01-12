@@ -26,7 +26,7 @@ void server_session::go() {
     // 2 coroutines - use same strand
     auto self1(shared_from_this());
     boost::asio::spawn(strand_, [this, self1](boost::asio::yield_context yield) {
-        nibaserver::server_processor processor(yield, db_);
+        server_processor processor(yield, db_);
         try {
             // control callback is not a completion handler!
             ws_.control_callback([this](boost::beast::websocket::frame_type kind,
@@ -45,7 +45,7 @@ void server_session::go() {
                 },
                 yield);
 
-            nibashared::request_dispatcher dispatcher(processor);
+            request_dispatcher dispatcher(processor);
             for (;;) {
                 // recv request
                 std::string request_str;
