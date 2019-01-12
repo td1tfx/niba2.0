@@ -4,12 +4,10 @@
         "name": "木棍",
         "description": "木质长棍，容易折断",
         "type": 7,
-        "fk_stats_id": 2,
         "item_level": 1,
         "required_level": 1,
         "stats": {
-            "stats_id": 2,
-            "description": "木棍",
+            "description": "木质长棍，容易折断",
             "hp": 0,
             "mp": 0,
             "attack_min": 3,

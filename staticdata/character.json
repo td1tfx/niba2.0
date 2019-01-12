@@ -8,14 +8,8 @@
             "physique": 3,
             "spirit": 6
         },
-        "active_magic": [
-            1,
-            4
-        ],
-        "equipments": [],
         "stats": {
-            "stats_id": 1,
-            "description": "空属性",
+            "description": "",
             "hp": 0,
             "mp": 0,
             "attack_min": 0,
@@ -40,7 +34,12 @@
             "hp_steal": 0,
             "mp_on_hit": 0,
             "mp_steal": 0
-        }
+        },
+        "active_magic": [
+            1,
+            4
+        ],
+        "equipments": []
     },
     {
         "character_id": 2,
@@ -51,15 +50,8 @@
             "physique": 17,
             "spirit": 7
         },
-        "active_magic": [
-            2,
-            1,
-            4
-        ],
-        "equipments": [],
         "stats": {
-            "stats_id": 1,
-            "description": "空属性",
+            "description": "",
             "hp": 0,
             "mp": 0,
             "attack_min": 0,
@@ -84,7 +76,13 @@
             "hp_steal": 0,
             "mp_on_hit": 0,
             "mp_steal": 0
-        }
+        },
+        "active_magic": [
+            2,
+            1,
+            4
+        ],
+        "equipments": []
     },
     {
         "character_id": 3,
@@ -95,14 +93,8 @@
             "physique": 5,
             "spirit": 2
         },
-        "active_magic": [
-            1,
-            4
-        ],
-        "equipments": [],
         "stats": {
-            "stats_id": 1,
-            "description": "空属性",
+            "description": "",
             "hp": 0,
             "mp": 0,
             "attack_min": 0,
@@ -127,7 +119,12 @@
             "hp_steal": 0,
             "mp_on_hit": 0,
             "mp_steal": 0
-        }
+        },
+        "active_magic": [
+            1,
+            4
+        ],
+        "equipments": []
     },
     {
         "character_id": 4,
@@ -138,13 +135,8 @@
             "physique": 50,
             "spirit": 10
         },
-        "active_magic": [
-            4
-        ],
-        "equipments": [],
         "stats": {
-            "stats_id": 1,
-            "description": "空属性",
+            "description": "",
             "hp": 0,
             "mp": 0,
             "attack_min": 0,
@@ -169,7 +161,11 @@
             "hp_steal": 0,
             "mp_on_hit": 0,
             "mp_steal": 0
-        }
+        },
+        "active_magic": [
+            4
+        ],
+        "equipments": []
     },
     {
         "character_id": 5,
@@ -180,15 +176,8 @@
             "physique": 11,
             "spirit": 7
         },
-        "active_magic": [
-            4
-        ],
-        "equipments": [
-            1
-        ],
         "stats": {
-            "stats_id": 1,
-            "description": "空属性",
+            "description": "",
             "hp": 0,
             "mp": 0,
             "attack_min": 0,
@@ -213,7 +202,13 @@
             "hp_steal": 0,
             "mp_on_hit": 0,
             "mp_steal": 0
-        }
+        },
+        "active_magic": [
+            4
+        ],
+        "equipments": [
+            1
+        ]
     },
     {
         "character_id": 6,
@@ -224,13 +219,8 @@
             "physique": 13,
             "spirit": 9
         },
-        "active_magic": [
-            4
-        ],
-        "equipments": [],
         "stats": {
-            "stats_id": 1,
-            "description": "空属性",
+            "description": "",
             "hp": 0,
             "mp": 0,
             "attack_min": 0,
@@ -255,7 +245,11 @@
             "hp_steal": 0,
             "mp_on_hit": 0,
             "mp_steal": 0
-        }
+        },
+        "active_magic": [
+            4
+        ],
+        "equipments": []
     },
     {
         "character_id": 7,
@@ -266,13 +260,8 @@
             "physique": 11,
             "spirit": 15
         },
-        "active_magic": [
-            3
-        ],
-        "equipments": [],
         "stats": {
-            "stats_id": 1,
-            "description": "空属性",
+            "description": "",
             "hp": 0,
             "mp": 0,
             "attack_min": 0,
@@ -297,7 +286,11 @@
             "hp_steal": 0,
             "mp_on_hit": 0,
             "mp_steal": 0
-        }
+        },
+        "active_magic": [
+            3
+        ],
+        "equipments": []
     },
     {
         "character_id": 8,
@@ -308,13 +301,8 @@
             "physique": 13,
             "spirit": 16
         },
-        "active_magic": [
-            5
-        ],
-        "equipments": [],
         "stats": {
-            "stats_id": 1,
-            "description": "空属性",
+            "description": "",
             "hp": 0,
             "mp": 0,
             "attack_min": 0,
@@ -339,6 +327,10 @@
             "hp_steal": 0,
             "mp_on_hit": 0,
             "mp_steal": 0
-        }
+        },
+        "active_magic": [
+            5
+        ],
+        "equipments": []
     }
 ]
