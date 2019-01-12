@@ -6,7 +6,7 @@ dir_path = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'buil
 
 # TODO: make it argparse
 # looks like the runtime/system is restricting to ~512 open handles per process on my wsl + arch + python3.7 setup
-CLIENTS = 500
+CLIENTS = 2000
 
 server = subprocess.Popen([dir_path + '/niba-server'], cwd=dir_path)
 time.sleep(1)
