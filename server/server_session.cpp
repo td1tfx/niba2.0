@@ -1,6 +1,5 @@
 #include "server_session.h"
 #include "db_accessor.h"
-#include "request_dispatcher.h"
 #include "server_processor.h"
 #include "util.h"
 
@@ -45,7 +44,6 @@ void server_session::go() {
                 },
                 yield);
 
-            request_dispatcher dispatcher(processor);
             for (;;) {
                 // recv request
                 std::string request_str;
@@ -60,7 +58,7 @@ void server_session::go() {
                 ping_state_ = pingstate::responsive;
                 timer_.expires_after(std::chrono::seconds(TIMEOUT));
                 // process request and send out response
-                std::string response = dispatcher.dispatch(request_str);
+                std::string response = processor.dispatch(request_str);
                 ws_.async_write(boost::asio::buffer(response), yield);
                 BOOST_LOG_SEV(logger_, sev::info)
                     << "request processed in " << stopwatch.elapsed_ms() << "ms";
