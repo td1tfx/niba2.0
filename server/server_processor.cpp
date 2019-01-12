@@ -3,6 +3,7 @@
 #include "fight.h"
 #include "gamedata.h"
 #include "rng.h"
+#include "util.h"
 
 #include <iostream>
 
@@ -16,10 +17,9 @@ server_processor::server_processor(boost::asio::yield_context &yield, nibaserver
 
 std::string server_processor::dispatch(const std::string &request) {
     try {
-        // std::cout << request << std::endl;
         auto j = nlohmann::json::parse(request);
-        auto cmd = static_cast<nibashared::cmdtype>(j.at("type").get<std::size_t>());
-        switch (cmd) {
+        auto cmd_id = j.at("type").get<std::size_t>();
+        switch (static_cast<nibashared::cmdtype>(cmd_id)) {
         case nibashared::cmdtype::registeration: {
             return do_request<nibashared::message_register>(j);
         }
@@ -33,13 +33,12 @@ std::string server_processor::dispatch(const std::string &request) {
             return do_request<nibashared::message_createchar>(j);
         }
         default:
-            throw std::runtime_error("invalid request");
+            BOOST_LOG_SEV(logger_, sev::info) << "unknown request type: " << cmd_id;
         }
     }
     // return whatever error message, I don't care
     catch (std::exception &e) {
-        // TODO: use glog
-        std::cout << e.what() << std::endl;
+        BOOST_LOG_SEV(logger_, sev::info) << "dispatch failure: " << e.what();
     }
     nlohmann::json error_msg{{"error", "request error"}};
     return error_msg.dump();
