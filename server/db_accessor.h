@@ -7,11 +7,8 @@
 #include "structs.h"
 #include "logger.h"
 #include <boost/asio/spawn.hpp>
-#include <ozo/request.h>
 #include <ozo/connection_info.h>
 #include <ozo/connection_pool.h>
-#include <ozo/shortcuts.h>
-#include <ozo/execute.h>
 #include <ozo/connection.h>
 
 namespace nibaserver {
