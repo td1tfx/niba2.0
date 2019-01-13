@@ -20,6 +20,11 @@
 #include <boost/beast/websocket.hpp>
 #include <boost/beast/websocket/ssl.hpp>
 
+#include <ozo/connection.h>
+#include <ozo/connection_info.h>
+#include <ozo/connection_pool.h>
+#include <ozo/execute.h>
+
 #include <cstdlib>
 #include <iostream>
 #include <memory>
@@ -36,6 +41,7 @@ using tcp = boost::asio::ip::tcp;              // from <boost/asio/ip/tcp.hpp>
 namespace ssl = boost::asio::ssl;              // from <boost/asio/ssl.hpp>
 namespace websocket = boost::beast::websocket; // from <boost/beast/websocket.hpp>
 namespace sev = boost::log::trivial;
+using namespace ozo::literals;
 using namespace nibaserver;
 
 int main(int argc, char *argv[]) {
@@ -85,6 +91,17 @@ int main(int argc, char *argv[]) {
     boost::asio::spawn(ioc, [&ioc, &address, &ctx, &connector,
                              &logger](boost::asio::yield_context yield) {
         boost::system::error_code ec;
+
+        // TODO: move elsewhere
+        // reset the login status on start up
+        auto conn = ozo::execute(
+            connector, "UPDATE user_id SET logged_in = false WHERE 1 = 1"_SQL,
+            yield[ec]);
+        if (ec) {
+            BOOST_LOG_SEV(logger, sev::error) << ec.message() << " | " << ozo::error_message(conn)
+                                              << " | " << ozo::get_error_context(conn);
+            return;
+        }
 
         // Open the acceptor
         tcp::acceptor acceptor(ioc);
