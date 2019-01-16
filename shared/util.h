@@ -1,11 +1,16 @@
 #pragma once
 
 #include <chrono>
+#include <string>
+#include <vector>
+
+
+#include <nlohmann/json.hpp>
 
 namespace nibautil {
 
 class stopwatch {
-    
+
 public:
     using clock = std::chrono::high_resolution_clock;
     stopwatch();

@@ -3,6 +3,8 @@
 #pragma once
 
 #include "global_defs.h"
+
+#include <boost/hana.hpp>
 #include <nlohmann/json.hpp>
 
 namespace nibashared {
@@ -11,31 +13,15 @@ using magic_ids = std::vector<int>;
 using equipment_ids = std::vector<int>;
 
 struct battlestats {
-    int hp{0};
-    int mp{0};
-    int attack_min{0};
-    int attack_max{0};
-    int inner_power{0};
-    int accuracy{0};
-    int evasion{0};
-    int speed{0};
-    int defence{0};
-    int crit_chance{0};
-    int crit_damage{0};
-    int reduce_def{0};
-    int reduce_def_perc{0};
-    int hp_regen{0};
-    int mp_regen{0};
-    int gold_res{0};
-    int wood_res{0};
-    int water_res{0};
-    int fire_res{0};
-    int earth_res{0};
-    int hp_on_hit{0};
-    int hp_steal{0};
-    int mp_on_hit{0};
-    int mp_steal{0};
+    BOOST_HANA_DEFINE_STRUCT(battlestats, (int, hp), (int, mp), (int, attack_min),
+                             (int, attack_max), (int, inner_power), (int, accuracy), (int, evasion),
+                             (int, speed), (int, defence), (int, crit_chance), (int, crit_damage),
+                             (int, reduce_def), (int, reduce_def_perc), (int, hp_regen),
+                             (int, mp_regen), (int, gold_res), (int, wood_res), (int, water_res),
+                             (int, fire_res), (int, earth_res), (int, hp_on_hit), (int, hp_steal),
+                             (int, mp_on_hit), (int, mp_steal));
 
+    // TODO: fix this with hana
     battlestats &operator+=(const battlestats &rhs) {
         hp += rhs.hp;
         mp += rhs.mp;
@@ -64,53 +50,94 @@ struct battlestats {
         return *this;
     }
 };
-void to_json(nlohmann::json &j, const battlestats &battlestats);
-void from_json(const nlohmann::json &j, battlestats &battlestats);
 
 struct attributes {
-    int strength{0};
-    int dexterity{0};
-    int physique{0};
-    int spirit{0};
+    BOOST_HANA_DEFINE_STRUCT(attributes, (int, strength), (int, dexterity), (int, physique),
+                             (int, spirit));
 };
-void to_json(nlohmann::json &j, const attributes &attributes);
-void from_json(const nlohmann::json &j, attributes &attributes);
 
 struct character {
-    std::string name;
-    int character_id;
-    attributes attrs;
-    battlestats stats;
-    equipment_ids equipments;
-    magic_ids active_magic;
+    BOOST_HANA_DEFINE_STRUCT(character, (std::string, name), (int, character_id),
+                             (attributes, attrs), (battlestats, stats), (equipment_ids, equipments),
+                             (magic_ids, active_magic));
 };
-void to_json(nlohmann::json &j, const character &character);
-void from_json(const nlohmann::json &j, character &character);
 
 struct magic {
-    std::string name;
-    int magic_id;
-    int active;
-    int cd;
-    int multiplier;
-    int inner_damage;
-    int mp_cost;
-    property inner_property;
-    battlestats stats{};
+    BOOST_HANA_DEFINE_STRUCT(magic, (std::string, name), (int, magic_id), (int, active), (int, cd),
+                             (int, multiplier), (int, inner_damage), (int, mp_cost),
+                             (property, inner_property), (battlestats, stats));
 };
-void to_json(nlohmann::json &j, const magic &magic);
-void from_json(const nlohmann::json &j, magic &magic);
 
 struct equipment {
-    int equipment_id;
-    std::string name;
-    std::string description;
-    equipmenttype type;
-    battlestats stats{};
-    int item_level;
-    int required_level;
+    BOOST_HANA_DEFINE_STRUCT(equipment, (int, equipment_id), (std::string, name),
+                             (std::string, description), (equipmenttype, type),
+                             (battlestats, stats), (int, item_level), (int, required_level));
 };
-void to_json(nlohmann::json &j, const equipment &equipment);
-void from_json(const nlohmann::json &j, equipment &equipment);
+
+// can't use template due to "conflict" with the json lib
+void to_json(nlohmann::json &j, const battlestats &t) {
+    boost::hana::for_each(t, boost::hana::fuse([&j](auto name, auto member) {
+                              j[boost::hana::to<char const *>(name)] = member;
+                          }));
+}
+
+void from_json(const nlohmann::json &j, battlestats &t) {
+    boost::hana::for_each(boost::hana::keys(t), [&](auto key) {
+        auto &member = boost::hana::at_key(t, key);
+        j.at(boost::hana::to<char const *>(key)).get_to(member);
+    });
+}
+
+void to_json(nlohmann::json &j, const attributes &t) {
+    boost::hana::for_each(t, boost::hana::fuse([&j](auto name, auto member) {
+                              j[boost::hana::to<char const *>(name)] = member;
+                          }));
+}
+
+void from_json(const nlohmann::json &j, attributes &t) {
+    boost::hana::for_each(boost::hana::keys(t), [&](auto key) {
+        auto &member = boost::hana::at_key(t, key);
+        j.at(boost::hana::to<char const *>(key)).get_to(member);
+    });
+}
+
+void to_json(nlohmann::json &j, const character &t) {
+    boost::hana::for_each(t, boost::hana::fuse([&j](auto name, auto member) {
+                              j[boost::hana::to<char const *>(name)] = member;
+                          }));
+}
+
+void from_json(const nlohmann::json &j, character &t) {
+    boost::hana::for_each(boost::hana::keys(t), [&](auto key) {
+        auto &member = boost::hana::at_key(t, key);
+        j.at(boost::hana::to<char const *>(key)).get_to(member);
+    });
+}
+
+void to_json(nlohmann::json &j, const magic &t) {
+    boost::hana::for_each(t, boost::hana::fuse([&j](auto name, auto member) {
+                              j[boost::hana::to<char const *>(name)] = member;
+                          }));
+}
+
+void from_json(const nlohmann::json &j, magic &t) {
+    boost::hana::for_each(boost::hana::keys(t), [&](auto key) {
+        auto &member = boost::hana::at_key(t, key);
+        j.at(boost::hana::to<char const *>(key)).get_to(member);
+    });
+}
+
+void to_json(nlohmann::json &j, const equipment &t) {
+    boost::hana::for_each(t, boost::hana::fuse([&j](auto name, auto member) {
+                              j[boost::hana::to<char const *>(name)] = member;
+                          }));
+}
+
+void from_json(const nlohmann::json &j, equipment &t) {
+    boost::hana::for_each(boost::hana::keys(t), [&](auto key) {
+        auto &member = boost::hana::at_key(t, key);
+        j.at(boost::hana::to<char const *>(key)).get_to(member);
+    });
+}
 
 } // namespace nibashared
