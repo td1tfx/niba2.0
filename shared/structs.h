@@ -27,13 +27,9 @@ void hana_from_json(const nlohmann::json &j, T &t) {
     });
 }
 
-#define JSON_SERIALIZE(STRUCT) \
-    inline void to_json(nlohmann::json &j, const STRUCT &t) { \
-        hana_to_json(j, t); \
-    } \
-    inline void from_json(const nlohmann::json &j, STRUCT &t) { \
-        hana_from_json(j, t); \
-    }
+#define JSON_SERIALIZE(STRUCT)                                                                     \
+    inline void to_json(nlohmann::json &j, const STRUCT &t) { hana_to_json(j, t); }                \
+    inline void from_json(const nlohmann::json &j, STRUCT &t) { hana_from_json(j, t); }
 
 struct battlestats {
     BOOST_HANA_DEFINE_STRUCT(battlestats, (int, hp), (int, mp), (int, attack_min),

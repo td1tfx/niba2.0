@@ -1,7 +1,5 @@
 #include "util.h"
 
-#include <iostream>
-
 namespace nibautil {
 
 stopwatch::stopwatch() : start_point_(clock::now()) {}
