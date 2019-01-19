@@ -5,12 +5,26 @@
 
 using namespace nibashared;
 
-staticdata &staticdata::get() {
-    static staticdata instance;
+staticdata &staticdata::get(bool is_server, nibaserver::db_accessor *db_ptr) {
+    static staticdata instance(is_server, db_ptr);
     return instance;
 }
 
-staticdata::staticdata() {
+staticdata::staticdata(bool is_server, nibaserver::db_accessor *db_ptr) {
+    if (is_server) {
+        staticdata::init_static_data_from_postgres(*db_ptr); 
+    } else {
+        staticdata::init_static_data_from_json();
+    }
+}
+
+void staticdata::init_static_data_from_postgres(nibaserver::db_accessor db) {
+    std::cout << "init_static_data_from_postgres\n";
+    // to keep the function complete at the moment
+    staticdata::init_static_data_from_json();
+}; 
+
+void staticdata::init_static_data_from_json() {
     try {
         std::ifstream char_fin("character.json");
         nlohmann::json serialized_chars = nlohmann::json::parse(char_fin);

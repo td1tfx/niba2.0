@@ -12,6 +12,7 @@ namespace sev = boost::log::trivial;
 server_processor::server_processor(boost::asio::yield_context &yield, nibaserver::db_accessor &db) :
     yield_(yield), db_(db) {
     session_.state = nibashared::gamestate::prelogin;
+    nibashared::staticdata::get(true, &db);
 }
 
 std::string server_processor::dispatch(const std::string &request) {
