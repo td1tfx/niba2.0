@@ -1,5 +1,6 @@
 #pragma once
-#include "gamedata.h"
+#include "client_gamedata.h"
+#include "server_gamedata.h"
 #include "global_defs.h"
 #include "rng.h"
 #include "structs.h"
@@ -71,7 +72,12 @@ private:
     std::vector<fightable> all_;
 };
 
+template<typename staticdata>
+fightable setup_fightable(int id);
+
 // this is temporary
+template<typename staticdata>
 std::pair<std::vector<fightable>, std::vector<fightable>> prep_fight(int id_me, int id_you);
+
 
 } // namespace nibashared
