@@ -213,6 +213,7 @@ battlestats stats_computer(const attributes &attr) {
     return stats; // RVO
 }
 
+template<typename staticdata>
 fightable setup_fightable(int id) {
     auto raw_character = staticdata::get().character(id);
     fightable fight_character;
@@ -234,13 +235,20 @@ fightable setup_fightable(int id) {
     return fight_character; // RVO
 }
 
+template fightable setup_fightable<nibashared::client_staticdata>(int id);
+template fightable setup_fightable<nibashared::server_staticdata>(int id);
+
+template<typename staticdata>
 std::pair<std::vector<fightable>, std::vector<fightable>> prep_fight(int id_me, int id_you) {
     CPRINT("prep " << id_me << " " << id_you);
     // initializer list do not like moves
     std::pair<std::vector<fightable>, std::vector<fightable>> ret;
-    ret.first.push_back(setup_fightable(id_me));
-    ret.second.push_back(setup_fightable(id_you));
+    ret.first.push_back(setup_fightable<staticdata>(id_me));
+    ret.second.push_back(setup_fightable<staticdata>(id_you));
     return ret; // RVO
 }
+
+template std::pair<std::vector<fightable>, std::vector<fightable>> prep_fight<nibashared::client_staticdata>(int id_me, int id_you);
+template std::pair<std::vector<fightable>, std::vector<fightable>> prep_fight<nibashared::server_staticdata>(int id_me, int id_you);
 
 } // namespace nibashared
