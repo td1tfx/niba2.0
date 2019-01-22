@@ -1,7 +1,12 @@
 #include "db_accessor.h"
+<<<<<<< HEAD
+
 #include <ozo/execute.h>
 #include <ozo/request.h>
 #include <ozo/shortcuts.h>
+
+=======
+>>>>>>> 66a61f2... addressing the review comments regarding two staticdata files;
 #include <algorithm>
 #include <openssl/rand.h>
 #include <openssl/sha.h>

@@ -7,20 +7,19 @@
 
 // this is temporary
 
-namespace nibashared {
+namespace nibaclient {
 
 // meh singletons
-
-class server_staticdata {
+class client_staticdata {
 public:
     // so why can't operators be static, especially functors?
-    static server_staticdata &get();
+    static client_staticdata &get();
     const nibashared::character &character(int id);
     const nibashared::magic &magic(int id);
     const nibashared::equipment &equipment(int id);
 
 private:
-    server_staticdata();
+    client_staticdata();
     std::unordered_map<int, nibashared::character> characters_;
     std::unordered_map<int, nibashared::magic> magics_;
     std::unordered_map<int, nibashared::equipment> equipments_;
