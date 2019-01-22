@@ -1,9 +1,11 @@
 #include "server_gamedata.h"
+#include "db_accessor.h"
 #include <fstream>
 #include <iostream>
 #include <nlohmann/json.hpp>
 
 using namespace nibashared;
+using namespace nibaserver;
 
 server_staticdata &server_staticdata::get() {
     static server_staticdata instance;
@@ -12,6 +14,22 @@ server_staticdata &server_staticdata::get() {
 
 server_staticdata::server_staticdata() {
     // read from postgres here
+    auto connection_info = ozo::make_connection_info("dbname=niba user=postgres");
+    const std::chrono::seconds connect_timeout(1);
+    boost::asio::io_context ioc;
+    const auto connector = ozo::make_connector(connection_info, ioc, connect_timeout);
+
+    /*
+    const auto connection = ozo::request(connector,
+        "SELECT "_SQL,
+        ozo::into(result), 
+        [&](ozo::error_code ec, auto conn) {
+            if (ec) {
+                std::cout << "failed " << std::endl;
+                exit(-1);
+            }
+    });
+    */
 
     try {
         std::ifstream char_fin("character.json");

@@ -4,6 +4,7 @@
 #include <nlohmann/json.hpp>
 
 using namespace nibashared;
+using namespace nibaclient;
 
 client_staticdata &client_staticdata::get() {
     static client_staticdata instance;
