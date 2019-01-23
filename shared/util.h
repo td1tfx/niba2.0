@@ -5,7 +5,7 @@
 namespace nibautil {
 
 class stopwatch {
-    
+
 public:
     using clock = std::chrono::high_resolution_clock;
     stopwatch();
