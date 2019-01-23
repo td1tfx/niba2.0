@@ -13,10 +13,7 @@
 #include <vector>
 =======
 #include <ozo/connection.h>
-#include <ozo/shortcuts.h>
-#include <ozo/execute.h>
-#include <ozo/request.h>
->>>>>>> 66a61f2... addressing the review comments regarding two staticdata files;
+>>>>>>> 958be86... minor change: switch header file locations
 
 namespace nibaserver {
 
