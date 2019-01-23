@@ -2,6 +2,9 @@
 #include <algorithm>
 #include <openssl/rand.h>
 #include <openssl/sha.h>
+#include <ozo/shortcuts.h>
+#include <ozo/execute.h>
+#include <ozo/request.h>
 
 using namespace nibaserver;
 using namespace ozo::literals;

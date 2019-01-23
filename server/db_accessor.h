@@ -10,9 +10,6 @@
 #include <ozo/connection_info.h>
 #include <ozo/connection_pool.h>
 #include <ozo/connection.h>
-#include <ozo/shortcuts.h>
-#include <ozo/execute.h>
-#include <ozo/request.h>
 
 namespace nibaserver {
 
