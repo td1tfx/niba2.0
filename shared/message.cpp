@@ -43,15 +43,28 @@ bool message_login::validate(const nibashared::sessionstate &session) {
     return true;
 }
 
-json message_login::create_response() { return {{"success", success}, {"characters", characters}}; }
+json message_login::create_response() {
+    json ret;
+    ret["success"] = success;
+    // the default serializer couldn't handle optional
+    // we could write one or we'll do this for now
+    if (player) {
+        ret["player"] = *player;
+    }
+    return ret;
+}
 
 // this is not used
 json message_login::create_request() {
     return {{"type", type}, {"id", id}, {"password", password}};
 }
+
 void message_login::merge_response(const json &j) {
     j.at("success").get_to(success);
-    j.at("characters").get_to(characters);
+    auto char_iter = j.find("player");
+    if (char_iter != j.end()) {
+        player = char_iter.value().get<nibashared::player>();
+    }
 }
 
 void message_login::from_request(const json &j) {
@@ -87,32 +100,35 @@ void nibashared::message_fight::from_request(const nlohmann::json &j) {
     j.at("enemyid").get_to(enemyid);
 }
 
-nibashared::message_createchar::message_createchar(std::string &&name, int gender,
-                                                   attributes &&attrs) :
-    name(std::move(name)),
-    gender{gender}, attrs{std::move(attrs)} {}
+nibashared::message_createchar::message_createchar(nibashared::player &&player) :
+    player(std::move(player)) {}
 
 bool nibashared::message_createchar::validate(const nibashared::sessionstate &session) {
     if (session.state != nibashared::gamestate::createchar)
         return false;
-    if (!(gender == 0 || gender == 1))
+    if (!(player.gender == 'm' || player.gender == 'f'))
         return false;
-    if (name.empty())
+    if (player.name.empty())
         return false;
-    if (attrs.strength < 0 || attrs.dexterity < 0 || attrs.spirit < 0 || attrs.physique < 0)
+    if (player.attrs.strength < 0 || player.attrs.dexterity < 0 || player.attrs.spirit < 0 ||
+        player.attrs.physique < 0)
         return false;
-    if (attrs.strength + attrs.dexterity + attrs.spirit + attrs.physique > 5)
+    if (player.attrs.strength + player.attrs.dexterity + player.attrs.spirit +
+            player.attrs.physique >
+        5)
         return false;
     return true;
 }
 
 nlohmann::json nibashared::message_createchar::create_response() {
-    // TODO maybe return the character data as well
-    return {{"success", success}};
+    if (success) {
+        return {{"success", true}, {"player", player}};
+    }
+    return {{"sucess", false}};
 }
 
 nlohmann::json nibashared::message_createchar::create_request() {
-    return {{"type", type}, {"name", name}, {"gender", gender}, {"attrs", attrs}};
+    return {{"type", type}, {"player", player}};
 }
 
 void nibashared::message_createchar::merge_response(const nlohmann::json &j) {
@@ -120,7 +136,5 @@ void nibashared::message_createchar::merge_response(const nlohmann::json &j) {
 }
 
 void nibashared::message_createchar::from_request(const nlohmann::json &j) {
-    j.at("name").get_to(name);
-    j.at("gender").get_to(gender);
-    j.at("attrs").get_to(attrs);
+    j.at("player").get_to(player);
 }

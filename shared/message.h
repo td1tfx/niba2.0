@@ -3,6 +3,7 @@
 #include "global_defs.h"
 #include "structs.h"
 #include <nlohmann/json.hpp>
+#include <optional>
 #include <vector>
 
 namespace nibashared {
@@ -50,7 +51,7 @@ struct message_login {
     std::string id;
     std::string password;
     bool success = false;
-    std::vector<std::string> characters;
+    std::optional<nibashared::player> player;
 };
 
 struct message_fight {
@@ -74,16 +75,15 @@ struct message_createchar {
     const cmdtype type = cmdtype::createchar;
 
     message_createchar() = default;
-    message_createchar(std::string &&name, int gender, attributes &&attrs);
+    message_createchar(nibashared::player&& player);
     bool validate(const nibashared::sessionstate &session);
     nlohmann::json create_response();
     nlohmann::json create_request();
     void merge_response(const nlohmann::json &j);
     void from_request(const nlohmann::json &j);
 
-    std::string name;
-    int gender;
-    attributes attrs;
+    // TODO move all to character after gender is added into character
+    nibashared::player player;
     bool success = false;
 };
 

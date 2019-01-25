@@ -59,11 +59,12 @@ void nibaclient::client_session::handle_cmd(const std::string &input) {
         } else if (results.size() == 7) {
             if (results[0] == "create") {
                 return create_and_go<nibashared::message_createchar>(
-                    std::move(results[1]), std::stoi(results[2]),
-                    nibashared::attributes{.strength = std::stoi(results[3]),
-                                           .dexterity = std::stoi(results[4]),
-                                           .physique = std::stoi(results[5]),
-                                           .spirit = std::stoi(results[6])});
+                    nibashared::player{.name = results[1],
+                                       .gender = results[2].at(0),
+                                       .attrs = {.strength = std::stoi(results[3]),
+                                                 .dexterity = std::stoi(results[4]),
+                                                 .physique = std::stoi(results[5]),
+                                                 .spirit = std::stoi(results[6])}});
             }
         }
     } catch (...) {

@@ -1,8 +1,8 @@
 #include "db_accessor.h"
 
-#include <ozo/shortcuts.h>
 #include <ozo/execute.h>
 #include <ozo/request.h>
+#include <ozo/shortcuts.h>
 
 #include <algorithm>
 #include <openssl/rand.h>
@@ -20,13 +20,12 @@ db_accessor::db_accessor(const ozo::connector<ozo::connection_pool<ozo::connecti
     logger_ = logger();
 }
 
-bool db_accessor::login(boost::asio::yield_context &yield, const std::string &id,
-                        const std::string &password) {
+bool db_accessor::login(const std::string &id, const std::string &password,
+                        boost::asio::yield_context &yield) {
     ozo::error_code ec{};
-    ozo::rows_of<ozo::pg::name, ozo::pg::bytea, ozo::pg::bytea, bool> user_credential;
+    ozo::rows_of<std::string, ozo::pg::bytea, ozo::pg::bytea, bool> user_credential;
     auto conn = ozo::request(
-        conn_,
-        "SELECT username, hashed_password, salt, logged_in FROM user_id WHERE username="_SQL + id,
+        conn_, "SELECT id, hashed_password, salt, logged_in FROM user_id WHERE id="_SQL + id,
         ozo::into(user_credential), yield[ec]);
     if (ec) {
         BOOST_LOG_SEV(logger_, sev::error) << ec.message() << " | " << ozo::error_message(conn)
@@ -35,7 +34,7 @@ bool db_accessor::login(boost::asio::yield_context &yield, const std::string &id
     }
 
     if (user_credential.size() == 0) {
-        BOOST_LOG_SEV(logger_, sev::info) << "username does not exist " << id;
+        BOOST_LOG_SEV(logger_, sev::info) << "id does not exist " << id;
         // this username does not exist in the database
         return false;
     }
@@ -68,8 +67,7 @@ bool db_accessor::login(boost::asio::yield_context &yield, const std::string &id
             return false;
         }
 
-        ozo::execute(conn_, "UPDATE user_id SET logged_in = true WHERE username="_SQL + id,
-                     yield[ec]);
+        ozo::execute(conn_, "UPDATE user_id SET logged_in = true WHERE id="_SQL + id, yield[ec]);
         if (ec) {
             BOOST_LOG_SEV(db_accessor::logger_, sev::error)
                 << ec.message() << " | " << ozo::error_message(conn) << " | "
@@ -82,10 +80,10 @@ bool db_accessor::login(boost::asio::yield_context &yield, const std::string &id
     return false;
 }
 
-bool db_accessor::logout(boost::asio::yield_context &yield, const std::string &id) {
+bool db_accessor::logout(const std::string &id, boost::asio::yield_context &yield) {
     ozo::error_code ec{};
-    auto conn = ozo::execute(conn_, "UPDATE user_id SET logged_in = false WHERE username="_SQL + id,
-                             yield[ec]);
+    auto conn =
+        ozo::execute(conn_, "UPDATE user_id SET logged_in = false WHERE id="_SQL + id, yield[ec]);
     if (ec) {
         BOOST_LOG_SEV(logger_, sev::error) << ec.message() << " | " << ozo::error_message(conn)
                                            << " | " << ozo::get_error_context(conn);
@@ -94,8 +92,8 @@ bool db_accessor::logout(boost::asio::yield_context &yield, const std::string &i
     return true;
 }
 
-bool db_accessor::create_user(boost::asio::yield_context &yield, const std::string &id,
-                              const std::string &password) {
+bool db_accessor::create_user(const std::string &id, const std::string &password,
+                              boost::asio::yield_context &yield) {
     std::vector<char> salt(HASH_SIZE, 0);
     std::vector<char> hashed_password(HASH_SIZE, 0);
     if (RAND_bytes((unsigned char *)&salt[0], HASH_SIZE) != 1)
@@ -122,8 +120,8 @@ bool db_accessor::create_user(boost::asio::yield_context &yield, const std::stri
     ozo::pg::bytea pswd_bytea(std::move(hashed_password));
 
     auto conn = ozo::execute(conn_,
-                             "INSERT INTO user_id (username, hashed_password, salt) VALUES ("_SQL +
-                                 id + ","_SQL + pswd_bytea + ","_SQL + salt_bytea + ")"_SQL,
+                             "INSERT INTO user_id (id, hashed_password, salt) VALUES ("_SQL + id +
+                                 ","_SQL + pswd_bytea + ","_SQL + salt_bytea + ")"_SQL,
                              yield[ec]);
     if (ec) {
         BOOST_LOG_SEV(logger_, sev::error) << ec.message() << " | " << ozo::error_message(conn)
@@ -134,19 +132,51 @@ bool db_accessor::create_user(boost::asio::yield_context &yield, const std::stri
     return true;
 }
 
-std::optional<nibashared::character> nibaserver::db_accessor::get_char(const std::string &id) {
-    auto iter = char_tbl_.find(id);
-    if (iter == char_tbl_.end())
+// looks like this function 'broke' clang-format
+std::optional<nibashared::player> nibaserver::db_accessor::get_char(const std::string &id, boost::asio::yield_context &yield) {
+    BOOST_LOG_SEV(logger_, sev::info) << "fetching character for " << id;
+    ozo::error_code ec{};
+    // not the best, we can probably do better
+    // TODO: do something else, for example change how player is layed out
+    ozo::rows_of<std::string, char, int, int, int, int> characters;
+    auto conn = ozo::request(
+        conn_,
+        "SELECT name, gender, strength, dexterity, physique, spirit FROM player_character where id="_SQL +
+            id,
+        ozo::into(characters), yield[ec]);
+    if (ec) {
+        BOOST_LOG_SEV(logger_, sev::error) << ec.message() << " | " << ozo::error_message(conn)
+                                           << " | " << ozo::get_error_context(conn);
         return {};
-    return iter->second;
+    }
+    if (characters.size() == 0)
+        return {};
+    auto &[name, gender, strength, dexterity, physique, spirit] = characters.at(0);
+    return nibashared::player{
+        .name = name,
+        .gender = gender,
+        .attrs = {
+            .strength = strength, .dexterity = dexterity, .physique = physique, .spirit = spirit}};
 }
 
-bool db_accessor::create_char(const std::string &id, nibashared::character &&character) {
-    auto c = get_char(id);
-    if (c) {
+bool db_accessor::create_char(const std::string &id, const nibashared::player &player,
+                              boost::asio::yield_context &yield) {
+    ozo::error_code ec{};
+    // the insert string is unfortunately long and hand written
+    auto conn = ozo::execute(
+        conn_,
+        "INSERT INTO player_character(id, name, gender, strength, dexterity, physique, spirit) VALUES("_SQL +
+            id + ","_SQL + player.name + ","_SQL + player.gender + ","_SQL + player.attrs.strength +
+            ","_SQL + player.attrs.dexterity + ","_SQL + player.attrs.physique + ","_SQL +
+            player.attrs.spirit + ")"_SQL,
+        yield[ec]);
+
+    // might not be an error
+    if (ec) {
+        BOOST_LOG_SEV(logger_, sev::error) << ec.message() << " | " << ozo::error_message(conn)
+                                           << " | " << ozo::get_error_context(conn);
         return false;
     }
-    char_tbl_[id] = std::move(character);
 
     return true;
 }

@@ -21,9 +21,12 @@ void client_processor::process(nibashared::message_login &req) {
     if (req.success) {
         std::cout << "success" << std::endl;
         session.userid = req.id;
-        // TODO look up character db, if no char, then create one
-        // just createchar for now
-        session.state = nibashared::gamestate::createchar;
+        if (!req.player) {
+            session.state = nibashared::gamestate::createchar;
+        } else {
+            session.state = nibashared::gamestate::ingame;
+            std::cout << *req.player << std::endl;
+        }
     } else {
         std::cout << "failed to login" << std::endl;
     }
@@ -31,8 +34,7 @@ void client_processor::process(nibashared::message_login &req) {
 
 void nibaclient::client_processor::process(nibashared::message_fight &req) {
     nibashared::rng_client rng(std::move(req.generated));
-    auto [self_fightable, enemy_fightable] =
-        nibashared::prep_fight(5, 7);
+    auto [self_fightable, enemy_fightable] = nibashared::prep_fight(5, 7);
     // session.charid, req.enemyid
     nibashared::fight fight(std::move(self_fightable), std::move(enemy_fightable));
     std::cout << fight.go(rng) << " wins" << std::endl;
@@ -41,6 +43,7 @@ void nibaclient::client_processor::process(nibashared::message_fight &req) {
 void nibaclient::client_processor::process(nibashared::message_createchar &req) {
     if (req.success) {
         std::cout << "success" << std::endl;
+        std::cout << req.player << std::endl;
         session.state = nibashared::gamestate::ingame;
     } else {
         std::cout << "unable to create character" << std::endl;
