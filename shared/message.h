@@ -75,7 +75,7 @@ struct message_createchar {
     const cmdtype type = cmdtype::createchar;
 
     message_createchar() = default;
-    message_createchar(nibashared::player&& player);
+    message_createchar(nibashared::player &&player);
     bool validate(const nibashared::sessionstate &session);
     nlohmann::json create_response();
     nlohmann::json create_request();

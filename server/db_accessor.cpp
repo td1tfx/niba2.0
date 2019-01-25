@@ -133,7 +133,8 @@ bool db_accessor::create_user(const std::string &id, const std::string &password
 }
 
 // looks like this function 'broke' clang-format
-std::optional<nibashared::player> nibaserver::db_accessor::get_char(const std::string &id, boost::asio::yield_context &yield) {
+std::optional<nibashared::player>
+nibaserver::db_accessor::get_char(const std::string &id, boost::asio::yield_context &yield) {
     BOOST_LOG_SEV(logger_, sev::info) << "fetching character for " << id;
     ozo::error_code ec{};
     // not the best, we can probably do better
