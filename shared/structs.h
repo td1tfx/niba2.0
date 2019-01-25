@@ -26,27 +26,53 @@ enum class equipmenttype {
 };
 
 inline std::ostream &operator<<(std::ostream &os, const property &p) {
-    switch(p) {
-        case property::gold: os << "gold"; break;
-        case property::wood: os << "wood"; break;
-        case property::water: os << "water"; break;
-        case property::fire: os << "fire"; break;
-        case property::earth: os << "earth"; break;
+    switch (p) {
+    case property::gold:
+        os << "gold";
+        break;
+    case property::wood:
+        os << "wood";
+        break;
+    case property::water:
+        os << "water";
+        break;
+    case property::fire:
+        os << "fire";
+        break;
+    case property::earth:
+        os << "earth";
+        break;
     }
     return os;
 }
 
 // need a better way to do this
 inline std::ostream &operator<<(std::ostream &os, const equipmenttype &v) {
-    switch(v) {
-        case equipmenttype::head: os << "head"; break;
-        case equipmenttype::armor: os << "armor"; break;
-        case equipmenttype::boots: os << "boots"; break;
-        case equipmenttype::gloves: os << "gloves"; break;
-        case equipmenttype::belt: os << "belt"; break;
-        case equipmenttype::amulet: os << "amulet"; break;
-        case equipmenttype::ring: os << "ring"; break;
-        case equipmenttype::weapon: os << "weapon"; break;
+    switch (v) {
+    case equipmenttype::head:
+        os << "head";
+        break;
+    case equipmenttype::armor:
+        os << "armor";
+        break;
+    case equipmenttype::boots:
+        os << "boots";
+        break;
+    case equipmenttype::gloves:
+        os << "gloves";
+        break;
+    case equipmenttype::belt:
+        os << "belt";
+        break;
+    case equipmenttype::amulet:
+        os << "amulet";
+        break;
+    case equipmenttype::ring:
+        os << "ring";
+        break;
+    case equipmenttype::weapon:
+        os << "weapon";
+        break;
     }
     return os;
 }
