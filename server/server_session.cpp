@@ -68,8 +68,8 @@ void server_session::go() {
         catch (std::exception &e) {
             // moving this logging line to the end will cause crashes
             BOOST_LOG_SEV(logger_, sev::info) << "Session ending, reason: " << e.what();
-            if (processor.get_session().userid.has_value()) {
-                db_.logout(yield, processor.get_session().userid.value());
+            if (processor.get_session().userid) {
+                db_.logout(*processor.get_session().userid, yield);
             }
             close_down_ = true;
             boost::system::error_code ec;
