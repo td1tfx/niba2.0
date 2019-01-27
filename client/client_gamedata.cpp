@@ -1,16 +1,17 @@
-#include "gamedata.h"
+#include "client_gamedata.h"
 #include <fstream>
 #include <iostream>
 #include <nlohmann/json.hpp>
 
 using namespace nibashared;
+using namespace nibaclient;
 
-staticdata &staticdata::get() {
-    static staticdata instance;
+client_staticdata &client_staticdata::get() {
+    static client_staticdata instance;
     return instance;
 }
 
-staticdata::staticdata() {
+client_staticdata::client_staticdata() {
     try {
         std::ifstream char_fin("character.json");
         nlohmann::json serialized_chars = nlohmann::json::parse(char_fin);
@@ -39,8 +40,8 @@ staticdata::staticdata() {
 
 // NOTE postgres index start at 1, and we may need to do some manually sequence
 // resetting if we get gaps (but that shouldn't be too hard)
-const character &staticdata::character(int id) { return characters_.at(id); }
+const character &client_staticdata::character(int id) { return characters_.at(id); }
 
-const magic &staticdata::magic(int id) { return magics_.at(id); }
+const magic &client_staticdata::magic(int id) { return magics_.at(id); }
 
-const equipment &staticdata::equipment(int id) { return equipments_.at(id); }
+const equipment &client_staticdata::equipment(int id) { return equipments_.at(id); }
