@@ -10,7 +10,7 @@ set(CMAKE_CXX_FLAGS "-Wall -Werror -Wextra -Wunreachable-code -Wuninitialized")
 
 # https://stackoverflow.com/questions/28532444/cmake-string-token-inclusion-check
 if (CMAKE_CXX_COMPILER_ID MATCHES "^(Apple)?Clang$")
-    set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-Wno-gnu-string-literal-operator-template")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-gnu-string-literal-operator-template")
 endif()
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
