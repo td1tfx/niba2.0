@@ -15,20 +15,6 @@ SET check_function_bodies = false;
 SET client_min_messages = warning;
 SET row_security = off;
 
---
--- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
---
-
-CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
-
-
---
--- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
---
-
-COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
-
-
 SET default_tablespace = '';
 
 SET default_with_oids = false;
@@ -73,6 +59,28 @@ CREATE TABLE public.character_attribute (
 
 
 ALTER TABLE public.character_attribute OWNER TO postgres;
+
+--
+-- Name: character_attribute_character_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.character_attribute_character_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.character_attribute_character_id_seq OWNER TO postgres;
+
+--
+-- Name: character_attribute_character_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.character_attribute_character_id_seq OWNED BY public.character_attribute.character_id;
+
 
 --
 -- Name: character_equipment; Type: TABLE; Schema: public; Owner: postgres
@@ -185,6 +193,50 @@ CREATE VIEW public.character_dump AS
 ALTER TABLE public.character_dump OWNER TO postgres;
 
 --
+-- Name: character_equipment_item_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.character_equipment_item_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.character_equipment_item_id_seq OWNER TO postgres;
+
+--
+-- Name: character_equipment_item_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.character_equipment_item_id_seq OWNED BY public.character_equipment.id;
+
+
+--
+-- Name: character_magic_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.character_magic_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.character_magic_id_seq OWNER TO postgres;
+
+--
+-- Name: character_magic_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.character_magic_id_seq OWNED BY public.character_magic.id;
+
+
+--
 -- Name: equipment; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -232,6 +284,28 @@ COMMENT ON COLUMN public.equipment.type IS '装备类型（武器，衣服等）
 
 
 --
+-- Name: equipment_equipment_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.equipment_equipment_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.equipment_equipment_id_seq OWNER TO postgres;
+
+--
+-- Name: equipment_equipment_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.equipment_equipment_id_seq OWNED BY public.equipment.equipment_id;
+
+
+--
 -- Name: equipment_type; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -248,6 +322,28 @@ ALTER TABLE public.equipment_type OWNER TO postgres;
 --
 
 COMMENT ON TABLE public.equipment_type IS '幼儿园专用';
+
+
+--
+-- Name: equipment_type_type_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.equipment_type_type_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.equipment_type_type_seq OWNER TO postgres;
+
+--
+-- Name: equipment_type_type_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.equipment_type_type_seq OWNED BY public.equipment_type.type;
 
 
 --
@@ -382,10 +478,10 @@ CREATE VIEW public.magic_dump AS
 ALTER TABLE public.magic_dump OWNER TO postgres;
 
 --
--- Name: 人物_character_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: magic_inner_property_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
-CREATE SEQUENCE public."人物_character_id_seq"
+CREATE SEQUENCE public.magic_inner_property_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -394,20 +490,20 @@ CREATE SEQUENCE public."人物_character_id_seq"
     CACHE 1;
 
 
-ALTER TABLE public."人物_character_id_seq" OWNER TO postgres;
+ALTER TABLE public.magic_inner_property_seq OWNER TO postgres;
 
 --
--- Name: 人物_character_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: magic_inner_property_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
-ALTER SEQUENCE public."人物_character_id_seq" OWNED BY public.character_attribute.character_id;
+ALTER SEQUENCE public.magic_inner_property_seq OWNED BY public.magic.inner_property;
 
 
 --
--- Name: 人物武功_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: magic_magic_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
-CREATE SEQUENCE public."人物武功_id_seq"
+CREATE SEQUENCE public.magic_magic_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -416,165 +512,111 @@ CREATE SEQUENCE public."人物武功_id_seq"
     CACHE 1;
 
 
-ALTER TABLE public."人物武功_id_seq" OWNER TO postgres;
+ALTER TABLE public.magic_magic_id_seq OWNER TO postgres;
 
 --
--- Name: 人物武功_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: magic_magic_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
-ALTER SEQUENCE public."人物武功_id_seq" OWNED BY public.character_magic.id;
-
-
---
--- Name: 人物装备_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public."人物装备_id_seq"
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE public."人物装备_id_seq" OWNER TO postgres;
-
---
--- Name: 人物装备_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public."人物装备_id_seq" OWNED BY public.character_equipment.id;
-
-
---
--- Name: 武功_inner_property_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public."武功_inner_property_seq"
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE public."武功_inner_property_seq" OWNER TO postgres;
-
---
--- Name: 武功_inner_property_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public."武功_inner_property_seq" OWNED BY public.magic.inner_property;
-
-
---
--- Name: 武功_magic_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public."武功_magic_id_seq"
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE public."武功_magic_id_seq" OWNER TO postgres;
-
---
--- Name: 武功_magic_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public."武功_magic_id_seq" OWNED BY public.magic.magic_id;
-
-
---
--- Name: 装备_item_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public."装备_item_id_seq"
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE public."装备_item_id_seq" OWNER TO postgres;
-
---
--- Name: 装备_item_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public."装备_item_id_seq" OWNED BY public.equipment.equipment_id;
-
-
---
--- Name: 装备类型_type_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public."装备类型_type_seq"
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE public."装备类型_type_seq" OWNER TO postgres;
-
---
--- Name: 装备类型_type_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public."装备类型_type_seq" OWNED BY public.equipment_type.type;
+ALTER SEQUENCE public.magic_magic_id_seq OWNED BY public.magic.magic_id;
 
 
 --
 -- Name: character_attribute character_id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public.character_attribute ALTER COLUMN character_id SET DEFAULT nextval('public."人物_character_id_seq"'::regclass);
+ALTER TABLE ONLY public.character_attribute ALTER COLUMN character_id SET DEFAULT nextval('public.character_attribute_character_id_seq'::regclass);
 
 
 --
 -- Name: character_equipment id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public.character_equipment ALTER COLUMN id SET DEFAULT nextval('public."人物装备_id_seq"'::regclass);
+ALTER TABLE ONLY public.character_equipment ALTER COLUMN id SET DEFAULT nextval('public.character_equipment_item_id_seq'::regclass);
 
 
 --
 -- Name: character_magic id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public.character_magic ALTER COLUMN id SET DEFAULT nextval('public."人物武功_id_seq"'::regclass);
+ALTER TABLE ONLY public.character_magic ALTER COLUMN id SET DEFAULT nextval('public.character_magic_id_seq'::regclass);
 
 
 --
 -- Name: equipment equipment_id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public.equipment ALTER COLUMN equipment_id SET DEFAULT nextval('public."装备_item_id_seq"'::regclass);
+ALTER TABLE ONLY public.equipment ALTER COLUMN equipment_id SET DEFAULT nextval('public.equipment_equipment_id_seq'::regclass);
 
 
 --
 -- Name: equipment_type type; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public.equipment_type ALTER COLUMN type SET DEFAULT nextval('public."装备类型_type_seq"'::regclass);
+ALTER TABLE ONLY public.equipment_type ALTER COLUMN type SET DEFAULT nextval('public.equipment_type_type_seq'::regclass);
 
 
 --
 -- Name: magic magic_id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public.magic ALTER COLUMN magic_id SET DEFAULT nextval('public."武功_magic_id_seq"'::regclass);
+ALTER TABLE ONLY public.magic ALTER COLUMN magic_id SET DEFAULT nextval('public.magic_magic_id_seq'::regclass);
+
+
+--
+-- Name: character_equipment character_equipment_fk_character_id_fk_item_type_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.character_equipment
+    ADD CONSTRAINT character_equipment_fk_character_id_fk_item_type_key UNIQUE (fk_character_id, fk_item_type);
+
+
+--
+-- Name: character_equipment character_equipment_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.character_equipment
+    ADD CONSTRAINT character_equipment_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: character_magic character_magic_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.character_magic
+    ADD CONSTRAINT character_magic_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: character_attribute character_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.character_attribute
+    ADD CONSTRAINT character_pkey PRIMARY KEY (character_id);
+
+
+--
+-- Name: equipment equipment_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.equipment
+    ADD CONSTRAINT equipment_pkey PRIMARY KEY (equipment_id);
+
+
+--
+-- Name: equipment_type equipment_type_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.equipment_type
+    ADD CONSTRAINT equipment_type_pkey PRIMARY KEY (type);
+
+
+--
+-- Name: magic magic_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.magic
+    ADD CONSTRAINT magic_pkey PRIMARY KEY (magic_id);
 
 
 --
@@ -586,107 +628,51 @@ ALTER TABLE ONLY public.character_magic
 
 
 --
--- Name: character_attribute 人物_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: character_equipment character_equipment_fk_character_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public.character_attribute
-    ADD CONSTRAINT "人物_pkey" PRIMARY KEY (character_id);
+ALTER TABLE ONLY public.character_equipment
+    ADD CONSTRAINT character_equipment_fk_character_id_fkey FOREIGN KEY (fk_character_id) REFERENCES public.character_attribute(character_id) ON UPDATE CASCADE ON DELETE RESTRICT;
 
 
 --
--- Name: character_magic 人物武功_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: character_equipment character_equipment_fk_item_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.character_equipment
+    ADD CONSTRAINT character_equipment_fk_item_id_fkey FOREIGN KEY (fk_item_id) REFERENCES public.equipment(equipment_id) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+--
+-- Name: character_equipment character_equipment_fk_item_type_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.character_equipment
+    ADD CONSTRAINT character_equipment_fk_item_type_fkey FOREIGN KEY (fk_item_type) REFERENCES public.equipment_type(type) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+--
+-- Name: character_magic character_magic_fk_character_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.character_magic
-    ADD CONSTRAINT "人物武功_pkey" PRIMARY KEY (id);
+    ADD CONSTRAINT character_magic_fk_character_id_fkey FOREIGN KEY (fk_character_id) REFERENCES public.character_attribute(character_id) ON UPDATE CASCADE ON DELETE RESTRICT;
 
 
 --
--- Name: character_equipment 人物装备_fk_character_id_fk_item_type_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: character_magic character_magic_fk_magic_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public.character_equipment
-    ADD CONSTRAINT "人物装备_fk_character_id_fk_item_type_key" UNIQUE (fk_character_id, fk_item_type);
-
-
---
--- Name: character_equipment 人物装备_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.character_equipment
-    ADD CONSTRAINT "人物装备_pkey" PRIMARY KEY (id);
+ALTER TABLE ONLY public.character_magic
+    ADD CONSTRAINT character_magic_fk_magic_id_fkey FOREIGN KEY (fk_magic_id) REFERENCES public.magic(magic_id) ON UPDATE CASCADE ON DELETE RESTRICT;
 
 
 --
--- Name: magic 武功_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.magic
-    ADD CONSTRAINT "武功_pkey" PRIMARY KEY (magic_id);
-
-
---
--- Name: equipment 装备_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: equipment equipment_type_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.equipment
-    ADD CONSTRAINT "装备_pkey" PRIMARY KEY (equipment_id);
-
-
---
--- Name: equipment_type 装备类型_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.equipment_type
-    ADD CONSTRAINT "装备类型_pkey" PRIMARY KEY (type);
-
-
---
--- Name: character_magic 人物武功_fk_character_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.character_magic
-    ADD CONSTRAINT "人物武功_fk_character_id_fkey" FOREIGN KEY (fk_character_id) REFERENCES public.character_attribute(character_id) ON UPDATE CASCADE ON DELETE RESTRICT;
-
-
---
--- Name: character_magic 人物武功_fk_magic_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.character_magic
-    ADD CONSTRAINT "人物武功_fk_magic_id_fkey" FOREIGN KEY (fk_magic_id) REFERENCES public.magic(magic_id) ON UPDATE CASCADE ON DELETE RESTRICT;
-
-
---
--- Name: character_equipment 人物装备_fk_character_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.character_equipment
-    ADD CONSTRAINT "人物装备_fk_character_id_fkey" FOREIGN KEY (fk_character_id) REFERENCES public.character_attribute(character_id) ON UPDATE CASCADE ON DELETE RESTRICT;
-
-
---
--- Name: character_equipment 人物装备_fk_item_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.character_equipment
-    ADD CONSTRAINT "人物装备_fk_item_id_fkey" FOREIGN KEY (fk_item_id) REFERENCES public.equipment(equipment_id) ON UPDATE CASCADE ON DELETE RESTRICT;
-
-
---
--- Name: character_equipment 人物装备_fk_item_type_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.character_equipment
-    ADD CONSTRAINT "人物装备_fk_item_type_fkey" FOREIGN KEY (fk_item_type) REFERENCES public.equipment_type(type) ON UPDATE CASCADE ON DELETE RESTRICT;
-
-
---
--- Name: equipment 装备_type_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.equipment
-    ADD CONSTRAINT "装备_type_fkey" FOREIGN KEY (type) REFERENCES public.equipment_type(type) ON UPDATE CASCADE ON DELETE RESTRICT;
+    ADD CONSTRAINT equipment_type_fkey FOREIGN KEY (type) REFERENCES public.equipment_type(type) ON UPDATE CASCADE ON DELETE RESTRICT;
 
 
 --
