@@ -19,6 +19,7 @@ struct magic_ex {
 
 const static magic DEFAULT_MAGIC{.name = u8"default",
                                  .magic_id = 0,
+                                 .static_id = -1,
                                  .active = 1,
                                  .cd = 0,
                                  .multiplier = 100,

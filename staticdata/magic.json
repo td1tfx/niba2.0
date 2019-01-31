@@ -1,6 +1,7 @@
 [
     {
         "magic_id": 1,
+        "static_id": -1,
         "name": "太祖长拳",
         "active": true,
         "multiplier": 120,
@@ -38,6 +39,7 @@
     },
     {
         "magic_id": 2,
+        "static_id": -1,
         "name": "农家腿法",
         "active": true,
         "multiplier": 110,
@@ -75,6 +77,7 @@
     },
     {
         "magic_id": 3,
+        "static_id": -1,
         "name": "八卦掌",
         "active": true,
         "multiplier": 20,
@@ -112,6 +115,7 @@
     },
     {
         "magic_id": 4,
+        "static_id": -1,
         "name": "凶猛扑击",
         "active": true,
         "multiplier": 150,
@@ -149,6 +153,7 @@
     },
     {
         "magic_id": 5,
+        "static_id": -1,
         "name": "六合拳",
         "active": true,
         "multiplier": 30,

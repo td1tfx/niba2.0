@@ -353,6 +353,7 @@ ALTER SEQUENCE public.equipment_type_type_seq OWNED BY public.equipment_type.typ
 CREATE VIEW public.item_dump AS
  SELECT to_json(array_agg(t.*)) AS to_json
    FROM ( SELECT equipment.equipment_id,
+            '-1'::integer AS static_id,
             equipment.name,
             equipment.description,
             equipment.type,
@@ -439,6 +440,7 @@ ALTER TABLE public.magic OWNER TO postgres;
 CREATE VIEW public.magic_dump AS
  SELECT to_json(array_agg(t.*)) AS to_json
    FROM ( SELECT magic.magic_id,
+            '-1'::integer AS static_id,
             magic.name,
             magic.active,
             magic.multiplier,

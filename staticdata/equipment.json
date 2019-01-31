@@ -1,6 +1,7 @@
 [
     {
         "equipment_id": 1,
+        "static_id": -1,
         "name": "木棍",
         "description": "木质长棍，容易折断",
         "type": 7,

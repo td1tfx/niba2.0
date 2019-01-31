@@ -165,15 +165,15 @@ STRUCT_JSON_SERIALIZE(player);
 STRUCT_PRINT(player);
 
 struct magic {
-    BOOST_HANA_DEFINE_STRUCT(magic, (std::string, name), (int, magic_id), (int, active), (int, cd),
-                             (int, multiplier), (int, inner_damage), (int, mp_cost),
-                             (property, inner_property), (battlestats, stats));
+    BOOST_HANA_DEFINE_STRUCT(magic, (std::string, name), (int, magic_id), (int, static_id),
+                             (int, active), (int, cd), (int, multiplier), (int, inner_damage),
+                             (int, mp_cost), (property, inner_property), (battlestats, stats));
 };
 STRUCT_JSON_SERIALIZE(magic);
 STRUCT_PRINT(magic);
 
 struct equipment {
-    BOOST_HANA_DEFINE_STRUCT(equipment, (int, equipment_id), (std::string, name),
+    BOOST_HANA_DEFINE_STRUCT(equipment, (int, equipment_id), (int, static_id), (std::string, name),
                              (std::string, description), (equipmenttype, type),
                              (battlestats, stats), (int, item_level), (int, required_level));
 };

@@ -17,7 +17,7 @@ server_staticdata &server_staticdata::get() {
 
 server_staticdata::server_staticdata() {
     // read from postgres here
-    const auto connection_info = ozo::make_connection_info("dbname=niba user=postgres");
+    const auto connection_info = ozo::make_connection_info("dbname=niba_static user=postgres");
     ozo::io_context ioc;
     const auto connector = ozo::make_connector(connection_info, ioc);
     ozo::rows_of<std::string> character, magic, item;
