@@ -146,6 +146,7 @@ CREATE VIEW public.character_dump AS
  SELECT to_json(array_agg(t.*)) AS to_json
    FROM ( SELECT character_attribute.character_id,
             character_attribute.name,
+            character_attribute.description,
             row_to_json(( SELECT d.*::record AS d
                    FROM ( SELECT character_attribute.strength,
                             character_attribute.dexterity,
@@ -442,6 +443,7 @@ CREATE VIEW public.magic_dump AS
    FROM ( SELECT magic.magic_id,
             '-1'::integer AS static_id,
             magic.name,
+            magic.description,
             magic.active,
             magic.multiplier,
             magic.inner_damage,

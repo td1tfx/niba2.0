@@ -8,7 +8,6 @@
         "item_level": 1,
         "required_level": 1,
         "stats": {
-            "description": "木质长棍，容易折断",
             "hp": 0,
             "mp": 0,
             "attack_min": 3,

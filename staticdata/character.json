@@ -2,6 +2,7 @@
     {
         "character_id": 1,
         "name": "野兔",
+        "description": "",
         "attrs": {
             "strength": 3,
             "dexterity": 11,
@@ -9,7 +10,6 @@
             "spirit": 6
         },
         "stats": {
-            "description": "",
             "hp": 0,
             "mp": 0,
             "attack_min": 0,
@@ -44,6 +44,7 @@
     {
         "character_id": 2,
         "name": "野猪",
+        "description": "",
         "attrs": {
             "strength": 11,
             "dexterity": 12,
@@ -51,7 +52,6 @@
             "spirit": 7
         },
         "stats": {
-            "description": "",
             "hp": 0,
             "mp": 0,
             "attack_min": 0,
@@ -87,6 +87,7 @@
     {
         "character_id": 3,
         "name": "山鸡",
+        "description": "",
         "attrs": {
             "strength": 5,
             "dexterity": 8,
@@ -94,7 +95,6 @@
             "spirit": 2
         },
         "stats": {
-            "description": "",
             "hp": 0,
             "mp": 0,
             "attack_min": 0,
@@ -129,6 +129,7 @@
     {
         "character_id": 4,
         "name": "野猪王",
+        "description": "",
         "attrs": {
             "strength": 20,
             "dexterity": 15,
@@ -136,7 +137,6 @@
             "spirit": 10
         },
         "stats": {
-            "description": "",
             "hp": 0,
             "mp": 0,
             "attack_min": 0,
@@ -170,6 +170,7 @@
     {
         "character_id": 5,
         "name": "地痞",
+        "description": "",
         "attrs": {
             "strength": 12,
             "dexterity": 15,
@@ -177,7 +178,6 @@
             "spirit": 7
         },
         "stats": {
-            "description": "",
             "hp": 0,
             "mp": 0,
             "attack_min": 0,
@@ -213,6 +213,7 @@
     {
         "character_id": 6,
         "name": "无赖",
+        "description": "",
         "attrs": {
             "strength": 11,
             "dexterity": 15,
@@ -220,7 +221,6 @@
             "spirit": 9
         },
         "stats": {
-            "description": "",
             "hp": 0,
             "mp": 0,
             "attack_min": 0,
@@ -254,6 +254,7 @@
     {
         "character_id": 7,
         "name": "八卦门弃徒",
+        "description": "",
         "attrs": {
             "strength": 11,
             "dexterity": 14,
@@ -261,7 +262,6 @@
             "spirit": 15
         },
         "stats": {
-            "description": "",
             "hp": 0,
             "mp": 0,
             "attack_min": 0,
@@ -295,6 +295,7 @@
     {
         "character_id": 8,
         "name": "六合门弃徒",
+        "description": "",
         "attrs": {
             "strength": 7,
             "dexterity": 14,
@@ -302,7 +303,6 @@
             "spirit": 16
         },
         "stats": {
-            "description": "",
             "hp": 0,
             "mp": 0,
             "attack_min": 0,
