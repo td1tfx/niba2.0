@@ -124,7 +124,7 @@ nlohmann::json nibashared::message_createchar::create_response() {
     if (success) {
         return {{"success", true}, {"player", player}};
     }
-    return {{"sucess", false}};
+    return {{"success", false}};
 }
 
 nlohmann::json nibashared::message_createchar::create_request() {

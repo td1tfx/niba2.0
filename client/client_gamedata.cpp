@@ -17,18 +17,24 @@ client_staticdata::client_staticdata() {
         nlohmann::json serialized_chars = nlohmann::json::parse(char_fin);
         for (auto &element : serialized_chars) {
             characters_[element["character_id"]] = element;
+            // std::cout << element << std::endl;
+            // std::cout << characters_[element["character_id"]] << std::endl;
         }
 
         std::ifstream magic_fin("magic.json");
         nlohmann::json serialized_magic = nlohmann::json::parse(magic_fin);
         for (auto &element : serialized_magic) {
             magics_[element["magic_id"]] = element;
+            // std::cout << element << std::endl;
+            // std::cout << magics_[element["magic_id"]] << std::endl;
         }
 
         std::ifstream equipment_fin("equipment.json");
         nlohmann::json serialized_equipment = nlohmann::json::parse(equipment_fin);
         for (auto &element : serialized_equipment) {
             equipments_[element["equipment_id"]] = element;
+            // std::cout << element << std::endl;
+            // std::cout << equipments_[element["equipment_id"]] << std::endl;
         }
 
     } catch (std::exception &e) {

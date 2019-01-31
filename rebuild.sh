@@ -18,10 +18,6 @@ do
 done
 shift $((OPTIND -1))
 
-if [ $gen = true ]; then
-    python3 shared/gen_structs.py shared/structs.yaml shared/structs.h shared/structs.cpp
-fi
-
 rm -rf build
 mkdir build
 cd build

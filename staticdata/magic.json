@@ -1,7 +1,9 @@
 [
     {
         "magic_id": 1,
+        "static_id": -1,
         "name": "太祖长拳",
+        "description": "",
         "active": true,
         "multiplier": 120,
         "inner_damage": 0,
@@ -9,7 +11,6 @@
         "mp_cost": 0,
         "inner_property": 1,
         "stats": {
-            "description": "",
             "hp": 0,
             "mp": 0,
             "attack_min": 0,
@@ -38,7 +39,9 @@
     },
     {
         "magic_id": 2,
+        "static_id": -1,
         "name": "农家腿法",
+        "description": "",
         "active": true,
         "multiplier": 110,
         "inner_damage": 0,
@@ -46,7 +49,6 @@
         "mp_cost": 0,
         "inner_property": 3,
         "stats": {
-            "description": "",
             "hp": 0,
             "mp": 0,
             "attack_min": 0,
@@ -75,7 +77,9 @@
     },
     {
         "magic_id": 3,
+        "static_id": -1,
         "name": "八卦掌",
+        "description": "",
         "active": true,
         "multiplier": 20,
         "inner_damage": 20,
@@ -83,7 +87,6 @@
         "mp_cost": 0,
         "inner_property": 1,
         "stats": {
-            "description": "",
             "hp": 0,
             "mp": 0,
             "attack_min": 0,
@@ -112,7 +115,9 @@
     },
     {
         "magic_id": 4,
+        "static_id": -1,
         "name": "凶猛扑击",
+        "description": "",
         "active": true,
         "multiplier": 150,
         "inner_damage": 0,
@@ -120,7 +125,6 @@
         "mp_cost": 0,
         "inner_property": 4,
         "stats": {
-            "description": "",
             "hp": 0,
             "mp": 0,
             "attack_min": 0,
@@ -149,7 +153,9 @@
     },
     {
         "magic_id": 5,
+        "static_id": -1,
         "name": "六合拳",
+        "description": "",
         "active": true,
         "multiplier": 30,
         "inner_damage": 30,
@@ -157,7 +163,6 @@
         "mp_cost": 0,
         "inner_property": 1,
         "stats": {
-            "description": "",
             "hp": 0,
             "mp": 0,
             "attack_min": 0,
