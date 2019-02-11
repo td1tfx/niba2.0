@@ -142,7 +142,7 @@ nibaserver::db_accessor::get_char(const std::string &id, boost::asio::yield_cont
     ozo::rows_of<std::string, char, int, int, int, int> characters;
     auto conn = ozo::request(
         conn_,
-        "SELECT name, gender, strength, dexterity, physique, spirit FROM player_character where id="_SQL +
+        "SELECT name, gender, strength, dexterity, physique, spirit FROM player_character WHERE id="_SQL +
             id,
         ozo::into(characters), yield[ec]);
     if (ec) {
@@ -158,6 +158,77 @@ nibaserver::db_accessor::get_char(const std::string &id, boost::asio::yield_cont
         .gender = gender,
         .attrs = {
             .strength = strength, .dexterity = dexterity, .physique = physique, .spirit = spirit}};
+}
+
+std::pair<std::vector<nibashared::magic>, std::vector<nibashared::equipment>>
+nibaserver::db_accessor::get_aux(const std::string &name, boost::asio::yield_context &yield) {
+    BOOST_LOG_SEV(logger_, sev::info) << "fetching character magic and equips for " << name;
+    // since magic and equipment are "hana adapted", we can do this directly
+    std::pair<std::vector<nibashared::magic>, std::vector<nibashared::equipment>> ret;
+    auto &magics = ret.first;
+    // auto &equips = ret.second;
+    // ?? looking for ways to fix this
+    ozo::rows_of<std::string, int, int, std::string, bool, int, int, int, int, int, int, int, int,
+                 int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int,
+                 int, int, int, int, int>
+        rows;
+    ozo::error_code ec{};
+    auto conn = ozo::request(
+        conn_,
+        "SELECT name, magic_id, static_id, description, active, cd, multiplier, inner_damage, mp_cost, "
+        "inner_property, "
+        " hp, mp, attack_min, attack_max, "
+        "inner_power, accuracy, evasion, speed, defence, crit_chance, crit_damage, "
+        "reduce_def, reduce_def_perc, hp_regen, mp_regen, gold_res, wood_res, water_res, "
+        "fire_res, earth_res, hp_on_hit, hp_steal, mp_on_hit, mp_steal "
+        " FROM player_magic WHERE player_name="_SQL + name + " ORDER BY priority"_SQL,
+        ozo::into(rows), yield[ec]);
+    if (ec) {
+        BOOST_LOG_SEV(logger_, sev::error) << ec.message() << " | " << ozo::error_message(conn)
+                                           << " | " << ozo::get_error_context(conn);
+        return ret;
+    }
+    for (auto &r : rows) {
+        // maybe hana can save this a bit too
+        nibashared::magic magic{.name = std::get<0>(r),
+                                .magic_id = std::get<1>(r),
+                                .static_id = std::get<2>(r),
+                                .description = std::get<3>(r),
+                                // json has no boolean, but db stored it as bool
+                                .active = std::get<4>(r) ? 1 : 0,
+                                .cd = std::get<5>(r),
+                                .multiplier = std::get<6>(r),
+                                .inner_damage = std::get<7>(r),
+                                .mp_cost = std::get<8>(r),
+                                .inner_property = static_cast<nibashared::property>(std::get<9>(r)),
+                                .stats = {.hp = std::get<10>(r),
+                                          .mp = std::get<11>(r),
+                                          .attack_min = std::get<12>(r),
+                                          .attack_max = std::get<13>(r),
+                                          .inner_power = std::get<14>(r),
+                                          .accuracy = std::get<15>(r),
+                                          .evasion = std::get<16>(r),
+                                          .speed = std::get<17>(r),
+                                          .defence = std::get<18>(r),
+                                          .crit_chance = std::get<19>(r),
+                                          .crit_damage = std::get<20>(r),
+                                          .reduce_def = std::get<21>(r),
+                                          .reduce_def_perc = std::get<22>(r),
+                                          .hp_regen = std::get<23>(r),
+                                          .mp_regen = std::get<24>(r),
+                                          .gold_res = std::get<25>(r),
+                                          .wood_res = std::get<26>(r),
+                                          .water_res = std::get<27>(r),
+                                          .fire_res = std::get<28>(r),
+                                          .earth_res = std::get<29>(r),
+                                          .hp_on_hit = std::get<30>(r),
+                                          .hp_steal = std::get<31>(r),
+                                          .mp_on_hit = std::get<32>(r),
+                                          .mp_steal = std::get<33>(r)}};
+        magics.push_back(std::move(magic));
+    }
+    return ret;
+    // skipping equipments for now...hoping there is a fix and we don't need to do this anymore
 }
 
 bool db_accessor::create_char(const std::string &id, const nibashared::player &player,
@@ -177,6 +248,21 @@ bool db_accessor::create_char(const std::string &id, const nibashared::player &p
         BOOST_LOG_SEV(logger_, sev::error) << ec.message() << " | " << ozo::error_message(conn)
                                            << " | " << ozo::get_error_context(conn);
         return false;
+    }
+
+    // insert a test magic as well for testing
+    // ideally use a transaction, but this is for testing anyway.
+    // note the binding is the name of the player_character
+    std::string description = u8"测试武功"; // TODO: try string_view
+    conn = ozo::execute(
+        conn_,
+        "INSERT INTO player_magic(static_id, player_name, priority, name, multiplier, inner_damage, cd) VALUES(0,"_SQL +
+            player.name + ", 0, "_SQL + description + ", 110, 10, 1)"_SQL,
+        yield[ec]);
+
+    if (ec) {
+        BOOST_LOG_SEV(logger_, sev::error) << ec.message() << " | " << ozo::error_message(conn)
+                                           << " | " << ozo::get_error_context(conn);
     }
 
     return true;

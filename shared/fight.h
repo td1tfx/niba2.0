@@ -1,6 +1,7 @@
 #pragma once
 #include "global_defs.h"
 #include "rng.h"
+#include "sessiondata.h"
 #include "structs.h"
 
 #include <optional>
@@ -74,34 +75,42 @@ private:
 
 battlestats stats_computer(const attributes &attr);
 
+// there is the idea of priority of magics (ordering is important)
+fightable setup_self(nibashared::character &&raw_character,
+                     const std::vector<nibashared::magic> &magics,
+                     const std::vector<nibashared::equipment> &equips);
+
 template<typename staticdata>
 fightable setup_fightable(int id) {
-    auto raw_character = staticdata::get().character(id);
-    fightable fight_character;
-    fight_character.char_data = raw_character;
-    fight_character.char_data.stats += stats_computer(raw_character.attrs);
-    for (auto magic_id : raw_character.active_magic) {
-        auto magic = staticdata::get().magic(magic_id);
-        CPRINT(raw_character.name << " has magic " << magic.name);
-        fight_character.char_data.stats += magic.stats;
-        // NOTE, aggregation initialization is copy... well fine
-        // also push_back is complaining designated initialization for reasons I don't understand
-        fight_character.magics.emplace_back(magic_ex{.cd = 0, .real_magic = magic});
-    }
-    for (auto equip_id : raw_character.equipments) {
-        auto equipment = staticdata::get().equipment(equip_id);
-        CPRINT(raw_character.name << " has item " << equipment.name);
-        fight_character.char_data.stats += equipment.stats;
-    }
-    return fight_character; // RVO
+    nibashared::character raw_character = staticdata::get().character(id);
+    std::vector<nibashared::magic> magics;
+    std::vector<nibashared::equipment> equips;
+    std::for_each(
+        raw_character.active_magic.begin(), raw_character.active_magic.end(),
+        [&magics](auto &magic_id) { magics.push_back(staticdata::get().magic(magic_id)); });
+    std::for_each(
+        raw_character.equipments.begin(), raw_character.equipments.end(),
+        [&equips](auto &equip_id) { equips.push_back(staticdata::get().equipment(equip_id)); });
+    // std::cout << magics << std::endl;
+    // std::cout << equips << std::endl;
+    return setup_self(std::move(raw_character), magics, equips);
 }
 
 template<typename staticdata>
-std::pair<std::vector<fightable>, std::vector<fightable>> prep_fight(int id_me, int id_you) {
-    CPRINT("prep " << id_me << " " << id_you);
+std::pair<std::vector<fightable>, std::vector<fightable>>
+prep_fight(nibashared::sessionstate &session, int id_you) {
+    CPRINT("prep " << (*(session.player)).name << " " << id_you);
     // initializer list do not like moves
     std::pair<std::vector<fightable>, std::vector<fightable>> ret;
-    ret.first.push_back(setup_fightable<staticdata>(id_me));
+    // copy player data into raw_character
+    nibashared::character raw_character{.name = (*(session.player)).name,
+                                        .character_id = -1,
+                                        .description{},
+                                        .attrs = (*(session.player)).attrs,
+                                        .stats{},
+                                        .equipments{},
+                                        .active_magic{}};
+    ret.first.push_back(setup_self(std::move(raw_character), session.magics, session.equips));
     ret.second.push_back(setup_fightable<staticdata>(id_you));
     return ret; // RVO
 }

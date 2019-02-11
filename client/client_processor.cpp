@@ -1,13 +1,13 @@
 #include "client_processor.h"
-#include "fight.h"
 #include "client_gamedata.h"
+#include "fight.h"
 #include "rng.h"
 
 #include <iostream>
 
 using namespace nibaclient;
 
-client_processor::client_processor() { session.state = nibashared::gamestate::prelogin; }
+client_processor::client_processor() : session_() {}
 
 void client_processor::process(nibashared::message_register &req) {
     if (req.success) {
@@ -20,12 +20,15 @@ void client_processor::process(nibashared::message_register &req) {
 void client_processor::process(nibashared::message_login &req) {
     if (req.success) {
         std::cout << "success" << std::endl;
-        session.userid = req.id;
+        session_.userid = req.id;
         if (!req.player) {
-            session.state = nibashared::gamestate::createchar;
+            session_.state = nibashared::gamestate::createchar;
         } else {
-            session.state = nibashared::gamestate::ingame;
+            session_.state = nibashared::gamestate::ingame;
             std::cout << *req.player << std::endl;
+            session_.player = *(req.player);
+            session_.magics = req.magics;
+            session_.equips = req.equips;
         }
     } else {
         std::cout << "failed to login" << std::endl;
@@ -35,8 +38,7 @@ void client_processor::process(nibashared::message_login &req) {
 void nibaclient::client_processor::process(nibashared::message_fight &req) {
     nibashared::rng_client rng(std::move(req.generated));
     auto [self_fightable, enemy_fightable] =
-        nibashared::prep_fight<nibaclient::client_staticdata>(5, 7);
-    // session.charid, req.enemyid
+        nibashared::prep_fight<nibaclient::client_staticdata>(session_, req.enemyid);
     nibashared::fight fight(std::move(self_fightable), std::move(enemy_fightable));
     std::cout << fight.go(rng) << " wins" << std::endl;
 }
@@ -45,10 +47,15 @@ void nibaclient::client_processor::process(nibashared::message_createchar &req) 
     if (req.success) {
         std::cout << "success" << std::endl;
         std::cout << req.player << std::endl;
-        session.state = nibashared::gamestate::ingame;
+        session_.player = req.player;
+        session_.magics = req.magics;
+        session_.equips = req.equips;
+        session_.state = nibashared::gamestate::ingame;
     } else {
         std::cout << "unable to create character" << std::endl;
     }
 }
 
-const nibashared::sessionstate &client_processor::get_session() { return session; }
+const nibashared::sessionstate &client_processor::get_session() {
+    return session_;
+}

@@ -3,6 +3,7 @@
 #include "global_defs.h"
 #include "logger.h"
 #include "message.h"
+#include "sessiondata.h"
 
 #include <boost/asio/spawn.hpp>
 #include <nlohmann/json.hpp>

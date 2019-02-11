@@ -22,19 +22,18 @@ server_staticdata::server_staticdata() {
     const auto connector = ozo::make_connector(connection_info, ioc);
     ozo::rows_of<std::string> character, magic, item;
 
-    boost::asio::spawn(ioc, [&] (boost::asio::yield_context yield) {
-        ozo::request(connector, "SELECT to_json::TEXT FROM character_dump"_SQL, 
-            ozo::into(character), yield);
+    boost::asio::spawn(ioc, [&](boost::asio::yield_context yield) {
+        ozo::request(connector, "SELECT to_json::TEXT FROM character_dump"_SQL,
+                     ozo::into(character), yield);
 
-        ozo::request(connector, "SELECT to_json::TEXT FROM magic_dump"_SQL, 
-            ozo::into(magic), yield);
+        ozo::request(connector, "SELECT to_json::TEXT FROM magic_dump"_SQL, ozo::into(magic),
+                     yield);
 
-        ozo::request(connector, "SELECT to_json::TEXT FROM item_dump"_SQL, 
-            ozo::into(item), yield);
+        ozo::request(connector, "SELECT to_json::TEXT FROM item_dump"_SQL, ozo::into(item), yield);
     });
     ioc.run();
 
-    try{
+    try {
         nlohmann::json serialized_chars = nlohmann::json::parse(std::get<0>(character.at(0)));
         for (auto &element : serialized_chars) {
             characters_[element["character_id"]] = element;

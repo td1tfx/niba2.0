@@ -20,10 +20,5 @@ enum class gamestate : std::size_t {
     LAST
 };
 
-struct sessionstate {
-    gamestate state;
-    std::optional<std::string> userid;
-    int charid{-1};
-};
 
 } // namespace nibashared

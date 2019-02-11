@@ -8,7 +8,9 @@
 #include <ozo/connection_info.h>
 #include <ozo/connection_pool.h>
 #include <string>
+#include <string_view>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace nibaserver {
@@ -27,8 +29,12 @@ public:
                      boost::asio::yield_context &yield);
 
     // NOTE no save char functions yet
-    std::optional<nibashared::player> get_char(const std::string &name,
+    std::optional<nibashared::player> get_char(const std::string &id,
                                                boost::asio::yield_context &yield);
+    // get player auxiliary data, magic and equipments
+    std::pair<std::vector<nibashared::magic>, std::vector<nibashared::equipment>>
+    get_aux(const std::string &name, boost::asio::yield_context &yield);
+    // create new character
     bool create_char(const std::string &id, const nibashared::player &player,
                      boost::asio::yield_context &yield);
 

@@ -213,4 +213,24 @@ battlestats stats_computer(const attributes &attr) {
     return stats; // RVO
 }
 
+fightable setup_self(nibashared::character &&raw_character,
+                     const std::vector<nibashared::magic> &magics,
+                     const std::vector<nibashared::equipment> &equips) {
+    fightable fight_character;
+    fight_character.char_data = std::move(raw_character);
+    fight_character.char_data.stats += stats_computer(fight_character.char_data.attrs);
+    for (const auto &magic : magics) {
+        CPRINT(fight_character.char_data.name << " has magic " << magic.name);
+        fight_character.char_data.stats += magic.stats;
+        // NOTE, aggregation initialization is copy... well fine
+        // also push_back is complaining designated initialization for reasons I don't understand
+        fight_character.magics.emplace_back(magic_ex{.cd = 0, .real_magic = magic});
+    }
+    for (const auto &equipment : equips) {
+        CPRINT(fight_character.char_data.name << " has item " << equipment.name);
+        fight_character.char_data.stats += equipment.stats;
+    }
+    return fight_character; // RVO
+}
+
 } // namespace nibashared

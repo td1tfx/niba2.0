@@ -1,8 +1,8 @@
 #include "server_processor.h"
 #include "db_accessor.h"
 #include "fight.h"
-#include "server_gamedata.h"
 #include "rng.h"
+#include "server_gamedata.h"
 
 #include <iostream>
 
@@ -10,9 +10,7 @@ using namespace nibaserver;
 namespace sev = boost::log::trivial;
 
 server_processor::server_processor(boost::asio::yield_context &yield, nibaserver::db_accessor &db) :
-    yield_(yield), db_(db) {
-    session_.state = nibashared::gamestate::prelogin;
-}
+    session_(), yield_(yield), db_(db) {}
 
 std::string server_processor::dispatch(const std::string &request) {
     try {
@@ -60,20 +58,23 @@ void nibaserver::server_processor::process(nibashared::message_login &req) {
         req.player = db_.get_char(req.id, yield_);
         if (req.player) {
             session_.state = nibashared::gamestate::ingame;
+            session_.player = *(req.player);
+            // player data exists, so lets fetch equipments&magics data of the player
+            std::tie(session_.magics, session_.equips) = db_.get_aux((*(req.player)).name, yield_);
+            req.magics = session_.magics;
+            req.equips = session_.equips;
         } else {
             session_.state = nibashared::gamestate::createchar;
         }
     } else {
         req.success = false;
     }
-    // TODO change this later
-    session_.charid = 0;
     BOOST_LOG_SEV(logger_, sev::info) << "User " << req.id << " logging in is " << req.success;
 }
 
 void nibaserver::server_processor::process(nibashared::message_fight &req) {
-    auto [self_fightable, enemy_fightable] = nibashared::prep_fight<nibaserver::server_staticdata>(5, 7);
-    // session_.charid, req.enemyid
+    auto [self_fightable, enemy_fightable] =
+        nibashared::prep_fight<nibaserver::server_staticdata>(session_, req.enemyid);
     nibashared::fight fight(std::move(self_fightable), std::move(enemy_fightable));
     nibashared::rng_server rng;
     fight.go(rng);
@@ -90,11 +91,18 @@ void nibaserver::server_processor::process(nibashared::message_createchar &req) 
         req.success = true;
         // nothing to modify for player
         session_.state = nibashared::gamestate::ingame;
+        session_.player = req.player;
         BOOST_LOG_SEV(logger_, sev::info)
             << "User " << *(session_.userid) << " created an character " << req.player;
+        // grab magic&equips, might not be the best way but anyway
+        std::tie(session_.magics, session_.equips) = db_.get_aux(req.player.name, yield_);
+        req.magics = session_.magics;
+        req.equips = session_.equips;
     } else {
         req.success = false;
     }
 }
 
-const nibashared::sessionstate &nibaserver::server_processor::get_session() { return session_; }
+const nibashared::sessionstate &nibaserver::server_processor::get_session() {
+    return session_;
+}

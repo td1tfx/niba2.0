@@ -1,6 +1,7 @@
 #pragma once
 
 #include "global_defs.h"
+#include "sessiondata.h"
 #include "structs.h"
 #include <nlohmann/json.hpp>
 #include <optional>
@@ -18,6 +19,8 @@ enum class cmdtype : std::size_t {
     LAST
 };
 
+// making staticdata templated might be too difficult to manage
+
 struct message_register {
     const cmdtype type = cmdtype::registeration;
 
@@ -29,6 +32,7 @@ struct message_register {
     void merge_response(const nlohmann::json &j);
     void from_request(const nlohmann::json &j);
 
+    // maybe we can boost hana this as well
     std::string id;
     std::string password;
     bool success = false;
@@ -52,7 +56,12 @@ struct message_login {
     std::string password;
     bool success = false;
     std::optional<nibashared::player> player;
+    std::vector<nibashared::magic> magics;
+    std::vector<nibashared::equipment> equips;
 };
+
+// after login, this is a separate request to fetch player data
+
 
 struct message_fight {
     const cmdtype type = cmdtype::fight;
@@ -84,6 +93,8 @@ struct message_createchar {
 
     // TODO move all to character after gender is added into character
     nibashared::player player;
+    std::vector<nibashared::magic> magics;
+    std::vector<nibashared::equipment> equips;
     bool success = false;
 };
 
