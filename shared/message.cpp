@@ -51,6 +51,8 @@ json message_login::create_response() {
     if (player) {
         ret["player"] = *player;
     }
+    ret["magics"] = magics;
+    ret["equips"] = equips;
     return ret;
 }
 
@@ -65,6 +67,8 @@ void message_login::merge_response(const json &j) {
     if (char_iter != j.end()) {
         player = char_iter.value().get<nibashared::player>();
     }
+    j.at("magics").get_to(magics);
+    j.at("equips").get_to(equips);
 }
 
 void message_login::from_request(const json &j) {
@@ -79,8 +83,8 @@ bool nibashared::message_fight::validate(const nibashared::sessionstate &session
     if (session.state != nibashared::gamestate::ingame)
         return false;
 
-    // currently only support id=1
-    if (enemyid != 1)
+    // TODO: store staticdata in session?
+    if (enemyid < 0 || enemyid > 8)
         return false;
 
     return true;
@@ -122,7 +126,7 @@ bool nibashared::message_createchar::validate(const nibashared::sessionstate &se
 
 nlohmann::json nibashared::message_createchar::create_response() {
     if (success) {
-        return {{"success", true}, {"player", player}};
+        return {{"success", true}, {"player", player}, {"magics", magics}, {"equips", equips}};
     }
     return {{"success", false}};
 }
@@ -133,6 +137,11 @@ nlohmann::json nibashared::message_createchar::create_request() {
 
 void nibashared::message_createchar::merge_response(const nlohmann::json &j) {
     j.at("success").get_to(success);
+    if (success) {
+        j.at("player").get_to(player);
+        j.at("magics").get_to(magics);
+        j.at("equips").get_to(equips);
+    }
 }
 
 void nibashared::message_createchar::from_request(const nlohmann::json &j) {

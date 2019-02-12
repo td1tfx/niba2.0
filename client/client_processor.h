@@ -1,6 +1,7 @@
 #pragma once
 #include "global_defs.h"
 #include "message.h"
+#include "sessiondata.h"
 #include <iostream>
 #include <nlohmann/json.hpp>
 
@@ -31,6 +32,6 @@ public:
     }
 
 private:
-    nibashared::sessionstate session;
+    nibashared::sessionstate session_;
 };
 } // namespace nibaclient

@@ -2,8 +2,6 @@
 
 #pragma once
 
-#include "global_defs.h"
-
 #include <boost/hana.hpp>
 #include <nlohmann/json.hpp>
 #include <ostream>
