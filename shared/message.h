@@ -13,7 +13,7 @@ enum class cmdtype : std::size_t {
     login = 0,
     registeration = 1,
     createchar = 2,
-    // start = 3,
+    getdata = 3,
     fight = 4,
 
     LAST
@@ -60,7 +60,23 @@ struct message_login {
     std::vector<nibashared::equipment> equips;
 };
 
-// after login, this is a separate request to fetch player data
+
+struct message_getdata {
+    const cmdtype type = cmdtype::getdata;
+
+    message_getdata() = default;
+    bool validate(const nibashared::sessionstate &session);
+    nlohmann::json create_response();
+    nlohmann::json create_request();
+    void merge_response(const nlohmann::json &j);
+    void from_request(const nlohmann::json &j);
+
+    std::unordered_map<int, nibashared::character> characters;
+    std::unordered_map<int, nibashared::magic> magics;
+    std::unordered_map<int, nibashared::equipment> equips;
+    bool success = false;
+};
+
 
 
 struct message_fight {

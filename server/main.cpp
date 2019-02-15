@@ -24,6 +24,8 @@
 #include <ozo/connection_info.h>
 #include <ozo/connection_pool.h>
 #include <ozo/execute.h>
+#include <ozo/request.h>
+#include <ozo/shortcuts.h>
 
 #include <cstdlib>
 #include <iostream>
@@ -34,8 +36,10 @@
 
 #include "cert_loader.hpp"
 #include "db_accessor.h"
+#include "gamedata.h"
 #include "logger.h"
 #include "server_session.h"
+#include "structs.h"
 
 using tcp = boost::asio::ip::tcp;              // from <boost/asio/ip/tcp.hpp>
 namespace ssl = boost::asio::ssl;              // from <boost/asio/ssl.hpp>
@@ -43,6 +47,50 @@ namespace websocket = boost::beast::websocket; // from <boost/beast/websocket.hp
 namespace sev = boost::log::trivial;
 using namespace ozo::literals;
 using namespace nibaserver;
+
+// TODO maybe refactor it a bit
+void init_gamedata() {
+    using namespace nibashared;
+    // read from postgres here
+    const auto connection_info = ozo::make_connection_info("dbname=niba_static user=postgres");
+    ozo::io_context ioc;
+    const auto connector = ozo::make_connector(connection_info, ioc);
+    ozo::rows_of<std::string> character, magic, item;
+
+    boost::asio::spawn(ioc, [&](boost::asio::yield_context yield) {
+        ozo::request(connector, "SELECT to_json::TEXT FROM character_dump"_SQL,
+                     ozo::into(character), yield);
+
+        ozo::request(connector, "SELECT to_json::TEXT FROM magic_dump"_SQL, ozo::into(magic),
+                     yield);
+
+        ozo::request(connector, "SELECT to_json::TEXT FROM item_dump"_SQL, ozo::into(item), yield);
+    });
+    ioc.run();
+
+    staticdata::init([&character, &magic, &item](auto &characters, auto &magics, auto &equipments) {
+        try {
+            nlohmann::json serialized_chars = nlohmann::json::parse(std::get<0>(character.at(0)));
+            for (auto &element : serialized_chars) {
+                characters[element["character_id"]] = element;
+            }
+
+            nlohmann::json serialized_magic = nlohmann::json::parse(std::get<0>(magic.at(0)));
+            for (auto &element : serialized_magic) {
+                magics[element["magic_id"]] = element;
+            }
+
+            nlohmann::json serialized_equipment = nlohmann::json::parse(std::get<0>(item.at(0)));
+            for (auto &element : serialized_equipment) {
+                equipments[element["equipment_id"]] = element;
+            }
+        } catch (std::exception &e) {
+            // I don't care at this point, this should be tested statically
+            std::cout << "failed " << e.what() << std::endl;
+            exit(-1);
+        }
+    });
+}
 
 int main(int argc, char *argv[]) {
     (void)argc;
@@ -55,6 +103,8 @@ int main(int argc, char *argv[]) {
 
     init_log();
     logger logger;
+
+    init_gamedata();
 
     // The io_context is required for all I/O
     boost::asio::io_context ioc{threads};
@@ -94,9 +144,8 @@ int main(int argc, char *argv[]) {
 
         // TODO: move elsewhere
         // reset the login status on start up
-        auto conn = ozo::execute(
-            connector, "UPDATE user_id SET logged_in = false WHERE 1 = 1"_SQL,
-            yield[ec]);
+        auto conn = ozo::execute(connector, "UPDATE user_id SET logged_in = false WHERE 1 = 1"_SQL,
+                                 yield[ec]);
         if (ec) {
             BOOST_LOG_SEV(logger, sev::error) << ec.message() << " | " << ozo::error_message(conn)
                                               << " | " << ozo::get_error_context(conn);

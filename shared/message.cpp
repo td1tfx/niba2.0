@@ -76,6 +76,34 @@ void message_login::from_request(const json &j) {
     j.at("password").get_to(password);
 }
 
+bool nibashared::message_getdata::validate(const nibashared::sessionstate &session) {
+    // TODO change this
+    if (session.state != nibashared::gamestate::ingame)
+        return false;
+
+    return true;
+}
+
+nlohmann::json nibashared::message_getdata::create_response() {
+    if (!success) {
+        return {{"success", false}};
+    }
+    return {{"success", true}, {"characters", characters}, {"magics", magics}, {"equips", equips}};
+}
+
+nlohmann::json nibashared::message_getdata::create_request() { return {{"type", type}}; }
+
+void nibashared::message_getdata::merge_response(const nlohmann::json &j) {
+    j.at("success").get_to(success);
+    if (success) {
+        j.at("characters").get_to(characters);
+        j.at("magics").get_to(magics);
+        j.at("equips").get_to(equips);
+    }
+}
+
+void nibashared::message_getdata::from_request(const nlohmann::json &j) { (void)j; }
+
 nibashared::message_fight::message_fight(int enemyid) : enemyid(enemyid) {}
 
 bool nibashared::message_fight::validate(const nibashared::sessionstate &session) {
@@ -84,6 +112,7 @@ bool nibashared::message_fight::validate(const nibashared::sessionstate &session
         return false;
 
     // TODO: store staticdata in session?
+    // TODO: after the change, staticdata should be initialized and useable at this point
     if (enemyid < 0 || enemyid > 8)
         return false;
 

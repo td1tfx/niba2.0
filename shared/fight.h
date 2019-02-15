@@ -80,39 +80,9 @@ fightable setup_self(nibashared::character &&raw_character,
                      const std::vector<nibashared::magic> &magics,
                      const std::vector<nibashared::equipment> &equips);
 
-template<typename staticdata>
-fightable setup_fightable(int id) {
-    nibashared::character raw_character = staticdata::get().character(id);
-    std::vector<nibashared::magic> magics;
-    std::vector<nibashared::equipment> equips;
-    std::for_each(
-        raw_character.active_magic.begin(), raw_character.active_magic.end(),
-        [&magics](auto &magic_id) { magics.push_back(staticdata::get().magic(magic_id)); });
-    std::for_each(
-        raw_character.equipments.begin(), raw_character.equipments.end(),
-        [&equips](auto &equip_id) { equips.push_back(staticdata::get().equipment(equip_id)); });
-    // std::cout << magics << std::endl;
-    // std::cout << equips << std::endl;
-    return setup_self(std::move(raw_character), magics, equips);
-}
+fightable setup_fightable(int id);
 
-template<typename staticdata>
 std::pair<std::vector<fightable>, std::vector<fightable>>
-prep_fight(nibashared::sessionstate &session, int id_you) {
-    CPRINT("prep " << (*(session.player)).name << " " << id_you);
-    // initializer list do not like moves
-    std::pair<std::vector<fightable>, std::vector<fightable>> ret;
-    // copy player data into raw_character
-    nibashared::character raw_character{.name = (*(session.player)).name,
-                                        .character_id = -1,
-                                        .description{},
-                                        .attrs = (*(session.player)).attrs,
-                                        .stats{},
-                                        .equipments{},
-                                        .active_magic{}};
-    ret.first.push_back(setup_self(std::move(raw_character), session.magics, session.equips));
-    ret.second.push_back(setup_fightable<staticdata>(id_you));
-    return ret; // RVO
-}
+prep_fight(nibashared::sessionstate &session, int id_you);
 
 } // namespace nibashared
