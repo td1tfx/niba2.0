@@ -21,6 +21,7 @@ nibaclient::client_session::client_session(std::string const &host, std::string 
     ws_.handshake(host_, "/");
     timer_.expires_after(std::chrono::seconds(5));
     ping_timer({});
+    // do a data exchange
 }
 
 nibaclient::client_session::~client_session() { close(); }
@@ -49,8 +50,10 @@ void nibaclient::client_session::handle_cmd(const std::string &input) {
                 return create_and_go<nibashared::message_register>(std::move(results[1]),
                                                                    std::move(results[2]));
             } else if (results[0] == "login") {
-                return create_and_go<nibashared::message_login>(std::move(results[1]),
-                                                                std::move(results[2]));
+                create_and_go<nibashared::message_login>(std::move(results[1]),
+                                                         std::move(results[2]));
+                // force a getdata after login
+                return create_and_go<nibashared::message_getdata>();
             }
         } else if (results.size() == 2) {
             if (results[0] == "fight") {

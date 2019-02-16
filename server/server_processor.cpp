@@ -2,7 +2,7 @@
 #include "db_accessor.h"
 #include "fight.h"
 #include "rng.h"
-#include "server_gamedata.h"
+#include "gamedata.h"
 
 #include <iostream>
 
@@ -13,6 +13,8 @@ server_processor::server_processor(boost::asio::yield_context &yield, nibaserver
     session_(), yield_(yield), db_(db) {}
 
 std::string server_processor::dispatch(const std::string &request) {
+    // logging the request is bad, when password is involved
+    // BOOST_LOG_SEV(logger_, sev::debug) << request;
     try {
         auto j = nlohmann::json::parse(request);
         auto cmd_id = j.at("type").get<std::size_t>();
@@ -22,6 +24,9 @@ std::string server_processor::dispatch(const std::string &request) {
         }
         case nibashared::cmdtype::login: {
             return do_request<nibashared::message_login>(j);
+        }
+        case nibashared::cmdtype::getdata: {
+            return do_request<nibashared::message_getdata>(j);
         }
         case nibashared::cmdtype::fight: {
             return do_request<nibashared::message_fight>(j);
@@ -72,9 +77,13 @@ void nibaserver::server_processor::process(nibashared::message_login &req) {
     BOOST_LOG_SEV(logger_, sev::info) << "User " << req.id << " logging in is " << req.success;
 }
 
+void nibaserver::server_processor::process(nibashared::message_getdata &req) {
+    std::tie(req.characters, req.magics, req.equips) = nibashared::staticdata::get().all();
+    req.success = true;
+}
+
 void nibaserver::server_processor::process(nibashared::message_fight &req) {
-    auto [self_fightable, enemy_fightable] =
-        nibashared::prep_fight<nibaserver::server_staticdata>(session_, req.enemyid);
+    auto [self_fightable, enemy_fightable] = nibashared::prep_fight(session_, req.enemyid);
     nibashared::fight fight(std::move(self_fightable), std::move(enemy_fightable));
     nibashared::rng_server rng;
     fight.go(rng);
@@ -103,6 +112,4 @@ void nibaserver::server_processor::process(nibashared::message_createchar &req) 
     }
 }
 
-const nibashared::sessionstate &nibaserver::server_processor::get_session() {
-    return session_;
-}
+const nibashared::sessionstate &nibaserver::server_processor::get_session() { return session_; }
