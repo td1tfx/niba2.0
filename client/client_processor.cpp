@@ -30,9 +30,6 @@ void client_processor::process(nibashared::message_login &req) {
             session_.player = *(req.player);
             session_.magics = req.magics;
             session_.equips = req.equips;
-            for (auto &magic : session_.magics) {
-                magic_static_id_map[magic.static_id] = magic.magic_id;
-            }
         }
     } else {
         std::cout << "failed to login" << std::endl;
@@ -67,9 +64,6 @@ void nibaclient::client_processor::process(nibashared::message_createchar &req) 
         session_.magics = req.magics;
         session_.equips = req.equips;
         session_.state = nibashared::gamestate::ingame;
-        for (auto &magic : session_.magics) {
-            magic_static_id_map[magic.static_id] = magic.magic_id;
-        }
     } else {
         std::cout << "unable to create character" << std::endl;
     }
@@ -78,7 +72,6 @@ void nibaclient::client_processor::process(nibashared::message_createchar &req) 
 void nibaclient::client_processor::process(nibashared::message_learnmagic &req) {
     if (req.success) {
         std::cout << "learned magic " << req.magic.name << std::endl;
-        magic_static_id_map[req.magic.static_id] = req.magic.magic_id;
         session_.magics.push_back(std::move(req.magic));
     } else {
         std::cout << "failed to learn magic" << std::endl;

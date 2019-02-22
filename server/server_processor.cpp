@@ -132,7 +132,6 @@ void nibaserver::server_processor::process(nibashared::message_createchar &req) 
 
 void nibaserver::server_processor::process(nibashared::message_learnmagic &req) {
     req.magic = nibashared::staticdata::get().magic(req.static_id);
-    req.magic.static_id = req.magic.magic_id;
     if (req.magic.description.empty()) {
         req.magic.description = req.magic.name;
     }

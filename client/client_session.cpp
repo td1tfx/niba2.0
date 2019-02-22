@@ -50,7 +50,7 @@ void nibaclient::client_session::handle_cmd(const std::string &input) {
         if (results[0] == "reordermagic") {
             std::vector<int> selected;
             std::for_each(results.begin() + 1, results.end(), [&selected, this](auto &magic_id) {
-                selected.push_back(processor_.magic_static_id_map.at(std::stoi(magic_id)));
+                selected.push_back(std::stoi(magic_id));
             });
             return create_and_go<nibashared::message_reordermagic>(std::move(selected));
         }
@@ -65,9 +65,8 @@ void nibaclient::client_session::handle_cmd(const std::string &input) {
                 // force a getdata after login
                 return create_and_go<nibashared::message_getdata>();
             } else if (results[0] == "fusemagic") {
-                return create_and_go<nibashared::message_fusemagic>(
-                    processor_.magic_static_id_map.at(std::stoi(results[1])),
-                    processor_.magic_static_id_map.at(std::stoi(results[2])));
+                return create_and_go<nibashared::message_fusemagic>(std::stoi(results[1]),
+                                                                    std::stoi(results[2]));
             }
         } else if (results.size() == 2) {
             if (results[0] == "fight") {

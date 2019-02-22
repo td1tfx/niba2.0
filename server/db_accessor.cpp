@@ -177,12 +177,13 @@ nibaserver::db_accessor::get_aux(const std::string &name, boost::asio::yield_con
     ozo::error_code ec{};
     auto conn = ozo::request(
         conn_,
-        "SELECT name, magic_id, static_id, description, active, cd, multiplier, inner_damage, "
+        "SELECT name, 1, magic_id, description, active, cd, multiplier, inner_damage, "
         "mp_cost, inner_property, hp, mp, attack_min, attack_max, "
         "inner_power, accuracy, evasion, speed, defence, crit_chance, crit_damage, "
         "reduce_def, reduce_def_perc, hp_regen, mp_regen, gold_res, wood_res, water_res, "
         "fire_res, earth_res, hp_on_hit, hp_steal, mp_on_hit, mp_steal "
-        " FROM player_magic WHERE player_name="_SQL + name,
+        " FROM player_magic WHERE player_name="_SQL +
+            name,
         ozo::into(rows), yield[ec]);
     if (ec) {
         BOOST_LOG_SEV(logger_, sev::error) << ec.message() << " | " << ozo::error_message(conn)
@@ -192,8 +193,8 @@ nibaserver::db_accessor::get_aux(const std::string &name, boost::asio::yield_con
     for (auto &r : rows) {
         // maybe hana can save this a bit too
         nibashared::magic magic{.name = std::get<0>(r),
-                                .magic_id = std::get<1>(r),
-                                .static_id = std::get<2>(r),
+                                // static_id removed!
+                                .magic_id = std::get<2>(r),
                                 .description = std::get<3>(r),
                                 // json has no boolean, but db stored it as bool
                                 .active = std::get<4>(r) ? 1 : 0,
@@ -273,14 +274,14 @@ bool db_accessor::create_magic(const std::string &player_name, const nibashared:
     ozo::error_code ec{};
     // note the binding is the name of the player_character
     auto &stats = magic.stats;
-    auto query = "INSERT INTO player_magic(static_id, player_name, "
+    auto query = "INSERT INTO player_magic(magic_id, player_name, "
                  "name, active, multiplier, inner_damage, cd, mp_cost, "
                  "inner_property, description, hp, mp, attack_min, attack_max, "
                  "inner_power, accuracy, evasion, speed, defence, "
                  "crit_chance, crit_damage, reduce_def, reduce_def_perc, hp_regen, "
                  "mp_regen, gold_res, wood_res, water_res, fire_res, earth_res, "
                  "hp_on_hit, hp_steal, mp_on_hit, mp_steal) VALUES("_SQL +
-                 magic.static_id + ","_SQL + player_name + ","_SQL + magic.name + ","_SQL +
+                 magic.magic_id + ","_SQL + player_name + ","_SQL + magic.name + ","_SQL +
                  static_cast<bool>(magic.active) + ","_SQL + magic.multiplier + ","_SQL +
                  magic.inner_damage + ","_SQL + magic.cd + ","_SQL + magic.mp_cost + ","_SQL +
                  static_cast<int>(magic.inner_property) + ","_SQL + magic.description + ","_SQL +
@@ -312,26 +313,27 @@ bool db_accessor::fuse_magic(const std::string &player_name, const nibashared::m
     auto transaction = ozo::begin(conn_, yield);
     ozo::result result;
     auto &stats = magic.stats;
-    auto query = "UPDATE player_magic SET (static_id, player_name, "
+    auto query = "UPDATE player_magic SET (player_name, "
                  "name, active, multiplier, inner_damage, cd, mp_cost, "
                  "inner_property, description, hp, mp, attack_min, attack_max, "
                  "inner_power, accuracy, evasion, speed, defence, "
                  "crit_chance, crit_damage, reduce_def, reduce_def_perc, hp_regen, "
                  "mp_regen, gold_res, wood_res, water_res, fire_res, earth_res, "
                  "hp_on_hit, hp_steal, mp_on_hit, mp_steal) = ("_SQL +
-                 magic.static_id + ","_SQL + player_name + ","_SQL + magic.name + ","_SQL +
-                 static_cast<bool>(magic.active) + ","_SQL + magic.multiplier + ","_SQL +
-                 magic.inner_damage + ","_SQL + magic.cd + ","_SQL + magic.mp_cost + ","_SQL +
-                 static_cast<int>(magic.inner_property) + ","_SQL + magic.description + ","_SQL +
-                 stats.hp + ","_SQL + stats.mp + ","_SQL + stats.attack_min + ","_SQL +
-                 stats.attack_max + ","_SQL + stats.inner_power + ","_SQL + stats.accuracy +
-                 ","_SQL + stats.evasion + ","_SQL + stats.speed + ","_SQL + stats.defence +
-                 ","_SQL + stats.crit_chance + ","_SQL + stats.crit_damage + ","_SQL +
-                 stats.reduce_def + ","_SQL + stats.reduce_def_perc + ","_SQL + stats.hp_regen +
-                 ","_SQL + stats.mp_regen + ","_SQL + stats.gold_res + ","_SQL + stats.wood_res +
-                 ","_SQL + stats.water_res + ","_SQL + stats.fire_res + ","_SQL + stats.earth_res +
-                 ","_SQL + stats.hp_on_hit + ","_SQL + stats.hp_steal + ","_SQL + stats.mp_on_hit +
-                 ","_SQL + stats.mp_steal + ") WHERE magic_id = "_SQL + magic.magic_id;
+                 player_name + ","_SQL + magic.name + ","_SQL + static_cast<bool>(magic.active) +
+                 ","_SQL + magic.multiplier + ","_SQL + magic.inner_damage + ","_SQL + magic.cd +
+                 ","_SQL + magic.mp_cost + ","_SQL + static_cast<int>(magic.inner_property) +
+                 ","_SQL + magic.description + ","_SQL + stats.hp + ","_SQL + stats.mp + ","_SQL +
+                 stats.attack_min + ","_SQL + stats.attack_max + ","_SQL + stats.inner_power +
+                 ","_SQL + stats.accuracy + ","_SQL + stats.evasion + ","_SQL + stats.speed +
+                 ","_SQL + stats.defence + ","_SQL + stats.crit_chance + ","_SQL +
+                 stats.crit_damage + ","_SQL + stats.reduce_def + ","_SQL + stats.reduce_def_perc +
+                 ","_SQL + stats.hp_regen + ","_SQL + stats.mp_regen + ","_SQL + stats.gold_res +
+                 ","_SQL + stats.wood_res + ","_SQL + stats.water_res + ","_SQL + stats.fire_res +
+                 ","_SQL + stats.earth_res + ","_SQL + stats.hp_on_hit + ","_SQL + stats.hp_steal +
+                 ","_SQL + stats.mp_on_hit + ","_SQL + stats.mp_steal +
+                 ") WHERE player_name = "_SQL + player_name + " AND "_SQL + " magic_id = "_SQL +
+                 magic.magic_id;
     ozo::request(transaction, query, std::ref(result), yield[ec]);
     if (ec) {
         BOOST_LOG_SEV(logger_, sev::error) << ec.message() << "111";

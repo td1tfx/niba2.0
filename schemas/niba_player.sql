@@ -51,12 +51,23 @@ CREATE TABLE public.player_character (
 ALTER TABLE public.player_character OWNER TO postgres;
 
 --
+-- Name: player_equipped_magic; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.player_equipped_magic (
+    player_name text NOT NULL,
+    magics integer[]
+);
+
+
+ALTER TABLE public.player_equipped_magic OWNER TO postgres;
+
+--
 -- Name: player_magic; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.player_magic (
-    magic_id SERIAL PRIMARY KEY,
-    static_id integer NOT NULL,
+    magic_id integer NOT NULL,
     player_name text NOT NULL,
     name text NOT NULL,
     active boolean DEFAULT true,
@@ -95,31 +106,6 @@ CREATE TABLE public.player_magic (
 
 ALTER TABLE public.player_magic OWNER TO postgres;
 
-
-
---
--- Name: player_magic_magic_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.player_magic_magic_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.player_magic_magic_id_seq OWNER TO postgres;
-
---
--- Name: player_magic_magic_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.player_magic_magic_id_seq OWNED BY public.player_magic.magic_id;
-
-
-
 --
 -- Name: user_id; Type: TABLE; Schema: public; Owner: postgres
 --
@@ -135,13 +121,6 @@ CREATE TABLE public.user_id (
 ALTER TABLE public.user_id OWNER TO postgres;
 
 --
--- Name: player_magic magic_id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.player_magic ALTER COLUMN magic_id SET DEFAULT nextval('public.player_magic_magic_id_seq'::regclass);
-
-
---
 -- Name: player_character player_character_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -150,11 +129,11 @@ ALTER TABLE ONLY public.player_character
 
 
 --
--- Name: player_magic player_magic_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: player_equipped_magic player_equipped_magic_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public.player_magic
-    ADD CONSTRAINT player_magic_pkey PRIMARY KEY (magic_id);
+ALTER TABLE ONLY public.player_equipped_magic
+    ADD CONSTRAINT player_equipped_magic_pkey PRIMARY KEY (player_name);
 
 
 --
@@ -163,14 +142,6 @@ ALTER TABLE ONLY public.player_magic
 
 ALTER TABLE ONLY public.user_id
     ADD CONSTRAINT user_id_pkey PRIMARY KEY (id);
-
-
---
--- Name: player_character player_character_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.player_character
-    ADD CONSTRAINT player_character_id_fkey FOREIGN KEY (id) REFERENCES public.user_id(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --

@@ -175,7 +175,7 @@ STRUCT_JSON_SERIALIZE(player);
 STRUCT_PRINT(player);
 
 struct magic {
-    BOOST_HANA_DEFINE_STRUCT(magic, (std::string, name), (int, magic_id), (int, static_id), (std::string, description),
+    BOOST_HANA_DEFINE_STRUCT(magic, (std::string, name), (int, magic_id), (std::string, description),
                              (int, active), (int, cd), (int, multiplier), (int, inner_damage),
                              (int, mp_cost), (property, inner_property), (battlestats, stats));
 };

@@ -187,7 +187,7 @@ bool nibashared::message_learnmagic::validate(const nibashared::sessionstate &se
 
     // can't learn a magic thats already learnt
     if (nibautil::find_if(session.magics, [this](auto &magic) {
-            return magic.static_id == static_id;
+            return magic.magic_id == static_id;
         }) != session.magics.end()) {
         return false;
     }

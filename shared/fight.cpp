@@ -223,7 +223,7 @@ fightable setup_self(nibashared::character &&raw_character,
     fight_character.char_data = std::move(raw_character);
     fight_character.char_data.stats += stats_computer(fight_character.char_data.attrs);
     for (const auto &magic : magics) {
-        if (std::find(magic_ids.begin(), magic_ids.end(), magic.static_id) == magic_ids.end()) {
+        if (std::find(magic_ids.begin(), magic_ids.end(), magic.magic_id) == magic_ids.end()) {
             continue;
         }
         CPRINT(fight_character.char_data.name << " equipped magic " << magic.name);

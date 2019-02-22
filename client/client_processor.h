@@ -36,10 +36,6 @@ public:
         }
     }
 
-    // public for now
-    // this is only to translate input id into actual magic id
-    std::unordered_map<int, int> magic_static_id_map;
-
 private:
     nibashared::sessionstate session_;
 };
