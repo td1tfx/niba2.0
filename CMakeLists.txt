@@ -55,6 +55,3 @@ set(LINK_LIBS
 
 target_link_libraries(niba-server ${LINK_LIBS} ${PostgreSQL_LIBRARIES})
 target_link_libraries(niba-client ${LINK_LIBS})
-
-file(GLOB STATIC_DATA "staticdata/*.json")
-file(COPY ${STATIC_DATA} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

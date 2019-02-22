@@ -15,6 +15,9 @@ public:
     void process(nibashared::message_getdata &req);
     void process(nibashared::message_fight &req);
     void process(nibashared::message_createchar &req);
+    void process(nibashared::message_learnmagic &req);
+    void process(nibashared::message_fusemagic &req);
+    void process(nibashared::message_reordermagic &req);
     const nibashared::sessionstate &get_session();
 
     template<typename message>
@@ -32,6 +35,10 @@ public:
             std::cout << "Client server communication failed: " << e.what() << std::endl;
         }
     }
+
+    // public for now
+    // this is only to translate input id into actual magic id
+    std::unordered_map<int, int> magic_static_id_map;
 
 private:
     nibashared::sessionstate session_;

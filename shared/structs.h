@@ -11,8 +11,10 @@ namespace nibashared {
 using magic_ids = std::vector<int>;
 using equipment_ids = std::vector<int>;
 
-enum class property { gold = 0, wood = 1, water = 2, fire = 3, earth = 4 };
-enum class equipmenttype {
+
+// actually allow implicit conversion
+enum property { gold = 0, wood = 1, water = 2, fire = 3, earth = 4 };
+enum equipmenttype {
     head = 0,
     armor = 1,
     boots = 2,
@@ -135,6 +137,16 @@ struct battlestats {
         });
         return *this;
     }
+
+    battlestats &operator*=(int multiplier) {
+        boost::hana::for_each(boost::hana::keys(*this), [&](auto key) {
+            auto &member = boost::hana::at_key(*this, key);
+            // truncate as needed
+            member *= multiplier;
+        });
+        return *this;
+    }
+
 };
 STRUCT_JSON_SERIALIZE(battlestats);
 STRUCT_PRINT(battlestats);

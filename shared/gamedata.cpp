@@ -26,4 +26,10 @@ const magic &staticdata::magic(int id) { return magics_.at(id); }
 
 const equipment &staticdata::equipment(int id) { return equipments_.at(id); }
 
+bool staticdata::has_character(int id) { return characters_.find(id) != characters_.end(); }
+
+bool staticdata::has_magic(int id) { return magics_.find(id) != magics_.end(); }
+
+bool staticdata::has_equipment(int id) { return equipments_.find(id) != equipments_.end(); }
+
 } // namespace nibashared

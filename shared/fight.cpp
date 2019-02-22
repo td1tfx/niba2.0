@@ -1,6 +1,7 @@
 #include "fight.h"
-#include "rng.h"
 #include "gamedata.h"
+#include "rng.h"
+#include "util.h"
 
 #include <algorithm>
 #include <boost/assert.hpp>
@@ -93,8 +94,8 @@ std::optional<std::size_t> fightable::pick_magic_idx() {
 fight::fight(std::vector<fightable> &&friends, std::vector<fightable> &&enemies) {
     friends_ = friends.size();
     enemies_ = enemies.size();
-    std::for_each(friends.begin(), friends.end(), [](auto &f) { f.team = 0; });
-    std::for_each(enemies.begin(), enemies.end(), [](auto &f) { f.team = 1; });
+    nibautil::for_each(friends, [](auto &f) { f.team = 0; });
+    nibautil::for_each(enemies, [](auto &f) { f.team = 1; });
     std::move(friends.begin(), friends.end(), std::back_inserter(all_));
     std::move(enemies.begin(), enemies.end(), std::back_inserter(all_));
     for (std::size_t i = 0; i < all_.size(); i++) {
@@ -216,12 +217,16 @@ battlestats stats_computer(const attributes &attr) {
 
 fightable setup_self(nibashared::character &&raw_character,
                      const std::vector<nibashared::magic> &magics,
-                     const std::vector<nibashared::equipment> &equips) {
+                     const std::vector<nibashared::equipment> &equips,
+                     const std::vector<int> &magic_ids) {
     fightable fight_character;
     fight_character.char_data = std::move(raw_character);
     fight_character.char_data.stats += stats_computer(fight_character.char_data.attrs);
     for (const auto &magic : magics) {
-        CPRINT(fight_character.char_data.name << " has magic " << magic.name);
+        if (std::find(magic_ids.begin(), magic_ids.end(), magic.static_id) == magic_ids.end()) {
+            continue;
+        }
+        CPRINT(fight_character.char_data.name << " equipped magic " << magic.name);
         fight_character.char_data.stats += magic.stats;
         // NOTE, aggregation initialization is copy... well fine
         // also push_back is complaining designated initialization for reasons I don't understand
@@ -238,32 +243,35 @@ fightable setup_fightable(int id) {
     nibashared::character raw_character = staticdata::get().character(id);
     std::vector<nibashared::magic> magics;
     std::vector<nibashared::equipment> equips;
-    std::for_each(
-        raw_character.active_magic.begin(), raw_character.active_magic.end(),
-        [&magics](auto &magic_id) { magics.push_back(staticdata::get().magic(magic_id)); });
-    std::for_each(
-        raw_character.equipments.begin(), raw_character.equipments.end(),
-        [&equips](auto &equip_id) { equips.push_back(staticdata::get().equipment(equip_id)); });
+    std::vector<int> magic_ids;
+    nibautil::for_each(raw_character.active_magic, [&magics, &magic_ids](auto &magic_id) {
+        magic_ids.push_back(magic_id);
+        magics.push_back(staticdata::get().magic(magic_id));
+    });
+    nibautil::for_each(raw_character.equipments, [&equips](auto &equip_id) {
+        equips.push_back(staticdata::get().equipment(equip_id));
+    });
     // std::cout << magics << std::endl;
     // std::cout << equips << std::endl;
-    return setup_self(std::move(raw_character), magics, equips);
+    return setup_self(std::move(raw_character), magics, equips, magic_ids);
 }
-
 
 std::pair<std::vector<fightable>, std::vector<fightable>>
 prep_fight(nibashared::sessionstate &session, int id_you) {
     CPRINT("prep " << (*(session.player)).name << " " << id_you);
-    // initializer list do not like moves
     std::pair<std::vector<fightable>, std::vector<fightable>> ret;
+    auto &magic_ids = session.equipped_magic_ids;
     // copy player data into raw_character
     nibashared::character raw_character{.name = (*(session.player)).name,
                                         .character_id = -1,
                                         .description = {},
                                         .attrs = (*(session.player)).attrs,
+                                        // leave these 3 blank
                                         .stats = {},
                                         .equipments = {},
                                         .active_magic = {}};
-    ret.first.push_back(setup_self(std::move(raw_character), session.magics, session.equips));
+    ret.first.push_back(
+        setup_self(std::move(raw_character), session.magics, session.equips, magic_ids));
     ret.second.push_back(setup_fightable(id_you));
     return ret; // RVO
 }

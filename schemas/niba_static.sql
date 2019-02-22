@@ -455,7 +455,7 @@ ALTER TABLE public.magic OWNER TO postgres;
 CREATE VIEW public.magic_dump AS
  SELECT to_json(array_agg(t.*)) AS to_json
    FROM ( SELECT magic.magic_id,
-            '-1'::integer AS static_id,
+            magic.magic_id AS static_id,
             magic.name,
             magic.description,
             magic.active,

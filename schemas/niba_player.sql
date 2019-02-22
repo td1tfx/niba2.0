@@ -55,18 +55,17 @@ ALTER TABLE public.player_character OWNER TO postgres;
 --
 
 CREATE TABLE public.player_magic (
-    magic_id integer NOT NULL,
+    magic_id SERIAL PRIMARY KEY,
     static_id integer NOT NULL,
     player_name text NOT NULL,
-    priority integer NOT NULL,
-    name text,
+    name text NOT NULL,
     active boolean DEFAULT true,
     multiplier integer DEFAULT 100,
     inner_damage integer DEFAULT 0,
     cd integer DEFAULT 0,
     mp_cost integer DEFAULT 0,
     inner_property integer DEFAULT 0 NOT NULL,
-    description text DEFAULT ''::text,
+    description text DEFAULT ''::text NOT NULL,
     hp integer DEFAULT 0,
     mp integer DEFAULT 0,
     attack_min integer DEFAULT 0,
@@ -96,6 +95,8 @@ CREATE TABLE public.player_magic (
 
 ALTER TABLE public.player_magic OWNER TO postgres;
 
+
+
 --
 -- Name: player_magic_magic_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
@@ -116,6 +117,7 @@ ALTER TABLE public.player_magic_magic_id_seq OWNER TO postgres;
 --
 
 ALTER SEQUENCE public.player_magic_magic_id_seq OWNED BY public.player_magic.magic_id;
+
 
 
 --

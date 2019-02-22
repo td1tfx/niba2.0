@@ -78,7 +78,8 @@ battlestats stats_computer(const attributes &attr);
 // there is the idea of priority of magics (ordering is important)
 fightable setup_self(nibashared::character &&raw_character,
                      const std::vector<nibashared::magic> &magics,
-                     const std::vector<nibashared::equipment> &equips);
+                     const std::vector<nibashared::equipment> &equips,
+                     const std::vector<int> &magic_ids);
 
 fightable setup_fightable(int id);
 

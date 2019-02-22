@@ -16,6 +16,7 @@ struct sessionstate {
     std::optional<nibashared::player> player;
     std::vector<magic> magics;
     std::vector<equipment> equips;
+    std::vector<int> equipped_magic_ids;
 };
 
 } // namespace nibashared
