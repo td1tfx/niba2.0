@@ -15,11 +15,12 @@ enum class cmdtype : std::size_t {
     createchar = 2,
     getdata = 3,
     fight = 4,
+    learnmagic = 5,
+    fusemagic = 6,
+    reordermagic = 7,
 
     LAST
 };
-
-// making staticdata templated might be too difficult to manage
 
 struct message_register {
     const cmdtype type = cmdtype::registeration;
@@ -58,8 +59,8 @@ struct message_login {
     std::optional<nibashared::player> player;
     std::vector<nibashared::magic> magics;
     std::vector<nibashared::equipment> equips;
+    std::vector<int> equipped_magic_ids;
 };
-
 
 struct message_getdata {
     const cmdtype type = cmdtype::getdata;
@@ -76,8 +77,6 @@ struct message_getdata {
     std::unordered_map<int, nibashared::equipment> equips;
     bool success = false;
 };
-
-
 
 struct message_fight {
     const cmdtype type = cmdtype::fight;
@@ -107,10 +106,62 @@ struct message_createchar {
     void merge_response(const nlohmann::json &j);
     void from_request(const nlohmann::json &j);
 
-    // TODO move all to character after gender is added into character
     nibashared::player player;
     std::vector<nibashared::magic> magics;
     std::vector<nibashared::equipment> equips;
+    std::vector<int> equipped_magic_ids;
+    bool success = false;
+};
+
+struct message_learnmagic {
+    // A magic_book is a book id stored in player_books
+    // a player learns a magic from a magic_book
+    // but a magic_book is just a magic in staticdata(TODO: add exp requirement)
+    const cmdtype type = cmdtype::learnmagic;
+
+    message_learnmagic() = default;
+    message_learnmagic(int static_id);
+    bool validate(const nibashared::sessionstate &session);
+    nlohmann::json create_response();
+    nlohmann::json create_request();
+    void merge_response(const nlohmann::json &j);
+    void from_request(const nlohmann::json &j);
+
+    int static_id;
+    nibashared::magic magic;
+    bool success = false;
+};
+
+struct message_fusemagic {
+    const cmdtype type = cmdtype::fusemagic;
+
+    message_fusemagic() = default;
+    message_fusemagic(int primary_magic_id, int secondary_magic_id);
+    bool validate(const nibashared::sessionstate &session);
+    nlohmann::json create_response();
+    nlohmann::json create_request();
+    void merge_response(const nlohmann::json &j);
+    void from_request(const nlohmann::json &j);
+
+    int primary_magic_id;
+    int secondary_magic_id;
+    nibashared::magic magic;
+    bool success = false;
+};
+
+struct message_reordermagic {
+    // use the same message for equipping & unequipping magics
+    const cmdtype type = cmdtype::reordermagic;
+
+    message_reordermagic() = default;
+    message_reordermagic(std::vector<int>&& equipped_magic_ids);
+    bool validate(const nibashared::sessionstate &session);
+    nlohmann::json create_response();
+    nlohmann::json create_request();
+    void merge_response(const nlohmann::json &j);
+    void from_request(const nlohmann::json &j);
+
+    std::vector<int> equipped_magic_ids;
     bool success = false;
 };
 

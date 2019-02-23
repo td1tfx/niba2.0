@@ -44,6 +44,16 @@ void nibaclient::client_session::handle_cmd(const std::string &input) {
         }
         std::vector<std::string> results;
         boost::split(results, input, boost::is_any_of("\t "));
+        if (results.empty())
+            return;
+        // dynamic sized
+        if (results[0] == "reordermagic") {
+            std::vector<int> selected;
+            std::for_each(results.begin() + 1, results.end(), [&selected, this](auto &magic_id) {
+                selected.push_back(std::stoi(magic_id));
+            });
+            return create_and_go<nibashared::message_reordermagic>(std::move(selected));
+        }
         // password input handled by cmd_processor
         if (results.size() == 3) {
             if (results[0] == "register") {
@@ -54,10 +64,15 @@ void nibaclient::client_session::handle_cmd(const std::string &input) {
                                                          std::move(results[2]));
                 // force a getdata after login
                 return create_and_go<nibashared::message_getdata>();
+            } else if (results[0] == "fusemagic") {
+                return create_and_go<nibashared::message_fusemagic>(std::stoi(results[1]),
+                                                                    std::stoi(results[2]));
             }
         } else if (results.size() == 2) {
             if (results[0] == "fight") {
                 return create_and_go<nibashared::message_fight>(std::stoi(results[1]));
+            } else if (results[0] == "learnmagic") {
+                return create_and_go<nibashared::message_learnmagic>(std::stoi(results[1]));
             }
         } else if (results.size() == 7) {
             if (results[0] == "create") {

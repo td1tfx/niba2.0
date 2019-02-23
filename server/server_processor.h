@@ -22,6 +22,9 @@ public:
     void process(nibashared::message_getdata &req);
     void process(nibashared::message_fight &req);
     void process(nibashared::message_createchar &req);
+    void process(nibashared::message_learnmagic& req);
+    void process(nibashared::message_fusemagic& req);
+    void process(nibashared::message_reordermagic& req);
     const nibashared::sessionstate &get_session();
 
 private:

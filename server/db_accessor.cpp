@@ -1,8 +1,10 @@
 #include "db_accessor.h"
 
 #include <ozo/execute.h>
+#include <ozo/query.h>
 #include <ozo/request.h>
 #include <ozo/shortcuts.h>
+#include <ozo/transaction.h>
 
 #include <algorithm>
 #include <openssl/rand.h>
@@ -160,12 +162,12 @@ nibaserver::db_accessor::get_char(const std::string &id, boost::asio::yield_cont
             .strength = strength, .dexterity = dexterity, .physique = physique, .spirit = spirit}};
 }
 
-std::pair<std::vector<nibashared::magic>, std::vector<nibashared::equipment>>
+std::tuple<std::vector<nibashared::magic>, std::vector<nibashared::equipment>, std::vector<int>>
 nibaserver::db_accessor::get_aux(const std::string &name, boost::asio::yield_context &yield) {
     BOOST_LOG_SEV(logger_, sev::info) << "fetching character magic and equips for " << name;
-    // since magic and equipment are "hana adapted", we can do this directly
-    std::pair<std::vector<nibashared::magic>, std::vector<nibashared::equipment>> ret;
-    auto &magics = ret.first;
+    std::tuple<std::vector<nibashared::magic>, std::vector<nibashared::equipment>, std::vector<int>>
+        ret;
+    auto &[magics, equips, equipped_magic_ids] = ret;
     // auto &equips = ret.second;
     // ?? looking for ways to fix this
     ozo::rows_of<std::string, int, int, std::string, bool, int, int, int, int, int, int, int, int,
@@ -175,13 +177,13 @@ nibaserver::db_accessor::get_aux(const std::string &name, boost::asio::yield_con
     ozo::error_code ec{};
     auto conn = ozo::request(
         conn_,
-        "SELECT name, magic_id, static_id, description, active, cd, multiplier, inner_damage, mp_cost, "
-        "inner_property, "
-        " hp, mp, attack_min, attack_max, "
+        "SELECT name, 1, magic_id, description, active, cd, multiplier, inner_damage, "
+        "mp_cost, inner_property, hp, mp, attack_min, attack_max, "
         "inner_power, accuracy, evasion, speed, defence, crit_chance, crit_damage, "
         "reduce_def, reduce_def_perc, hp_regen, mp_regen, gold_res, wood_res, water_res, "
         "fire_res, earth_res, hp_on_hit, hp_steal, mp_on_hit, mp_steal "
-        " FROM player_magic WHERE player_name="_SQL + name + " ORDER BY priority"_SQL,
+        " FROM player_magic WHERE player_name="_SQL +
+            name,
         ozo::into(rows), yield[ec]);
     if (ec) {
         BOOST_LOG_SEV(logger_, sev::error) << ec.message() << " | " << ozo::error_message(conn)
@@ -191,8 +193,8 @@ nibaserver::db_accessor::get_aux(const std::string &name, boost::asio::yield_con
     for (auto &r : rows) {
         // maybe hana can save this a bit too
         nibashared::magic magic{.name = std::get<0>(r),
-                                .magic_id = std::get<1>(r),
-                                .static_id = std::get<2>(r),
+                                // static_id removed!
+                                .magic_id = std::get<2>(r),
                                 .description = std::get<3>(r),
                                 // json has no boolean, but db stored it as bool
                                 .active = std::get<4>(r) ? 1 : 0,
@@ -227,6 +229,21 @@ nibaserver::db_accessor::get_aux(const std::string &name, boost::asio::yield_con
                                           .mp_steal = std::get<33>(r)}};
         magics.push_back(std::move(magic));
     }
+    BOOST_LOG_SEV(logger_, sev::info) << "getting player magics " << name;
+    ozo::rows_of<std::vector<int>> equipped_magic_rows;
+    conn = ozo::request(conn_,
+                        "SELECT magics FROM player_equipped_magic WHERE player_name = "_SQL + name,
+                        ozo::into(equipped_magic_rows), yield[ec]);
+    if (equipped_magic_rows.size() != 0) {
+        equipped_magic_ids = std::get<0>(equipped_magic_rows.back());
+    }
+    if (ec) {
+        // not the best... we need better ways to return data
+        BOOST_LOG_SEV(logger_, sev::error) << ec.message() << " | " << ozo::error_message(conn)
+                                           << " | " << ozo::get_error_context(conn);
+        return ret;
+    }
+
     return ret;
     // skipping equipments for now...hoping there is a fix and we don't need to do this anymore
 }
@@ -249,21 +266,118 @@ bool db_accessor::create_char(const std::string &id, const nibashared::player &p
                                            << " | " << ozo::get_error_context(conn);
         return false;
     }
+    return true;
+}
 
-    // insert a test magic as well for testing
-    // ideally use a transaction, but this is for testing anyway.
+bool db_accessor::create_magic(const std::string &player_name, const nibashared::magic &magic,
+                               boost::asio::yield_context &yield) {
+    ozo::error_code ec{};
     // note the binding is the name of the player_character
-    std::string description = u8"测试武功"; // TODO: try string_view
-    conn = ozo::execute(
-        conn_,
-        "INSERT INTO player_magic(static_id, player_name, priority, name, multiplier, inner_damage, cd) VALUES(0,"_SQL +
-            player.name + ", 0, "_SQL + description + ", 110, 10, 1)"_SQL,
-        yield[ec]);
+    auto &stats = magic.stats;
+    auto query = "INSERT INTO player_magic(magic_id, player_name, "
+                 "name, active, multiplier, inner_damage, cd, mp_cost, "
+                 "inner_property, description, hp, mp, attack_min, attack_max, "
+                 "inner_power, accuracy, evasion, speed, defence, "
+                 "crit_chance, crit_damage, reduce_def, reduce_def_perc, hp_regen, "
+                 "mp_regen, gold_res, wood_res, water_res, fire_res, earth_res, "
+                 "hp_on_hit, hp_steal, mp_on_hit, mp_steal) VALUES("_SQL +
+                 magic.magic_id + ","_SQL + player_name + ","_SQL + magic.name + ","_SQL +
+                 static_cast<bool>(magic.active) + ","_SQL + magic.multiplier + ","_SQL +
+                 magic.inner_damage + ","_SQL + magic.cd + ","_SQL + magic.mp_cost + ","_SQL +
+                 static_cast<int>(magic.inner_property) + ","_SQL + magic.description + ","_SQL +
+                 stats.hp + ","_SQL + stats.mp + ","_SQL + stats.attack_min + ","_SQL +
+                 stats.attack_max + ","_SQL + stats.inner_power + ","_SQL + stats.accuracy +
+                 ","_SQL + stats.evasion + ","_SQL + stats.speed + ","_SQL + stats.defence +
+                 ","_SQL + stats.crit_chance + ","_SQL + stats.crit_damage + ","_SQL +
+                 stats.reduce_def + ","_SQL + stats.reduce_def_perc + ","_SQL + stats.hp_regen +
+                 ","_SQL + stats.mp_regen + ","_SQL + stats.gold_res + ","_SQL + stats.wood_res +
+                 ","_SQL + stats.water_res + ","_SQL + stats.fire_res + ","_SQL + stats.earth_res +
+                 ","_SQL + stats.hp_on_hit + ","_SQL + stats.hp_steal + ","_SQL + stats.mp_on_hit +
+                 ","_SQL + stats.mp_steal + ")"_SQL;
+
+    auto conn = ozo::execute(conn_, query, yield[ec]);
 
     if (ec) {
         BOOST_LOG_SEV(logger_, sev::error) << ec.message() << " | " << ozo::error_message(conn)
                                            << " | " << ozo::get_error_context(conn);
+        return false;
     }
+    return true;
+}
 
+bool db_accessor::fuse_magic(const std::string &player_name, const nibashared::magic &magic,
+                             int delete_magic_id, const std::vector<int> &equipped_magic_ids,
+                             boost::asio::yield_context &yield) {
+    ozo::error_code ec{};
+
+    auto transaction = ozo::begin(conn_, yield);
+    ozo::result result;
+    auto &stats = magic.stats;
+    auto query = "UPDATE player_magic SET (player_name, "
+                 "name, active, multiplier, inner_damage, cd, mp_cost, "
+                 "inner_property, description, hp, mp, attack_min, attack_max, "
+                 "inner_power, accuracy, evasion, speed, defence, "
+                 "crit_chance, crit_damage, reduce_def, reduce_def_perc, hp_regen, "
+                 "mp_regen, gold_res, wood_res, water_res, fire_res, earth_res, "
+                 "hp_on_hit, hp_steal, mp_on_hit, mp_steal) = ("_SQL +
+                 player_name + ","_SQL + magic.name + ","_SQL + static_cast<bool>(magic.active) +
+                 ","_SQL + magic.multiplier + ","_SQL + magic.inner_damage + ","_SQL + magic.cd +
+                 ","_SQL + magic.mp_cost + ","_SQL + static_cast<int>(magic.inner_property) +
+                 ","_SQL + magic.description + ","_SQL + stats.hp + ","_SQL + stats.mp + ","_SQL +
+                 stats.attack_min + ","_SQL + stats.attack_max + ","_SQL + stats.inner_power +
+                 ","_SQL + stats.accuracy + ","_SQL + stats.evasion + ","_SQL + stats.speed +
+                 ","_SQL + stats.defence + ","_SQL + stats.crit_chance + ","_SQL +
+                 stats.crit_damage + ","_SQL + stats.reduce_def + ","_SQL + stats.reduce_def_perc +
+                 ","_SQL + stats.hp_regen + ","_SQL + stats.mp_regen + ","_SQL + stats.gold_res +
+                 ","_SQL + stats.wood_res + ","_SQL + stats.water_res + ","_SQL + stats.fire_res +
+                 ","_SQL + stats.earth_res + ","_SQL + stats.hp_on_hit + ","_SQL + stats.hp_steal +
+                 ","_SQL + stats.mp_on_hit + ","_SQL + stats.mp_steal +
+                 ") WHERE player_name = "_SQL + player_name + " AND "_SQL + " magic_id = "_SQL +
+                 magic.magic_id;
+    ozo::request(transaction, query, std::ref(result), yield[ec]);
+    if (ec) {
+        BOOST_LOG_SEV(logger_, sev::error) << ec.message() << "111";
+        return false;
+    }
+    ozo::request(transaction, "DELETE FROM player_magic WHERE magic_id = "_SQL + delete_magic_id,
+                 std::ref(result), yield[ec]);
+    if (ec) {
+        BOOST_LOG_SEV(logger_, sev::error) << ec.message() << "222";
+        return false;
+    }
+    ozo::request(transaction,
+                 "INSERT INTO player_equipped_magic(player_name, magics) VALUES("_SQL +
+                     player_name + ","_SQL + equipped_magic_ids +
+                     ") ON CONFLICT (player_name) DO UPDATE SET magics ="_SQL + equipped_magic_ids,
+                 std::ref(result), yield[ec]);
+    if (ec) {
+        BOOST_LOG_SEV(logger_, sev::error) << ec.message() << "333";
+        return false;
+    }
+    auto conn = ozo::commit(std::move(transaction), yield[ec]);
+
+    if (ec) {
+        BOOST_LOG_SEV(logger_, sev::error) << ec.message() << " | " << ozo::error_message(conn)
+                                           << " | " << ozo::get_error_context(conn);
+        return false;
+    }
+    return true;
+}
+
+bool db_accessor::equip_magics(const std::string &player_name,
+                               const std::vector<int> &equipped_magic_ids,
+                               boost::asio::yield_context &yield) {
+    ozo::error_code ec{};
+    auto conn = ozo::execute(conn_,
+                             "INSERT INTO player_equipped_magic(player_name, magics) VALUES("_SQL +
+                                 player_name + ","_SQL + equipped_magic_ids +
+                                 ") ON CONFLICT (player_name) DO UPDATE SET magics ="_SQL +
+                                 equipped_magic_ids,
+                             yield[ec]);
+    if (ec) {
+        BOOST_LOG_SEV(logger_, sev::error) << ec.message() << " | " << ozo::error_message(conn)
+                                           << " | " << ozo::get_error_context(conn);
+        return false;
+    }
     return true;
 }

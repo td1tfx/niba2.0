@@ -1,4 +1,8 @@
 register niba doctorniba
 login niba doctorniba
 create nibadan m 1 1 2 1
+learnmagic 1
+learnmagic 2
+fusemagic 2 1
+reordermagic 2
 fight 1

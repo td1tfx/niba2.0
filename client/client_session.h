@@ -33,7 +33,9 @@ private:
             // TODO maybe message specific error msg
             std::cout << "command validation failed" << std::endl;
         } else {
-            std::string request_str = message.create_request().dump();
+            auto request_json = message.create_request();
+            request_json["type"] = message.type;
+            std::string request_str = request_json.dump();
             nibautil::stopwatch stopwatch;
             ws_.write(boost::asio::buffer(request_str));
             std::string response_str;
