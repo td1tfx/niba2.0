@@ -34,6 +34,6 @@ inline auto make_ozo_connector(boost::asio::io_context &ioc) {
 }
 
 using niba_ozo_connector =
-    std::result_of<decltype (&make_ozo_connector)(boost::asio::io_context &)>::type;
+    std::invoke_result_t<decltype(&make_ozo_connector), boost::asio::io_context&>;
 
 } // namespace nibaserver

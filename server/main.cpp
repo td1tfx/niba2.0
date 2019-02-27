@@ -117,7 +117,7 @@ int main(int argc, char *argv[]) {
 
     // This holds the self-signed certificate used by the server
     load_server_certificate(ctx);
-    auto connector = make_ozo_connector(ioc);
+    const auto connector = make_ozo_connector(ioc);
 
     boost::asio::spawn(ioc, [&ioc, &address, &ctx, &connector,
                              &logger](boost::asio::yield_context yield) {
