@@ -14,7 +14,7 @@ namespace nibaserver {
 inline auto make_ozo_connector(boost::asio::io_context &ioc) {
     // note these are static so they still exist after we return from this function
     static auto connection_info = ozo::make_connection_info("dbname=niba user=postgres");
-    ozo::connection_pool_config connection_pool_config;
+    static ozo::connection_pool_config connection_pool_config;
     static auto connection_pool =
         ozo::make_connection_pool(connection_info, connection_pool_config);
     // Creating connection pool from connection_info as the underlying ConnectionSource
@@ -34,6 +34,6 @@ inline auto make_ozo_connector(boost::asio::io_context &ioc) {
 }
 
 using niba_ozo_connector =
-    std::invoke_result_t<decltype(&make_ozo_connector), boost::asio::io_context&>;
+    std::invoke_result_t<decltype(&make_ozo_connector), boost::asio::io_context &>;
 
 } // namespace nibaserver
