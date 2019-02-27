@@ -12,7 +12,7 @@ namespace nibaserver {
 
 // we use this just to get around needing to write out the type for the connector
 inline auto make_ozo_connector(boost::asio::io_context &ioc) {
-    // note these are static so they still exists after we return from this function
+    // note these are static so they still exist after we return from this function
     static auto connection_info = ozo::make_connection_info("dbname=niba user=postgres");
     ozo::connection_pool_config connection_pool_config;
     static auto connection_pool =
