@@ -16,8 +16,7 @@ namespace sev = boost::log::trivial;
 
 constexpr std::size_t HASH_SIZE = 32;
 
-db_accessor::db_accessor(const ozo::connector<ozo::connection_pool<ozo::connection_info<>>,
-                                              ozo::connection_pool_timeouts> &conn) :
+db_accessor::db_accessor(const niba_ozo_connector &conn) :
     conn_(conn) {
     logger_ = logger();
 }

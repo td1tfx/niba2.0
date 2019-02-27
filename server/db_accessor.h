@@ -1,5 +1,6 @@
 #pragma once
 
+#include "connector.h"
 #include "logger.h"
 #include "structs.h"
 #include <boost/asio/spawn.hpp>
@@ -9,6 +10,7 @@
 #include <ozo/connection_pool.h>
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -53,8 +55,7 @@ public:
 
 private:
     logger logger_;
-    const ozo::connector<ozo::connection_pool<ozo::connection_info<>>,
-                         ozo::connection_pool_timeouts> &conn_;
+    const niba_ozo_connector &conn_;
 };
 
 } // namespace nibaserver
