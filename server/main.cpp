@@ -35,6 +35,7 @@
 // #include <vector>
 
 #include "cert_loader.hpp"
+#include "connector.h"
 #include "db_accessor.h"
 #include "gamedata.h"
 #include "logger.h"
@@ -103,8 +104,10 @@ int main(int argc, char *argv[]) {
 
     init_log();
     logger logger;
+    BOOST_LOG_SEV(logger, sev::info) << "Server starts.";
 
     init_gamedata();
+    BOOST_LOG_SEV(logger, sev::info) << "Game data loaded.";
 
     // The io_context is required for all I/O
     boost::asio::io_context ioc{threads};
@@ -114,29 +117,7 @@ int main(int argc, char *argv[]) {
 
     // This holds the self-signed certificate used by the server
     load_server_certificate(ctx);
-
-    BOOST_LOG_SEV(logger, sev::info) << "Server starts.";
-
-    // Spawn a listening port, note as per clang, &port is not required in capture list as its
-    // a constexpr
-
-    auto connection_info = ozo::make_connection_info("dbname=niba user=postgres");
-
-    ozo::connection_pool_config connection_pool_config;
-
-    // Maximum limit for number of stored connections
-    connection_pool_config.capacity = 100;
-    // Maximum limit for number of waiting requests for connection
-    connection_pool_config.queue_capacity = 5000;
-    // Maximum time duration to store unused open connection
-    connection_pool_config.idle_timeout = std::chrono::seconds(60);
-
-    // Creating connection pool from connection_info as the underlying ConnectionSource
-    auto connection_pool = ozo::make_connection_pool(connection_info, connection_pool_config);
-    ozo::connection_pool_timeouts timeouts;
-    timeouts.connect = std::chrono::seconds(10);
-    timeouts.queue = std::chrono::seconds(10);
-    const auto connector = ozo::make_connector(connection_pool, ioc, timeouts);
+    const auto connector = make_ozo_connector(ioc);
 
     boost::asio::spawn(ioc, [&ioc, &address, &ctx, &connector,
                              &logger](boost::asio::yield_context yield) {
@@ -151,6 +132,7 @@ int main(int argc, char *argv[]) {
                                               << " | " << ozo::get_error_context(conn);
             return;
         }
+        BOOST_LOG_SEV(logger, sev::info) << "All users logged out." << port;
 
         // Open the acceptor
         tcp::acceptor acceptor(ioc);
@@ -169,6 +151,8 @@ int main(int argc, char *argv[]) {
         // Start listening for connections
         acceptor.listen(boost::asio::socket_base::max_listen_connections);
 
+        BOOST_LOG_SEV(logger, sev::info) << "Listening for connection on " << port;
+
         for (;;) {
             tcp::socket socket(ioc);
             acceptor.async_accept(socket, yield);
@@ -182,6 +166,7 @@ int main(int argc, char *argv[]) {
         }
     });
 
+    BOOST_LOG_SEV(logger, sev::info) << "Main thread ioc running.";
     ioc.run();
 
     return EXIT_SUCCESS;
