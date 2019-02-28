@@ -24,6 +24,7 @@ public:
     ~client_session();
 
     void handle_cmd(const std::string &input);
+    double get_delay() const;
 
 private:
     template<typename Message, typename... Args>
@@ -54,6 +55,7 @@ private:
     boost::asio::ip::tcp::resolver resolver_;
     boost::beast::websocket::stream<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>> ws_;
     boost::asio::steady_timer timer_;
+    double delay_ = 0;
     client_processor processor_;
 };
 

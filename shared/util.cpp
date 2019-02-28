@@ -10,4 +10,8 @@ double stopwatch::elapsed_ms() const {
     return fp_ms.count();
 }
 
+void stopwatch::reset() {
+    start_point_ = clock::now();
+}
+
 } // namespace nibautil

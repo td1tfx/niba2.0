@@ -28,6 +28,7 @@ public:
     using clock = std::chrono::high_resolution_clock;
     stopwatch();
     double elapsed_ms() const;
+    void reset();
 
 private:
     std::chrono::high_resolution_clock::time_point start_point_;

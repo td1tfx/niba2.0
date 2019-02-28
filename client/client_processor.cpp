@@ -8,7 +8,7 @@
 
 using namespace nibaclient;
 
-client_processor::client_processor() : session_() {}
+client_processor::client_processor(double &delay) : session_(), delay_(delay) {}
 
 void client_processor::process(nibashared::message_register &req) {
     if (req.success) {
@@ -52,8 +52,19 @@ void nibaclient::client_processor::process(nibashared::message_getdata &req) {
 void nibaclient::client_processor::process(nibashared::message_fight &req) {
     nibashared::rng_client rng(std::move(req.generated));
     auto [self_fightable, enemy_fightable] = nibashared::prep_fight(session_, req.enemyid);
+    auto max_hp = static_cast<double>(self_fightable.at(0).char_data.stats.hp);
+    // TODO: should not be owning the fightables, maybe it shouldn't even be a class?
     nibashared::fight fight(std::move(self_fightable), std::move(enemy_fightable));
     std::cout << fight.go(rng) << " wins" << std::endl;
+    // TODO: refactor the delays
+    delay_ = fight.elapsed_ticks() * nibashared::delay::fight_tick;
+    auto cur_hp = fight.my_status().char_data.stats.hp;
+    if (cur_hp < 0)
+        cur_hp = 0;
+    // find %hp missing, truncate
+    auto missing_perc = static_cast<int>(((max_hp - cur_hp) / max_hp) * 100);
+    std::cout << "hp missing " << missing_perc << "%" << std::endl;
+    delay_ += missing_perc * nibashared::delay::per_hp;
 }
 
 void nibaclient::client_processor::process(nibashared::message_createchar &req) {

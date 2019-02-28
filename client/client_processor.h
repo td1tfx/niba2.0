@@ -8,7 +8,7 @@
 namespace nibaclient {
 class client_processor {
 public:
-    client_processor();
+    client_processor(double &delay);
     ~client_processor() = default;
     void process(nibashared::message_register &req);
     void process(nibashared::message_login &req);
@@ -38,5 +38,6 @@ public:
 
 private:
     nibashared::sessionstate session_;
+    double &delay_;
 };
 } // namespace nibaclient

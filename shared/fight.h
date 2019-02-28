@@ -65,11 +65,15 @@ public:
     // the test client will have the set of numbers received from server
     template<typename Rng>
     int go(Rng &rng);
+    int elapsed_ticks() const;
+    // just return the first fightable
+    fightable& my_status();
 
 private:
     std::size_t friends_;
     std::size_t enemies_;
     std::vector<fightable> all_;
+    int elapsed_ticks_ = 0;
 };
 
 battlestats stats_computer(const attributes &attr);

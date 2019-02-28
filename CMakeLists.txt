@@ -18,6 +18,8 @@ set(Boost_USE_STATIC_LIBS ON)
 
 add_compile_definitions(BOOST_COROUTINES_NO_DEPRECATION_WARNING)
 add_compile_definitions(BOOST_HANA_CONFIG_ENABLE_STRING_UDL)
+# TODO: enable only for debug builds
+add_compile_definitions(DELAYFACTOR=0.1)
 
 find_package(Boost 1.68.0 REQUIRED COMPONENTS system context coroutine log regex)
 find_package(nlohmann_json 3.3.0 REQUIRED)
