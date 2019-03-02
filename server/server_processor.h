@@ -5,6 +5,7 @@
 #include "message.h"
 #include "sessiondata.h"
 
+#include <chrono>
 #include <boost/asio/spawn.hpp>
 #include <nlohmann/json.hpp>
 
@@ -35,6 +36,13 @@ private:
 
     template<typename request>
     std::string do_request(const nlohmann::json &json_request) {
+        // TODO: minimize exceptions
+        // check if past earliest_time, then reset
+        session_.current_time = std::chrono::high_resolution_clock::now();
+        if (session_.current_time < session_.earliest_time) {
+            throw std::runtime_error("request too frequent");
+        }
+        session_.earliest_time = session_.current_time;
         request req;
         req.from_request(json_request);
         if (!req.validate(session_)) {

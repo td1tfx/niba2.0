@@ -11,7 +11,7 @@ nibaclient::client_session::client_session(std::string const &host, std::string 
                                            boost::asio::io_context &ioc,
                                            boost::asio::ssl::context &ssl_ctx) :
     host_(host),
-    port_(port), ioc_(ioc), resolver_(ioc_), ws_(ioc_, ssl_ctx), timer_(ioc_), processor_(delay_) {
+    port_(port), ioc_(ioc), resolver_(ioc_), ws_(ioc_, ssl_ctx), timer_(ioc_) {
     // everything can be sync because this client has no ui anyway
     auto const results = resolver_.resolve(host_, port_);
     boost::asio::connect(ws_.next_layer().next_layer(), results.begin(), results.end());
@@ -34,7 +34,6 @@ void nibaclient::client_session::close() {
 }
 
 void nibaclient::client_session::handle_cmd(const std::string &input) {
-    delay_ = 0;
     try {
         if (input == "exit") {
             std::cout << "goodbye" << std::endl;
@@ -92,8 +91,12 @@ void nibaclient::client_session::handle_cmd(const std::string &input) {
     std::cout << "incorrect command" << std::endl;
 }
 
-double nibaclient::client_session::get_delay() const {
-    return delay_;
+std::chrono::high_resolution_clock::time_point nibaclient::client_session::earliest() const {
+    // if no change then it means do whatever
+    if (processor_.get_session().earliest_time == processor_.get_session().current_time)
+        return {};
+    return {};
+    // return processor_.get_session().earliest_time;
 }
 
 void nibaclient::client_session::ping_timer(boost::system::error_code ec) {

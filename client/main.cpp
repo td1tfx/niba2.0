@@ -62,18 +62,18 @@ int main(int argc, char **argv) {
     std::thread([&ioc, &client_session, &processor_mutex, &processor_cv, &processed] {
         // separate io thread so that getline doesn't block our websocket pingpong
         std::string line;
-        nibautil::stopwatch stopwatch;
+        auto now = std::chrono::high_resolution_clock::now();
         while (std::getline(std::cin, line)) {
             if (line == "exit" || line == "quit")
                 break;
             std::unique_lock<std::mutex> lock(processor_mutex);
             processor_cv.wait(lock, [&processed] { return processed; });
-            auto delay = client_session.get_delay();
-            auto elapsed = stopwatch.elapsed_ms();
-            if (delay > elapsed) { // first request should have 0 delay
-                std::cout << "cooldown " << (delay - elapsed) << "ms" << std::endl;
-                std::this_thread::sleep_for(
-                    std::chrono::milliseconds(static_cast<int>(delay - elapsed) + 1));
+            auto earliest = client_session.earliest();
+            if (earliest > now) {
+                // if we do auto its nano seconds, fine
+                auto delay = earliest - now;
+                std::cout << "cooldown " << delay.count() << "ns" << std::endl;
+                std::this_thread::sleep_for(delay);
             }
             processed = false;
             try {
@@ -90,7 +90,7 @@ int main(int argc, char **argv) {
                 std::cout << e.what() << std::endl;
                 break;
             }
-            stopwatch.reset();
+            now = std::chrono::high_resolution_clock::now();
         }
         ioc.post([&client_session]() { client_session.handle_cmd("exit"); });
     })

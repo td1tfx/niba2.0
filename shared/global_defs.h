@@ -24,10 +24,4 @@ enum class gamestate : std::size_t {
     LAST
 };
 
-namespace delay {
-// all in ms
-constexpr double per_hp = 100.0 * DELAYFACTOR;
-constexpr double fight_tick = 10.0 * DELAYFACTOR;
-} // namespace delay
-
 } // namespace nibashared

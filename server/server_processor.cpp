@@ -1,4 +1,5 @@
 #include "server_processor.h"
+#include "calcdelay.h"
 #include "db_accessor.h"
 #include "fight.h"
 #include "gamedata.h"
@@ -98,10 +99,14 @@ void nibaserver::server_processor::process(nibashared::message_getdata &req) {
 
 void nibaserver::server_processor::process(nibashared::message_fight &req) {
     auto [self_fightable, enemy_fightable] = nibashared::prep_fight(session_, req.enemyid);
+    // Maybe refactor again..
+    auto max_hp = static_cast<double>(self_fightable.at(0).char_data.stats.hp);
     nibashared::fight fight(std::move(self_fightable), std::move(enemy_fightable));
     nibashared::rng_server rng;
     fight.go(rng);
     req.generated = std::move(rng.generated);
+    session_.earliest_time += nibashared::fight_delay(max_hp, fight.my_status().char_data.stats.hp,
+                                                      fight.elapsed_ticks());
 }
 
 void nibaserver::server_processor::process(nibashared::message_createchar &req) {
