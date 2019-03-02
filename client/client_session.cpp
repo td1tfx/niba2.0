@@ -95,8 +95,7 @@ std::chrono::high_resolution_clock::time_point nibaclient::client_session::earli
     // if no change then it means do whatever
     if (processor_.get_session().earliest_time == processor_.get_session().current_time)
         return {};
-    return {};
-    // return processor_.get_session().earliest_time;
+    return processor_.get_session().earliest_time;
 }
 
 void nibaclient::client_session::ping_timer(boost::system::error_code ec) {
