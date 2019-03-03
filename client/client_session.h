@@ -24,6 +24,7 @@ public:
     ~client_session();
 
     void handle_cmd(const std::string &input);
+    std::chrono::high_resolution_clock::time_point earliest() const;
 
 private:
     template<typename Message, typename... Args>

@@ -132,7 +132,7 @@ int main(int argc, char *argv[]) {
                                               << " | " << ozo::get_error_context(conn);
             return;
         }
-        BOOST_LOG_SEV(logger, sev::info) << "All users logged out." << port;
+        BOOST_LOG_SEV(logger, sev::info) << "All users logged out.";
 
         // Open the acceptor
         tcp::acceptor acceptor(ioc);

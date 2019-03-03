@@ -91,6 +91,13 @@ void nibaclient::client_session::handle_cmd(const std::string &input) {
     std::cout << "incorrect command" << std::endl;
 }
 
+std::chrono::high_resolution_clock::time_point nibaclient::client_session::earliest() const {
+    // if no change then it means do whatever
+    if (processor_.get_session().earliest_time == processor_.get_session().current_time)
+        return {};
+    return processor_.get_session().earliest_time;
+}
+
 void nibaclient::client_session::ping_timer(boost::system::error_code ec) {
     if (ec && ec != boost::asio::error::operation_aborted)
         return;

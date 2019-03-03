@@ -1,4 +1,5 @@
 #include "client_processor.h"
+#include "calcdelay.h"
 #include "fight.h"
 #include "gamedata.h"
 #include "rng.h"
@@ -7,8 +8,6 @@
 #include <iostream>
 
 using namespace nibaclient;
-
-client_processor::client_processor() : session_() {}
 
 void client_processor::process(nibashared::message_register &req) {
     if (req.success) {
@@ -52,8 +51,12 @@ void nibaclient::client_processor::process(nibashared::message_getdata &req) {
 void nibaclient::client_processor::process(nibashared::message_fight &req) {
     nibashared::rng_client rng(std::move(req.generated));
     auto [self_fightable, enemy_fightable] = nibashared::prep_fight(session_, req.enemyid);
+    auto max_hp = static_cast<double>(self_fightable.at(0).char_data.stats.hp);
+    // TODO: should not be owning the fightables, maybe it shouldn't even be a class?
     nibashared::fight fight(std::move(self_fightable), std::move(enemy_fightable));
     std::cout << fight.go(rng) << " wins" << std::endl;
+    session_.earliest_time += nibashared::fight_delay(max_hp, fight.my_status().char_data.stats.hp,
+                                                      fight.elapsed_ticks());
 }
 
 void nibaclient::client_processor::process(nibashared::message_createchar &req) {
@@ -106,4 +109,4 @@ void nibaclient::client_processor::process(nibashared::message_reordermagic &req
     }
 }
 
-const nibashared::sessionstate &client_processor::get_session() { return session_; }
+const nibashared::sessionstate &client_processor::get_session() const { return session_; }

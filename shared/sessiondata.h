@@ -1,6 +1,7 @@
 #pragma once
 #include "global_defs.h"
 #include "structs.h"
+#include <chrono>
 #include <functional>
 #include <optional>
 #include <string>
@@ -17,6 +18,10 @@ struct sessionstate {
     std::vector<magic> magics;
     std::vector<equipment> equips;
     std::vector<int> equipped_magic_ids;
+
+    std::chrono::high_resolution_clock::time_point current_time; // when request comes in
+    std::chrono::high_resolution_clock::time_point
+        earliest_time; // add delay to current_time if neccessary
 };
 
 } // namespace nibashared

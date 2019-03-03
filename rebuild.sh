@@ -3,16 +3,16 @@
 set -e
 
 jobs=$(nproc --all)
-# Release
+# set it to Debug for proper debugging
 type=RelWithDebInfo
-gen=false
+ninja=false
 
-while getopts ':j:dg' option
+while getopts ':j:dn' option
 do
     case $option in
         j) jobs=$OPTARG;;
         d) type=Debug;;
-        g) gen=true;;
+        n) ninja=true;;
         \? ) echo "Unknown option" >&2; exit 1;;
     esac
 done
@@ -21,6 +21,11 @@ shift $((OPTIND -1))
 rm -rf build
 mkdir build
 cd build
-# set it to Debug for debugging
-cmake .. -DCMAKE_BUILD_TYPE=${type}
-make -j ${jobs}
+
+if [ $ninja = true ]; then
+    cmake .. -DCMAKE_BUILD_TYPE=${type} -GNinja
+    ninja
+else
+    cmake .. -DCMAKE_BUILD_TYPE=${type}
+    make -j ${jobs}
+fi

@@ -10,6 +10,10 @@
 #define CPRINT(X)
 #endif
 
+#ifndef DELAYFACTOR
+#define DELAYFACTOR 1.0
+#endif
+
 namespace nibashared {
 
 enum class gamestate : std::size_t {
@@ -19,6 +23,5 @@ enum class gamestate : std::size_t {
 
     LAST
 };
-
 
 } // namespace nibashared

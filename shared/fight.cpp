@@ -141,6 +141,9 @@ int fight::go(Rng &rng) {
         auto &[ticks, attacker_idx] = min_tick;
         auto &attacker = all_.at(attacker_idx);
 
+        // keep track of elasped ticks
+        elapsed_ticks_ += ticks;
+
         // make everyone progress and find the target, to break ties, again use idx
         using threat_idx_p = std::pair<int, std::size_t>;
         // it's unknown which idx is the first enemy
@@ -199,6 +202,15 @@ int fight::go(Rng &rng) {
 
 template int fight::go<rng_client>(rng_client &rng);
 template int fight::go<rng_server>(rng_server &rng);
+
+int fight::elapsed_ticks() const {
+    return elapsed_ticks_;
+}
+
+fightable& fight::my_status() {
+    return all_.at(0);
+}
+
 
 // will move this elsewhere
 battlestats stats_computer(const attributes &attr) {
