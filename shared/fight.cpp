@@ -42,19 +42,19 @@ int fightable::damage_calc(const magic &chosen_magic, const fightable &defender,
     double inner_damage_multiplier = 1 + char_data.stats.inner_power / INNER_BASE;
     double inner_damage_reduction;
     switch (chosen_magic.inner_property) {
-    case property::gold:
+    case 0:
         inner_damage_reduction = defender.char_data.stats.gold_res / 100.0;
         break;
-    case property::wood:
+    case 1:
         inner_damage_reduction = defender.char_data.stats.wood_res / 100.0;
         break;
-    case property::water:
+    case 2:
         inner_damage_reduction = defender.char_data.stats.water_res / 100.0;
         break;
-    case property::fire:
+    case 3:
         inner_damage_reduction = defender.char_data.stats.fire_res / 100.0;
         break;
-    case property::earth:
+    case 4:
         inner_damage_reduction = defender.char_data.stats.earth_res / 100.0;
         break;
     default:

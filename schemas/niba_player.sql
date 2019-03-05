@@ -16,95 +16,154 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
+-- Name: battlestats; Type: TYPE; Schema: public; Owner: postgres
 --
 
-CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
+CREATE TYPE public.battlestats AS (
+	hp integer,
+	mp integer,
+	attack_min integer,
+	attack_max integer,
+	inner_power integer,
+	accuracy integer,
+	evasion integer,
+	speed integer,
+	defence integer,
+	crit_chance integer,
+	crit_damage integer,
+	reduce_def integer,
+	reduce_def_perc integer,
+	hp_regen integer,
+	mp_regen integer,
+	gold_res integer,
+	wood_res integer,
+	water_res integer,
+	fire_res integer,
+	earth_res integer,
+	hp_on_hit integer,
+	hp_steal integer,
+	mp_on_hit integer,
+	mp_steal integer
+);
+
+
+ALTER TYPE public.battlestats OWNER TO postgres;
+
+--
+-- Name: character_four_attributes; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE public.character_four_attributes AS (
+	strength integer,
+	dexterity integer,
+	physique integer,
+	spirit integer
+);
+
+
+ALTER TYPE public.character_four_attributes OWNER TO postgres;
+
+--
+-- Name: TYPE character_four_attributes; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON TYPE public.character_four_attributes IS 'strength, dexterity, physique, spirit';
 
 
 --
--- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
+-- Name: character_info; Type: TYPE; Schema: public; Owner: postgres
 --
 
-COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
+CREATE TYPE public.character_info AS (
+	name text,
+	gender "char",
+	attrs public.character_four_attributes
+);
 
+
+ALTER TYPE public.character_info OWNER TO postgres;
+
+--
+-- Name: TYPE character_info; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON TYPE public.character_info IS 'including name, gender and character_four_attributess';
+
+
+--
+-- Name: magic_info; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE public.magic_info AS (
+	magic_id integer,
+	name text,
+	active integer,
+	multiplier integer,
+	inner_damage integer,
+	cd integer,
+	mp_cost integer,
+	inner_property integer,
+	description text,
+	stats public.battlestats
+);
+
+
+ALTER TYPE public.magic_info OWNER TO postgres;
 
 SET default_tablespace = '';
 
 SET default_with_oids = false;
 
 --
+-- Name: character_equipped_magic; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.character_equipped_magic (
+    character_name text NOT NULL,
+    magics integer[]
+);
+
+
+ALTER TABLE public.character_equipped_magic OWNER TO postgres;
+
+--
 -- Name: player_character; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.player_character (
-    name text NOT NULL,
     id text NOT NULL,
-    gender "char" NOT NULL,
-    strength integer DEFAULT 0,
-    dexterity integer DEFAULT 0,
-    physique integer DEFAULT 0,
-    spirit integer DEFAULT 0
+    "character" public.character_info NOT NULL
 );
 
 
 ALTER TABLE public.player_character OWNER TO postgres;
 
 --
--- Name: player_equipped_magic; Type: TABLE; Schema: public; Owner: postgres
+-- Name: TABLE player_character; Type: COMMENT; Schema: public; Owner: postgres
 --
 
-CREATE TABLE public.player_equipped_magic (
-    player_name text NOT NULL,
-    magics integer[]
-);
+COMMENT ON TABLE public.player_character IS 'stores user id -> character mapping';
 
-
-ALTER TABLE public.player_equipped_magic OWNER TO postgres;
 
 --
 -- Name: player_magic; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.player_magic (
+    character_name text NOT NULL,
     magic_id integer NOT NULL,
-    player_name text NOT NULL,
-    name text NOT NULL,
-    active boolean DEFAULT true,
-    multiplier integer DEFAULT 100,
-    inner_damage integer DEFAULT 0,
-    cd integer DEFAULT 0,
-    mp_cost integer DEFAULT 0,
-    inner_property integer DEFAULT 0 NOT NULL,
-    description text DEFAULT ''::text NOT NULL,
-    hp integer DEFAULT 0,
-    mp integer DEFAULT 0,
-    attack_min integer DEFAULT 0,
-    attack_max integer DEFAULT 0,
-    inner_power integer DEFAULT 0,
-    accuracy integer DEFAULT 0,
-    evasion integer DEFAULT 0,
-    speed integer DEFAULT 0,
-    defence integer DEFAULT 0,
-    crit_chance integer DEFAULT 0,
-    crit_damage integer DEFAULT 0,
-    reduce_def integer DEFAULT 0,
-    reduce_def_perc integer DEFAULT 0,
-    hp_regen integer DEFAULT 0,
-    mp_regen integer DEFAULT 0,
-    gold_res integer DEFAULT 0,
-    wood_res integer DEFAULT 0,
-    water_res integer DEFAULT 0,
-    fire_res integer DEFAULT 0,
-    earth_res integer DEFAULT 0,
-    hp_on_hit integer DEFAULT 0,
-    hp_steal integer DEFAULT 0,
-    mp_on_hit integer DEFAULT 0,
-    mp_steal integer DEFAULT 0
+    magic public.magic_info NOT NULL
 );
 
 
 ALTER TABLE public.player_magic OWNER TO postgres;
+
+--
+-- Name: COLUMN player_magic.magic; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON COLUMN public.player_magic.magic IS 'note that magic itself contains the same magic_id; not a very good practice';
+
 
 --
 -- Name: user_id; Type: TABLE; Schema: public; Owner: postgres
@@ -121,19 +180,27 @@ CREATE TABLE public.user_id (
 ALTER TABLE public.user_id OWNER TO postgres;
 
 --
+-- Name: character_equipped_magic character_equipped_magic_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.character_equipped_magic
+    ADD CONSTRAINT character_equipped_magic_pkey PRIMARY KEY (character_name);
+
+
+--
 -- Name: player_character player_character_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.player_character
-    ADD CONSTRAINT player_character_pkey PRIMARY KEY (name);
+    ADD CONSTRAINT player_character_pkey PRIMARY KEY (id);
 
 
 --
--- Name: player_equipped_magic player_equipped_magic_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: player_magic player_magic_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public.player_equipped_magic
-    ADD CONSTRAINT player_equipped_magic_pkey PRIMARY KEY (player_name);
+ALTER TABLE ONLY public.player_magic
+    ADD CONSTRAINT player_magic_pkey PRIMARY KEY (character_name, magic_id);
 
 
 --
@@ -147,4 +214,3 @@ ALTER TABLE ONLY public.user_id
 --
 -- PostgreSQL database dump complete
 --
-

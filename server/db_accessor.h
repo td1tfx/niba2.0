@@ -18,8 +18,7 @@ namespace nibaserver {
 
 class db_accessor {
 public:
-    db_accessor(const ozo::connector<ozo::connection_pool<ozo::connection_info<>>,
-                                     ozo::connection_pool_timeouts> &conn);
+    db_accessor(const niba_ozo_connector &conn);
     // ~db_accessor() = default;
     bool login(const std::string &id, const std::string &password,
                boost::asio::yield_context &yield);
