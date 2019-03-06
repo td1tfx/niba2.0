@@ -5,15 +5,14 @@
 #include <boost/hana.hpp>
 #include <nlohmann/json.hpp>
 #include <ostream>
+#include <ozo/type_traits.h>
 
 namespace nibashared {
 
 using magic_ids = std::vector<int>;
 using equipment_ids = std::vector<int>;
 
-
-// actually allow implicit conversion
-enum property { gold = 0, wood = 1, water = 2, fire = 3, earth = 4 };
+enum property { gold = 'j', wood = 'm', water = 's', fire = 'h', earth = 't' };
 enum equipmenttype {
     head = 0,
     armor = 1,
@@ -175,9 +174,9 @@ STRUCT_JSON_SERIALIZE(player);
 STRUCT_PRINT(player);
 
 struct magic {
-    BOOST_HANA_DEFINE_STRUCT(magic, (std::string, name), (int, magic_id), (std::string, description),
-                             (int, active), (int, cd), (int, multiplier), (int, inner_damage),
-                             (int, mp_cost), (property, inner_property), (battlestats, stats));
+    BOOST_HANA_DEFINE_STRUCT(magic, (int, magic_id), (std::string, name), (int, active), (int, multiplier),
+                             (int, inner_damage), (int, cd), (int, mp_cost), (char, inner_property),
+                             (std::string, description), (battlestats, stats));
 };
 STRUCT_JSON_SERIALIZE(magic);
 STRUCT_PRINT(magic);
@@ -191,3 +190,8 @@ STRUCT_JSON_SERIALIZE(equipment);
 STRUCT_PRINT(equipment);
 
 } // namespace nibashared
+
+OZO_PG_DEFINE_CUSTOM_TYPE(nibashared::attributes, "character_four_attributes")
+OZO_PG_DEFINE_CUSTOM_TYPE(nibashared::player, "character_info")
+OZO_PG_DEFINE_CUSTOM_TYPE(nibashared::battlestats, "battlestats")
+OZO_PG_DEFINE_CUSTOM_TYPE(nibashared::magic, "magic_info")

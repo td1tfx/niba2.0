@@ -6,6 +6,7 @@
 #include <ozo/execute.h>
 #include <ozo/request.h>
 #include <ozo/shortcuts.h>
+#include <structs.h>
 #include <type_traits>
 
 namespace nibaserver {
@@ -13,7 +14,10 @@ namespace nibaserver {
 // we use this just to get around needing to write out the type for the connector
 inline auto make_ozo_connector(boost::asio::io_context &ioc) {
     // note these are static so they still exist after we return from this function
-    static auto connection_info = ozo::make_connection_info("dbname=niba user=postgres");
+    static auto connection_info = ozo::make_connection_info(
+        "dbname=niba user=postgres",
+        ozo::register_types<nibashared::attributes, nibashared::magic, nibashared::player,
+                            nibashared::battlestats>());
     static ozo::connection_pool_config connection_pool_config;
     static auto connection_pool =
         ozo::make_connection_pool(connection_info, connection_pool_config);

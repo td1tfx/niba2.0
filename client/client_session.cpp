@@ -49,7 +49,7 @@ void nibaclient::client_session::handle_cmd(const std::string &input) {
         // dynamic sized
         if (results[0] == "reordermagic") {
             std::vector<int> selected;
-            std::for_each(results.begin() + 1, results.end(), [&selected, this](auto &magic_id) {
+            std::for_each(results.begin() + 1, results.end(), [&selected](auto &magic_id) {
                 selected.push_back(std::stoi(magic_id));
             });
             return create_and_go<nibashared::message_reordermagic>(std::move(selected));
