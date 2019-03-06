@@ -12,16 +12,7 @@ namespace nibashared {
 using magic_ids = std::vector<int>;
 using equipment_ids = std::vector<int>;
 
-
-/* 
-    constant -> property mapping
-    0: gold
-    1: wood
-    2: water
-    3: fire
-    4: earth
-*/
-
+enum property { gold = 'j', wood = 'm', water = 's', fire = 'h', earth = 't' };
 enum equipmenttype {
     head = 0,
     armor = 1,
@@ -32,6 +23,27 @@ enum equipmenttype {
     ring = 6,
     weapon = 7
 };
+
+inline std::ostream &operator<<(std::ostream &os, const property &p) {
+    switch (p) {
+    case property::gold:
+        os << "gold";
+        break;
+    case property::wood:
+        os << "wood";
+        break;
+    case property::water:
+        os << "water";
+        break;
+    case property::fire:
+        os << "fire";
+        break;
+    case property::earth:
+        os << "earth";
+        break;
+    }
+    return os;
+}
 
 // need a better way to do this
 inline std::ostream &operator<<(std::ostream &os, const equipmenttype &v) {
@@ -163,7 +175,7 @@ STRUCT_PRINT(player);
 
 struct magic {
     BOOST_HANA_DEFINE_STRUCT(magic, (int, magic_id), (std::string, name), (int, active), (int, multiplier),
-                             (int, inner_damage), (int, cd), (int, mp_cost), (int, inner_property),
+                             (int, inner_damage), (int, cd), (int, mp_cost), (char, inner_property),
                              (std::string, description), (battlestats, stats));
 };
 STRUCT_JSON_SERIALIZE(magic);

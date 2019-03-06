@@ -26,7 +26,7 @@ const static magic DEFAULT_MAGIC{.name = u8"default",
                                  .multiplier = 100,
                                  .inner_damage = 0,
                                  .mp_cost = 0,
-                                 .inner_property = 0,
+                                 .inner_property = 'j',
                                  .stats = {}};
 
 constexpr int FIGHT_MAX_PROG = 1000;

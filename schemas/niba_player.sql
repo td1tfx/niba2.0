@@ -102,7 +102,7 @@ CREATE TYPE public.magic_info AS (
 	inner_damage integer,
 	cd integer,
 	mp_cost integer,
-	inner_property integer,
+	inner_property "char",
 	description text,
 	stats public.battlestats
 );
