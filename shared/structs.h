@@ -10,7 +10,8 @@ namespace nibashared {
 
 using magic_ids = std::vector<int>;
 using equipment_ids = std::vector<int>;
-
+using enemy_ids = std::vector<int>;
+using map_ids = std::vector<int>;
 
 // actually allow implicit conversion
 enum property { gold = 0, wood = 1, water = 2, fire = 3, earth = 4 };
@@ -146,7 +147,6 @@ struct battlestats {
         });
         return *this;
     }
-
 };
 STRUCT_JSON_SERIALIZE(battlestats);
 STRUCT_PRINT(battlestats);
@@ -159,9 +159,9 @@ STRUCT_JSON_SERIALIZE(attributes);
 STRUCT_PRINT(attributes);
 
 struct character {
-    BOOST_HANA_DEFINE_STRUCT(character, (std::string, name), (int, character_id), (std::string, description),
-                             (attributes, attrs), (battlestats, stats), (equipment_ids, equipments),
-                             (magic_ids, active_magic));
+    BOOST_HANA_DEFINE_STRUCT(character, (std::string, name), (int, character_id),
+                             (std::string, description), (attributes, attrs), (battlestats, stats),
+                             (equipment_ids, equipments), (magic_ids, active_magic));
 };
 STRUCT_JSON_SERIALIZE(character);
 STRUCT_PRINT(character);
@@ -175,9 +175,10 @@ STRUCT_JSON_SERIALIZE(player);
 STRUCT_PRINT(player);
 
 struct magic {
-    BOOST_HANA_DEFINE_STRUCT(magic, (std::string, name), (int, magic_id), (std::string, description),
-                             (int, active), (int, cd), (int, multiplier), (int, inner_damage),
-                             (int, mp_cost), (property, inner_property), (battlestats, stats));
+    BOOST_HANA_DEFINE_STRUCT(magic, (std::string, name), (int, magic_id),
+                             (std::string, description), (int, active), (int, cd),
+                             (int, multiplier), (int, inner_damage), (int, mp_cost),
+                             (property, inner_property), (battlestats, stats));
 };
 STRUCT_JSON_SERIALIZE(magic);
 STRUCT_PRINT(magic);
@@ -189,5 +190,13 @@ struct equipment {
 };
 STRUCT_JSON_SERIALIZE(equipment);
 STRUCT_PRINT(equipment);
+
+struct map {
+    BOOST_HANA_DEFINE_STRUCT(map, (int, map_id), (double, elite_prob), (double, boss_prob),
+                             (enemy_ids, enemies), (int, boss_id), (map_ids, open_maps),
+                             (bool, is_open));
+};
+STRUCT_JSON_SERIALIZE(map);
+STRUCT_PRINT(map);
 
 } // namespace nibashared

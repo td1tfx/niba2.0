@@ -24,4 +24,13 @@ struct sessionstate {
         earliest_time; // add delay to current_time if neccessary
 };
 
+struct playerdata {
+    // db_accessor can just return playerdata
+    std::optional<std::string> userid;
+    std::optional<nibashared::player> player;
+    std::vector<magic> magics;
+    std::vector<equipment> equips;
+    std::vector<int> equipped_magic_ids;
+};
+
 } // namespace nibashared
