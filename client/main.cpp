@@ -23,7 +23,9 @@
 
 #include <chrono>
 #include <condition_variable>
+#include <fstream>
 #include <iostream>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <thread>
@@ -43,6 +45,12 @@ int main(int argc, char **argv) {
     (void)argc;
     (void)argv;
 
+    std::unique_ptr<std::ifstream> fin;
+    if (argc == 2) {
+        fin = std::make_unique<std::ifstream>(argv[1]);
+    }
+    std::istream &instream = fin ? *fin : std::cin;
+
     std::string host = "localhost";
     std::string port = "19999";
 
@@ -59,16 +67,16 @@ int main(int argc, char **argv) {
     std::condition_variable processor_cv;
     bool processed = true;
 
-    std::thread([&ioc, &client_session, &processor_mutex, &processor_cv, &processed] {
+    std::thread([&ioc, &instream, &client_session, &processor_mutex, &processor_cv, &processed] {
         // separate io thread so that getline doesn't block our websocket pingpong
         std::string line;
-        auto now = std::chrono::high_resolution_clock::now();
-        while (std::getline(std::cin, line)) {
+        while (std::getline(instream, line)) {
             if (line == "exit" || line == "quit")
                 break;
             std::unique_lock<std::mutex> lock(processor_mutex);
             processor_cv.wait(lock, [&processed] { return processed; });
             auto earliest = client_session.earliest();
+            auto now = std::chrono::high_resolution_clock::now();
             if (earliest > now) {
                 // if we do auto its nano seconds, fine
                 auto delay = earliest - now;
@@ -90,7 +98,6 @@ int main(int argc, char **argv) {
                 std::cout << e.what() << std::endl;
                 break;
             }
-            now = std::chrono::high_resolution_clock::now();
         }
         ioc.post([&client_session]() { client_session.handle_cmd("exit"); });
     })

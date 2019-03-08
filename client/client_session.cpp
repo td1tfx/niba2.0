@@ -42,10 +42,11 @@ void nibaclient::client_session::handle_cmd(const std::string &input) {
             ioc_.stop();
             return;
         }
+        handled_ = true;
         std::vector<std::string> results;
         boost::split(results, input, boost::is_any_of("\t "));
         if (results.empty())
-            return;
+            throw std::runtime_error("empty input");
         // dynamic sized
         if (results[0] == "reordermagic") {
             std::vector<int> selected;
@@ -86,12 +87,15 @@ void nibaclient::client_session::handle_cmd(const std::string &input) {
             }
         }
     } catch (...) {
+        std::cout << "incorrect command" << std::endl;
         // parsing failure whatever
     }
-    std::cout << "incorrect command" << std::endl;
+    handled_ = false;
 }
 
 std::chrono::high_resolution_clock::time_point nibaclient::client_session::earliest() const {
+    if (!handled_)
+        return {};
     // if no change then it means do whatever
     if (processor_.get_session().earliest_time == processor_.get_session().current_time)
         return {};

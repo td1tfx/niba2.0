@@ -6,18 +6,23 @@
 #include <ozo/execute.h>
 #include <ozo/request.h>
 #include <ozo/shortcuts.h>
+#include <ozo/type_traits.h>
 #include <structs.h>
 #include <type_traits>
+
+OZO_PG_DEFINE_CUSTOM_TYPE(nibashared::attributes, "character_four_attributes")
+OZO_PG_DEFINE_CUSTOM_TYPE(nibashared::player, "character_info")
+OZO_PG_DEFINE_CUSTOM_TYPE(nibashared::battlestats, "battlestats")
+OZO_PG_DEFINE_CUSTOM_TYPE(nibashared::magic, "magic_info")
 
 namespace nibaserver {
 
 // we use this just to get around needing to write out the type for the connector
-inline auto make_ozo_connector(boost::asio::io_context &ioc) {
+inline auto make_ozo_connector(boost::asio::io_context &ioc, const std::string &player_conn_str) {
     // note these are static so they still exist after we return from this function
     static auto connection_info = ozo::make_connection_info(
-        "dbname=niba user=postgres",
-        ozo::register_types<nibashared::attributes, nibashared::magic, nibashared::player,
-                            nibashared::battlestats>());
+        player_conn_str, ozo::register_types<nibashared::attributes, nibashared::magic,
+                                             nibashared::player, nibashared::battlestats>());
     static ozo::connection_pool_config connection_pool_config;
     static auto connection_pool =
         ozo::make_connection_pool(connection_info, connection_pool_config);
@@ -37,7 +42,7 @@ inline auto make_ozo_connector(boost::asio::io_context &ioc) {
     return ozo::make_connector(connection_pool, ioc, timeouts);
 }
 
-using niba_ozo_connector =
-    std::invoke_result_t<decltype(&make_ozo_connector), boost::asio::io_context &>;
+using niba_ozo_connector = std::invoke_result_t<decltype(&make_ozo_connector),
+                                                boost::asio::io_context &, const std::string &>;
 
 } // namespace nibaserver

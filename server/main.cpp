@@ -35,6 +35,7 @@
 // #include <vector>
 
 #include "cert_loader.hpp"
+#include "config.h"
 #include "connector.h"
 #include "db_accessor.h"
 #include "gamedata.h"
@@ -50,10 +51,10 @@ using namespace ozo::literals;
 using namespace nibaserver;
 
 // TODO maybe refactor it a bit
-void init_gamedata() {
+void init_gamedata(const std::string &static_conn_str) {
     using namespace nibashared;
     // read from postgres here
-    const auto connection_info = ozo::make_connection_info("dbname=niba_static user=postgres");
+    const auto connection_info = ozo::make_connection_info(static_conn_str);
     ozo::io_context ioc;
     const auto connector = ozo::make_connector(connection_info, ioc);
     ozo::rows_of<std::string> character, magic, item;
@@ -94,32 +95,31 @@ void init_gamedata() {
 }
 
 int main(int argc, char *argv[]) {
-    (void)argc;
-    (void)argv;
+    config conf = read_config(argc, argv);
 
-    auto const address = boost::asio::ip::make_address("0.0.0.0");
-    constexpr unsigned short port = 19999;
+    auto const address = boost::asio::ip::make_address(conf.host);
+    unsigned short port = conf.port;
     // Single threaded
-    auto const threads = std::max<int>(1, 1);
+    // auto const threads = conf.threads;
 
     init_log();
     logger logger;
     BOOST_LOG_SEV(logger, sev::info) << "Server starts.";
 
-    init_gamedata();
+    init_gamedata(conf.static_conn_str);
     BOOST_LOG_SEV(logger, sev::info) << "Game data loaded.";
 
     // The io_context is required for all I/O
-    boost::asio::io_context ioc{threads};
+    boost::asio::io_context ioc{1};
 
     // The SSL context is required, and holds certificates
     ssl::context ctx{ssl::context::sslv23};
 
     // This holds the self-signed certificate used by the server
     load_server_certificate(ctx);
-    const auto connector = make_ozo_connector(ioc);
+    const auto connector = make_ozo_connector(ioc, conf.player_conn_str);
 
-    boost::asio::spawn(ioc, [&ioc, &address, &ctx, &connector,
+    boost::asio::spawn(ioc, [&ioc, &address, &port, &ctx, &connector,
                              &logger](boost::asio::yield_context yield) {
         boost::system::error_code ec;
 
