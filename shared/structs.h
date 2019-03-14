@@ -5,7 +5,6 @@
 #include <boost/hana.hpp>
 #include <nlohmann/json.hpp>
 #include <ostream>
-#include <ozo/type_traits.h>
 
 namespace nibashared {
 
@@ -190,8 +189,3 @@ STRUCT_JSON_SERIALIZE(equipment);
 STRUCT_PRINT(equipment);
 
 } // namespace nibashared
-
-OZO_PG_DEFINE_CUSTOM_TYPE(nibashared::attributes, "character_four_attributes")
-OZO_PG_DEFINE_CUSTOM_TYPE(nibashared::player, "character_info")
-OZO_PG_DEFINE_CUSTOM_TYPE(nibashared::battlestats, "battlestats")
-OZO_PG_DEFINE_CUSTOM_TYPE(nibashared::magic, "magic_info")

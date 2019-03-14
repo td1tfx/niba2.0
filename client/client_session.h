@@ -56,6 +56,7 @@ private:
     boost::beast::websocket::stream<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>> ws_;
     boost::asio::steady_timer timer_;
     client_processor processor_;
+    bool handled_ = false;
 };
 
 } // namespace nibaclient
