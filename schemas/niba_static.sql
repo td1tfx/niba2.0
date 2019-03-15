@@ -416,7 +416,7 @@ CREATE TABLE public.magic (
     inner_damage integer DEFAULT 0,
     cd integer DEFAULT 0,
     mp_cost integer DEFAULT 0,
-    inner_property integer DEFAULT 0 NOT NULL,
+    inner_property "char" DEFAULT 'j' NOT NULL,
     description text DEFAULT ''::text,
     hp integer DEFAULT 0,
     mp integer DEFAULT 0,

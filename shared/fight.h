@@ -18,15 +18,15 @@ struct magic_ex {
     void cooldown(int ticks);
 };
 
-const static magic DEFAULT_MAGIC{.name = u8"default",
-                                 .magic_id = 0,
-                                 .description = u8"",
+const static magic DEFAULT_MAGIC{.magic_id = 0,
+                                 .name = u8"default",
                                  .active = 1,
-                                 .cd = 0,
                                  .multiplier = 100,
                                  .inner_damage = 0,
+                                 .cd = 0,
                                  .mp_cost = 0,
-                                 .inner_property = property::gold,
+                                 .inner_property = 'j',
+                                 .description = u8"",
                                  .stats = {}};
 
 constexpr int FIGHT_MAX_PROG = 1000;
@@ -67,7 +67,7 @@ public:
     int go(Rng &rng);
     int elapsed_ticks() const;
     // just return the first fightable
-    fightable& my_status();
+    fightable &my_status();
 
 private:
     std::size_t friends_;

@@ -161,7 +161,7 @@ void nibaserver::server_processor::process(nibashared::message_fusemagic &req) {
             // 根据人物属性，随机选取被融合武功的其中一项属性为融合主属性，其余为附属性。
             // （力量除以胫骨的比值越大，选取物理输出作为主属性概率越高）
             // 武功融合过程，主属性武功+附武功主属性的0%~10%，副属性+附武功属性的-1%~3%。
-            secondary_stats *= 0.1;
+            //secondary_stats *= 0.1;
             req.magic.stats += secondary_stats;
             // figure out the new equipped magics
             std::vector<int> new_equipped;
