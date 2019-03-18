@@ -27,8 +27,7 @@ void client_processor::process(nibashared::message_login &req) {
             session_.state = nibashared::gamestate::ingame;
             std::cout << *req.player << std::endl;
             session_.player = *(req.player);
-            session_.magics = req.magics;
-            session_.equips = req.equips;
+            session_.data = *(req.data);
         }
     } else {
         std::cout << "failed to login" << std::endl;
@@ -64,8 +63,7 @@ void nibaclient::client_processor::process(nibashared::message_createchar &req) 
         std::cout << "success" << std::endl;
         std::cout << req.player << std::endl;
         session_.player = req.player;
-        session_.magics = req.magics;
-        session_.equips = req.equips;
+        session_.data = req.data;
         session_.state = nibashared::gamestate::ingame;
     } else {
         std::cout << "unable to create character" << std::endl;
@@ -75,7 +73,7 @@ void nibaclient::client_processor::process(nibashared::message_createchar &req) 
 void nibaclient::client_processor::process(nibashared::message_learnmagic &req) {
     if (req.success) {
         std::cout << "learned magic " << req.magic.name << std::endl;
-        session_.magics.push_back(std::move(req.magic));
+        session_.data.magics.push_back(std::move(req.magic));
     } else {
         std::cout << "failed to learn magic" << std::endl;
     }
@@ -84,14 +82,14 @@ void nibaclient::client_processor::process(nibashared::message_learnmagic &req) 
 void nibaclient::client_processor::process(nibashared::message_fusemagic &req) {
     if (req.success) {
         // remove secondary magic and update primary magic
-        nibautil::vector_remove(session_.magics, [&req](auto &magic) {
+        nibautil::vector_remove(session_.data.magics, [&req](auto &magic) {
             return magic.magic_id == req.secondary_magic_id;
         });
         // remove secondary if in equipped magics
-        nibautil::vector_remove(session_.equipped_magic_ids, [&req](auto &magic_id) {
+        nibautil::vector_remove(session_.data.equipped_magic_ids, [&req](auto &magic_id) {
             return magic_id == req.secondary_magic_id;
         });
-        auto primary_magic_iter = nibautil::find_if(session_.magics, [&req](auto &magic) {
+        auto primary_magic_iter = nibautil::find_if(session_.data.magics, [&req](auto &magic) {
             return magic.magic_id == req.primary_magic_id;
         });
         *primary_magic_iter = req.magic;
@@ -103,7 +101,7 @@ void nibaclient::client_processor::process(nibashared::message_fusemagic &req) {
 
 void nibaclient::client_processor::process(nibashared::message_reordermagic &req) {
     if (req.success) {
-        session_.equipped_magic_ids = std::move(req.equipped_magic_ids);
+        session_.data.equipped_magic_ids = std::move(req.equipped_magic_ids);
     } else {
         std::cout << "failed to reorder magic" << std::endl;
     }

@@ -57,9 +57,7 @@ struct message_login {
     std::string password;
     bool success = false;
     std::optional<nibashared::player> player;
-    std::vector<nibashared::magic> magics;
-    std::vector<nibashared::equipment> equips;
-    std::vector<int> equipped_magic_ids;
+    std::optional<nibashared::playerdata> data;
 };
 
 struct message_getdata {
@@ -107,9 +105,7 @@ struct message_createchar {
     void from_request(const nlohmann::json &j);
 
     nibashared::player player;
-    std::vector<nibashared::magic> magics;
-    std::vector<nibashared::equipment> equips;
-    std::vector<int> equipped_magic_ids;
+    nibashared::playerdata data;    // this is part of response
     bool success = false;
 };
 

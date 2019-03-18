@@ -76,13 +76,10 @@ void nibaserver::server_processor::process(nibashared::message_login &req) {
             session_.state = nibashared::gamestate::ingame;
             session_.player = *(req.player);
             // player data exists, so lets fetch equipments&magics data of the player
-            std::tie(session_.magics, session_.equips, session_.equipped_magic_ids) =
-                db_.get_aux((*(req.player)).name, yield_);
-            req.magics = session_.magics;
-            req.equips = session_.equips;
-            req.equipped_magic_ids = session_.equipped_magic_ids;
+            session_.data = db_.get_aux((*(req.player)).name, yield_);
+            req.data = session_.data;
             BOOST_LOG_SEV(logger_, sev::info)
-                << "User " << *(session_.userid) << " magics " << req.magics;
+                << "User " << *(session_.userid) << " data " << *(req.data);
         } else {
             session_.state = nibashared::gamestate::createchar;
         }
@@ -122,14 +119,9 @@ void nibaserver::server_processor::process(nibashared::message_createchar &req) 
         session_.player = req.player;
         BOOST_LOG_SEV(logger_, sev::info)
             << "User " << *(session_.userid) << " created an character " << req.player;
-        // grab magic&equips, might not be the best way but anyway
-        std::tie(session_.magics, session_.equips, session_.equipped_magic_ids) =
-            db_.get_aux(req.player.name, yield_);
-        req.magics = session_.magics;
-        req.equips = session_.equips;
-        req.equipped_magic_ids = session_.equipped_magic_ids;
-        BOOST_LOG_SEV(logger_, sev::info)
-            << "User " << *(session_.userid) << " magics " << req.magics;
+        session_.data = db_.get_aux(req.player.name, yield_);
+        req.data = session_.data;
+        BOOST_LOG_SEV(logger_, sev::info) << "User " << *(session_.userid) << " data " << req.data;
     } else {
         req.success = false;
     }
@@ -145,28 +137,29 @@ void nibaserver::server_processor::process(nibashared::message_learnmagic &req) 
     if (!(req.success = result)) {
         return;
     }
-    session_.magics.push_back(req.magic);
+    session_.data.magics.push_back(req.magic);
 }
 
 void nibaserver::server_processor::process(nibashared::message_fusemagic &req) {
     // this is a double find, but it's what it is
     // validate has to be separated out, we could cache more things in memory
-    auto primary_magic_iter = nibautil::find_if(
-        session_.magics, [&req](auto &magic) { return magic.magic_id == req.primary_magic_id; });
+    auto primary_magic_iter = nibautil::find_if(session_.data.magics, [&req](auto &magic) {
+        return magic.magic_id == req.primary_magic_id;
+    });
     req.magic = *primary_magic_iter;
-    for (auto &magic : session_.magics) {
+    for (auto &magic : session_.data.magics) {
         if (magic.magic_id == req.secondary_magic_id) {
             auto secondary_stats = magic.stats;
             // TODO:
             // 根据人物属性，随机选取被融合武功的其中一项属性为融合主属性，其余为附属性。
             // （力量除以胫骨的比值越大，选取物理输出作为主属性概率越高）
             // 武功融合过程，主属性武功+附武功主属性的0%~10%，副属性+附武功属性的-1%~3%。
-            //secondary_stats *= 0.1;
+            // secondary_stats *= 0.1;
             req.magic.stats += secondary_stats;
             // figure out the new equipped magics
             std::vector<int> new_equipped;
-            std::copy_if(session_.equipped_magic_ids.begin(), session_.equipped_magic_ids.end(),
-                         std::back_inserter(new_equipped),
+            std::copy_if(session_.data.equipped_magic_ids.begin(),
+                         session_.data.equipped_magic_ids.end(), std::back_inserter(new_equipped),
                          [removing = req.secondary_magic_id](int id) { return id != removing; });
             BOOST_LOG_SEV(logger_, sev::info) << "removing magic_id " << req.secondary_magic_id;
             BOOST_LOG_SEV(logger_, sev::info) << "new equipped ids " << req.secondary_magic_id;
@@ -177,8 +170,8 @@ void nibaserver::server_processor::process(nibashared::message_fusemagic &req) {
             }
             // if db is ok, update in memory data, well if there is a problem then there is a
             // problem... at least db and memory is consistently not updated
-            session_.equipped_magic_ids = new_equipped;
-            nibautil::vector_remove(session_.magics, [&req](auto &magic) {
+            session_.data.equipped_magic_ids = new_equipped;
+            nibautil::vector_remove(session_.data.magics, [&req](auto &magic) {
                 return magic.magic_id == req.secondary_magic_id;
             });
             *primary_magic_iter = req.magic;
@@ -194,7 +187,7 @@ void nibaserver::server_processor::process(nibashared::message_reordermagic &req
     if (!(req.success = result)) {
         return;
     }
-    session_.equipped_magic_ids = req.equipped_magic_ids;
+    session_.data.equipped_magic_ids = req.equipped_magic_ids;
 }
 
 const nibashared::sessionstate &nibaserver::server_processor::get_session() { return session_; }
