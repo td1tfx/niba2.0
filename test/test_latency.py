@@ -30,7 +30,7 @@ def run_client(input_bytes):
 try:
     procs = []
     stderrs = []
-    input_bytes = b'register niba%d doctorniba\nlogin niba%d doctorniba\ncreate nibadan%d m 1 1 2 1\nfight 1\nexit\n'
+    input_bytes = b'register niba%d doctorniba\nlogin niba%d doctorniba\ncreate nibadan%d m 1 1 2 1\nfight 1\nfight 1\nfight 1\nexit\n'
     # for j in range(100):
     #     input_bytes += b'fight 1\n'
 
