@@ -204,14 +204,9 @@ int fight::go(Rng &rng) {
 template int fight::go<rng_client>(rng_client &rng);
 template int fight::go<rng_server>(rng_server &rng);
 
-int fight::elapsed_ticks() const {
-    return elapsed_ticks_;
-}
+int fight::elapsed_ticks() const { return elapsed_ticks_; }
 
-fightable& fight::my_status() {
-    return all_.at(0);
-}
-
+fightable &fight::my_status() { return all_.at(0); }
 
 // will move this elsewhere
 battlestats stats_computer(const attributes &attr) {
@@ -273,7 +268,7 @@ std::pair<std::vector<fightable>, std::vector<fightable>>
 prep_fight(nibashared::sessionstate &session, int id_you) {
     CPRINT("prep " << (*(session.player)).name << " " << id_you);
     std::pair<std::vector<fightable>, std::vector<fightable>> ret;
-    auto &magic_ids = session.equipped_magic_ids;
+    auto &magic_ids = session.data.equipped_magic_ids;
     // copy player data into raw_character
     nibashared::character raw_character{.name = (*(session.player)).name,
                                         .character_id = -1,
@@ -284,7 +279,7 @@ prep_fight(nibashared::sessionstate &session, int id_you) {
                                         .equipments = {},
                                         .active_magic = {}};
     ret.first.push_back(
-        setup_self(std::move(raw_character), session.magics, session.equips, magic_ids));
+        setup_self(std::move(raw_character), session.data.magics, session.data.equips, magic_ids));
     ret.second.push_back(setup_fightable(id_you));
     return ret; // RVO
 }

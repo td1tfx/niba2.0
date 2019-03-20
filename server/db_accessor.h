@@ -31,9 +31,8 @@ public:
     // NOTE no save char functions yet
     std::optional<nibashared::player> get_char(const std::string &id,
                                                boost::asio::yield_context &yield);
-    // get player auxiliary data, magic and equipments
-    std::tuple<std::vector<nibashared::magic>, std::vector<nibashared::equipment>, std::vector<int>>
-    get_aux(const std::string &name, boost::asio::yield_context &yield);
+    // get player auxiliary data, magic and equipments etc.
+    nibashared::playerdata get_aux(const std::string &name, boost::asio::yield_context &yield);
     // create new character
     bool create_char(const std::string &id, const nibashared::player &player,
                      boost::asio::yield_context &yield);

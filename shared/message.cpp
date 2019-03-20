@@ -46,16 +46,7 @@ bool message_login::validate(const nibashared::sessionstate &session) {
 }
 
 json message_login::create_response() {
-    json ret;
-    ret["success"] = success;
-    // the default serializer couldn't handle optional
-    // we could write one or we'll do this for now
-    if (player) {
-        ret["player"] = *player;
-    }
-    ret["magics"] = magics;
-    ret["equips"] = equips;
-    return ret;
+    return {{"success", success}, {"player", player}, {"data", data}};
 }
 
 // this is not used
@@ -63,12 +54,8 @@ json message_login::create_request() { return {{"id", id}, {"password", password
 
 void message_login::merge_response(const json &j) {
     j.at("success").get_to(success);
-    auto char_iter = j.find("player");
-    if (char_iter != j.end()) {
-        player = char_iter.value().get<nibashared::player>();
-    }
-    j.at("magics").get_to(magics);
-    j.at("equips").get_to(equips);
+    j.at("player").get_to(player);
+    j.at("data").get_to(data);
 }
 
 void message_login::from_request(const json &j) {
@@ -152,7 +139,7 @@ bool nibashared::message_createchar::validate(const nibashared::sessionstate &se
 
 nlohmann::json nibashared::message_createchar::create_response() {
     if (success) {
-        return {{"success", true}, {"player", player}, {"magics", magics}, {"equips", equips}};
+        return {{"success", true}, {"player", player}, {"data", data}};
     }
     return {{"success", false}};
 }
@@ -163,8 +150,7 @@ void nibashared::message_createchar::merge_response(const nlohmann::json &j) {
     j.at("success").get_to(success);
     if (success) {
         j.at("player").get_to(player);
-        j.at("magics").get_to(magics);
-        j.at("equips").get_to(equips);
+        j.at("data").get_to(data);
     }
 }
 
@@ -186,9 +172,9 @@ bool nibashared::message_learnmagic::validate(const nibashared::sessionstate &se
     }
 
     // can't learn a magic thats already learnt
-    if (nibautil::find_if(session.magics, [this](auto &magic) {
+    if (nibautil::find_if(session.data.magics, [this](auto &magic) {
             return magic.magic_id == static_id;
-        }) != session.magics.end()) {
+        }) != session.data.magics.end()) {
         return false;
     }
 
@@ -238,10 +224,10 @@ bool nibashared::message_fusemagic::validate(const nibashared::sessionstate &ses
 
     // player also has to have both magics
     auto primary_iter = nibautil::find_if(
-        session.magics, [this](auto &magic) { return magic.magic_id == primary_magic_id; });
+        session.data.magics, [this](auto &magic) { return magic.magic_id == primary_magic_id; });
     auto secondary_iter = nibautil::find_if(
-        session.magics, [this](auto &magic) { return magic.magic_id == secondary_magic_id; });
-    if (primary_iter == session.magics.end() || secondary_iter == session.magics.end()) {
+        session.data.magics, [this](auto &magic) { return magic.magic_id == secondary_magic_id; });
+    if (primary_iter == session.data.magics.end() || secondary_iter == session.data.magics.end()) {
         return false;
     }
     // must also be the same type
@@ -286,7 +272,7 @@ bool nibashared::message_reordermagic::validate(const nibashared::sessionstate &
     // id to index
     std::unordered_map<int, std::size_t> magic_id_set;
     std::size_t idx = 0;
-    for (auto &magic : session.magics) {
+    for (auto &magic : session.data.magics) {
         magic_id_set[magic.magic_id] = idx++;
     }
     std::size_t passives = 0;
@@ -295,7 +281,7 @@ bool nibashared::message_reordermagic::validate(const nibashared::sessionstate &
         if (iter == magic_id_set.end()) {
             return false;
         }
-        if (!session.magics[iter->second].active) {
+        if (!session.data.magics[iter->second].active) {
             passives++;
         }
     }

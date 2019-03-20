@@ -6,10 +6,36 @@
 #include <nlohmann/json.hpp>
 #include <ostream>
 
+// Copied from nlohmann readme
+namespace nlohmann {
+template<typename T>
+struct adl_serializer<std::optional<T>> {
+    static void to_json(json &j, const std::optional<T> &opt) {
+        if (!opt) {
+            j = nullptr;
+        } else {
+            j = *opt; // this will call adl_serializer<T>::to_json which will
+                      // find the free function to_json in T's namespace!
+        }
+    }
+
+    static void from_json(const json &j, std::optional<T> &opt) {
+        if (j.is_null()) {
+            opt = {};
+        } else {
+            opt = j.get<T>(); // same as above, but with
+                              // adl_serializer<T>::from_json
+        }
+    }
+};
+} // namespace nlohmann
+
 namespace nibashared {
 
 using magic_ids = std::vector<int>;
 using equipment_ids = std::vector<int>;
+using enemy_ids = std::vector<int>;
+using map_ids = std::vector<int>;
 
 enum property { gold = 'j', wood = 'm', water = 's', fire = 'h', earth = 't' };
 enum equipmenttype {
@@ -144,7 +170,6 @@ struct battlestats {
         });
         return *this;
     }
-
 };
 STRUCT_JSON_SERIALIZE(battlestats);
 STRUCT_PRINT(battlestats);
@@ -157,9 +182,9 @@ STRUCT_JSON_SERIALIZE(attributes);
 STRUCT_PRINT(attributes);
 
 struct character {
-    BOOST_HANA_DEFINE_STRUCT(character, (std::string, name), (int, character_id), (std::string, description),
-                             (attributes, attrs), (battlestats, stats), (equipment_ids, equipments),
-                             (magic_ids, active_magic));
+    BOOST_HANA_DEFINE_STRUCT(character, (std::string, name), (int, character_id),
+                             (std::string, description), (attributes, attrs), (battlestats, stats),
+                             (equipment_ids, equipments), (magic_ids, active_magic));
 };
 STRUCT_JSON_SERIALIZE(character);
 STRUCT_PRINT(character);
@@ -173,9 +198,10 @@ STRUCT_JSON_SERIALIZE(player);
 STRUCT_PRINT(player);
 
 struct magic {
-    BOOST_HANA_DEFINE_STRUCT(magic, (int, magic_id), (std::string, name), (int, active), (int, multiplier),
-                             (int, inner_damage), (int, cd), (int, mp_cost), (char, inner_property),
-                             (std::string, description), (battlestats, stats));
+    BOOST_HANA_DEFINE_STRUCT(magic, (int, magic_id), (std::string, name), (int, active),
+                             (int, multiplier), (int, inner_damage), (int, cd), (int, mp_cost),
+                             (char, inner_property), (std::string, description),
+                             (battlestats, stats));
 };
 STRUCT_JSON_SERIALIZE(magic);
 STRUCT_PRINT(magic);
@@ -187,5 +213,21 @@ struct equipment {
 };
 STRUCT_JSON_SERIALIZE(equipment);
 STRUCT_PRINT(equipment);
+
+struct map {
+    BOOST_HANA_DEFINE_STRUCT(map, (int, map_id), (double, elite_prob), (double, boss_prob),
+                             (enemy_ids, enemies), (int, boss_id), (map_ids, open_maps),
+                             (bool, is_open));
+};
+STRUCT_JSON_SERIALIZE(map);
+STRUCT_PRINT(map);
+
+struct playerdata {
+    BOOST_HANA_DEFINE_STRUCT(playerdata, (std::vector<magic>, magics),
+                             (std::vector<equipment>, equips), (magic_ids, equipped_magic_ids),
+                             (map_ids, avail_map_ids));
+};
+STRUCT_JSON_SERIALIZE(playerdata);
+STRUCT_PRINT(playerdata);
 
 } // namespace nibashared

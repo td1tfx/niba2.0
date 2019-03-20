@@ -16,6 +16,13 @@ namespace sev = boost::log::trivial;
 
 constexpr std::size_t HASH_SIZE = 32;
 
+#define CHECKDBERROR(ec, conn, ret)                                                                \
+    if (ec) {                                                                                      \
+        BOOST_LOG_SEV(logger_, sev::error) << ec.message() << " | " << ozo::error_message(conn)    \
+                                           << " | " << ozo::get_error_context(conn);               \
+        return ret;                                                                                \
+    }
+
 db_accessor::db_accessor(const niba_ozo_connector &conn) : conn_(conn) { logger_ = logger(); }
 
 bool db_accessor::login(const std::string &id, const std::string &password,
@@ -25,11 +32,7 @@ bool db_accessor::login(const std::string &id, const std::string &password,
     auto conn = ozo::request(
         conn_, "SELECT id, hashed_password, salt, logged_in FROM user_id WHERE id="_SQL + id,
         ozo::into(user_credential), yield[ec]);
-    if (ec) {
-        BOOST_LOG_SEV(logger_, sev::error) << ec.message() << " | " << ozo::error_message(conn)
-                                           << " | " << ozo::get_error_context(conn);
-        return false;
-    }
+    CHECKDBERROR(ec, conn, false);
 
     if (user_credential.size() == 0) {
         BOOST_LOG_SEV(logger_, sev::info) << "id does not exist " << id;
@@ -66,12 +69,7 @@ bool db_accessor::login(const std::string &id, const std::string &password,
         }
 
         ozo::execute(conn_, "UPDATE user_id SET logged_in = true WHERE id="_SQL + id, yield[ec]);
-        if (ec) {
-            BOOST_LOG_SEV(db_accessor::logger_, sev::error)
-                << ec.message() << " | " << ozo::error_message(conn) << " | "
-                << ozo::get_error_context(conn);
-            return false;
-        }
+        CHECKDBERROR(ec, conn, false);
         return true;
     }
     BOOST_LOG_SEV(logger_, sev::info) << "password mismatch " << id;
@@ -82,11 +80,7 @@ bool db_accessor::logout(const std::string &id, boost::asio::yield_context &yiel
     ozo::error_code ec{};
     auto conn =
         ozo::execute(conn_, "UPDATE user_id SET logged_in = false WHERE id="_SQL + id, yield[ec]);
-    if (ec) {
-        BOOST_LOG_SEV(logger_, sev::error) << ec.message() << " | " << ozo::error_message(conn)
-                                           << " | " << ozo::get_error_context(conn);
-        return false;
-    }
+    CHECKDBERROR(ec, conn, false);
     return true;
 }
 
@@ -121,11 +115,7 @@ bool db_accessor::create_user(const std::string &id, const std::string &password
                              "INSERT INTO user_id (id, hashed_password, salt) VALUES ("_SQL + id +
                                  ","_SQL + pswd_bytea + ","_SQL + salt_bytea + ")"_SQL,
                              yield[ec]);
-    if (ec) {
-        BOOST_LOG_SEV(logger_, sev::error) << ec.message() << " | " << ozo::error_message(conn)
-                                           << " | " << ozo::get_error_context(conn);
-        return false;
-    }
+    CHECKDBERROR(ec, conn, false);
 
     return true;
 }
@@ -140,22 +130,16 @@ nibaserver::db_accessor::get_char(const std::string &id, boost::asio::yield_cont
     ozo::rows_of<nibashared::player> characters;
     auto conn = ozo::request(conn_, "SELECT character FROM player_character WHERE id="_SQL + id,
                              ozo::into(characters), yield[ec]);
-    if (ec) {
-        BOOST_LOG_SEV(logger_, sev::error) << ec.message() << " | " << ozo::error_message(conn)
-                                           << " | " << ozo::get_error_context(conn);
-        return {};
-    }
+    CHECKDBERROR(ec, conn, {});
     if (characters.size() == 0)
         return {};
     return std::get<0>(characters.at(0));
 }
 
-std::tuple<std::vector<nibashared::magic>, std::vector<nibashared::equipment>, std::vector<int>>
-nibaserver::db_accessor::get_aux(const std::string &name, boost::asio::yield_context &yield) {
+nibashared::playerdata nibaserver::db_accessor::get_aux(const std::string &name,
+                                                        boost::asio::yield_context &yield) {
     BOOST_LOG_SEV(logger_, sev::info) << "fetching character magic and equips for " << name;
-    std::tuple<std::vector<nibashared::magic>, std::vector<nibashared::equipment>, std::vector<int>>
-        ret;
-    auto &[magics, equips, equipped_magic_ids] = ret;
+    nibashared::playerdata ret;
     // auto &equips = ret.second;
     // ?? looking for ways to fix this
     ozo::rows_of<nibashared::magic> rows;
@@ -163,13 +147,9 @@ nibaserver::db_accessor::get_aux(const std::string &name, boost::asio::yield_con
     auto conn =
         ozo::request(conn_, "SELECT magic FROM player_magic WHERE character_name="_SQL + name,
                      ozo::into(rows), yield[ec]);
-    if (ec) {
-        BOOST_LOG_SEV(logger_, sev::error) << ec.message() << " | " << ozo::error_message(conn)
-                                           << " | " << ozo::get_error_context(conn);
-        return ret;
-    }
+    CHECKDBERROR(ec, conn, ret);
     for (auto &r : rows) {
-        magics.push_back(std::move(std::get<0>(r)));
+        ret.magics.push_back(std::move(std::get<0>(r)));
     }
     BOOST_LOG_SEV(logger_, sev::info) << "getting player magics " << name;
     ozo::rows_of<std::vector<int>> equipped_magic_rows;
@@ -177,14 +157,10 @@ nibaserver::db_accessor::get_aux(const std::string &name, boost::asio::yield_con
         conn_, "SELECT magics FROM character_equipped_magic WHERE character_name = "_SQL + name,
         ozo::into(equipped_magic_rows), yield[ec]);
     if (equipped_magic_rows.size() != 0) {
-        equipped_magic_ids = std::get<0>(equipped_magic_rows.back());
+        ret.equipped_magic_ids = std::get<0>(equipped_magic_rows.back());
     }
-    if (ec) {
-        // not the best... we need better ways to return data
-        BOOST_LOG_SEV(logger_, sev::error) << ec.message() << " | " << ozo::error_message(conn)
-                                           << " | " << ozo::get_error_context(conn);
-        return ret;
-    }
+    CHECKDBERROR(ec, conn, ret);
+    // TODO: also grab map right here
 
     return ret;
     // skipping equipments for now...hoping there is a fix and we don't need to do this anymore
@@ -200,11 +176,7 @@ bool db_accessor::create_char(const std::string &id, const nibashared::player &p
                              yield[ec]);
 
     // might not be an error
-    if (ec) {
-        BOOST_LOG_SEV(logger_, sev::error) << ec.message() << " | " << ozo::error_message(conn)
-                                           << " | " << ozo::get_error_context(conn);
-        return false;
-    }
+    CHECKDBERROR(ec, conn, false);
     return true;
 }
 
@@ -216,12 +188,7 @@ bool db_accessor::create_magic(const std::string &player_name, const nibashared:
                  player_name + ","_SQL + magic.magic_id + ","_SQL + magic + ")"_SQL;
 
     auto conn = ozo::execute(conn_, query, yield[ec]);
-
-    if (ec) {
-        BOOST_LOG_SEV(logger_, sev::error) << ec.message() << " | " << ozo::error_message(conn)
-                                           << " | " << ozo::get_error_context(conn);
-        return false;
-    }
+    CHECKDBERROR(ec, conn, false);
     return true;
 }
 
@@ -259,11 +226,7 @@ bool db_accessor::fuse_magic(const std::string &player_name, const nibashared::m
     }
     auto conn = ozo::commit(std::move(transaction), yield[ec]);
 
-    if (ec) {
-        BOOST_LOG_SEV(logger_, sev::error) << ec.message() << " | " << ozo::error_message(conn)
-                                           << " | " << ozo::get_error_context(conn);
-        return false;
-    }
+    CHECKDBERROR(ec, conn, false);
     return true;
 }
 
@@ -277,10 +240,6 @@ bool db_accessor::equip_magics(const std::string &player_name,
             ","_SQL + equipped_magic_ids +
             ") ON CONFLICT (character_name) DO UPDATE SET magics ="_SQL + equipped_magic_ids,
         yield[ec]);
-    if (ec) {
-        BOOST_LOG_SEV(logger_, sev::error) << ec.message() << " | " << ozo::error_message(conn)
-                                           << " | " << ozo::get_error_context(conn);
-        return false;
-    }
+    CHECKDBERROR(ec, conn, false);
     return true;
 }
