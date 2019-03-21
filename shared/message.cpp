@@ -21,11 +21,11 @@ bool message_register::validate(const nibashared::sessionstate &session) {
     return true;
 }
 
-json message_register::create_response() { return {{"success", success}}; }
+json message_register::create_response() { return {}; }
 
 // this is not used
 json message_register::create_request() { return {{"id", id}, {"password", password}}; }
-void message_register::merge_response(const json &j) { j.at("success").get_to(success); }
+void message_register::merge_response(const json &j) { (void)j; }
 
 void message_register::from_request(const json &j) {
     j.at("id").get_to(id);
@@ -45,15 +45,12 @@ bool message_login::validate(const nibashared::sessionstate &session) {
     return true;
 }
 
-json message_login::create_response() {
-    return {{"success", success}, {"player", player}, {"data", data}};
-}
+json message_login::create_response() { return {{"player", player}, {"data", data}}; }
 
 // this is not used
 json message_login::create_request() { return {{"id", id}, {"password", password}}; }
 
 void message_login::merge_response(const json &j) {
-    j.at("success").get_to(success);
     j.at("player").get_to(player);
     j.at("data").get_to(data);
 }
@@ -74,15 +71,14 @@ bool nibashared::message_getdata::validate(const nibashared::sessionstate &sessi
 
 nlohmann::json nibashared::message_getdata::create_response() {
     if (!success) {
-        return {{"success", false}};
+        return {};
     }
-    return {{"success", true}, {"characters", characters}, {"magics", magics}, {"equips", equips}};
+    return {{"characters", characters}, {"magics", magics}, {"equips", equips}};
 }
 
 nlohmann::json nibashared::message_getdata::create_request() { return {}; }
 
 void nibashared::message_getdata::merge_response(const nlohmann::json &j) {
-    j.at("success").get_to(success);
     if (success) {
         j.at("characters").get_to(characters);
         j.at("magics").get_to(magics);
@@ -139,15 +135,14 @@ bool nibashared::message_createchar::validate(const nibashared::sessionstate &se
 
 nlohmann::json nibashared::message_createchar::create_response() {
     if (success) {
-        return {{"success", true}, {"player", player}, {"data", data}};
+        return {{"player", player}, {"data", data}};
     }
-    return {{"success", false}};
+    return {};
 }
 
 nlohmann::json nibashared::message_createchar::create_request() { return {{"player", player}}; }
 
 void nibashared::message_createchar::merge_response(const nlohmann::json &j) {
-    j.at("success").get_to(success);
     if (success) {
         j.at("player").get_to(player);
         j.at("data").get_to(data);
@@ -195,9 +190,9 @@ nlohmann::json nibashared::message_learnmagic::create_response() {
     if (success) {
         // no extra magic check, we assume that its assigned if success
         // (its actually IFF)
-        return {{"success", true}, {"magic", magic}};
+        return {{"magic", magic}};
     }
-    return {{"success", false}};
+    return {};
 }
 
 nlohmann::json nibashared::message_learnmagic::create_request() {
@@ -205,7 +200,6 @@ nlohmann::json nibashared::message_learnmagic::create_request() {
 }
 
 void nibashared::message_learnmagic::merge_response(const nlohmann::json &j) {
-    j.at("success").get_to(success);
     if (success) {
         j.at("magic").get_to(magic);
     }
@@ -239,9 +233,9 @@ bool nibashared::message_fusemagic::validate(const nibashared::sessionstate &ses
 
 nlohmann::json nibashared::message_fusemagic::create_response() {
     if (success) {
-        return {{"success", true}, {"magic", magic}};
+        return {{"magic", magic}};
     }
-    return {{"success", false}};
+    return {};
 }
 
 nlohmann::json nibashared::message_fusemagic::create_request() {
@@ -249,7 +243,6 @@ nlohmann::json nibashared::message_fusemagic::create_request() {
 }
 
 void nibashared::message_fusemagic::merge_response(const nlohmann::json &j) {
-    j.at("success").get_to(success);
     if (success) {
         j.at("magic").get_to(magic);
     }
@@ -293,17 +286,13 @@ bool nibashared::message_reordermagic::validate(const nibashared::sessionstate &
     return true;
 }
 
-nlohmann::json nibashared::message_reordermagic::create_response() {
-    return {{"success", success}};
-}
+nlohmann::json nibashared::message_reordermagic::create_response() { return {}; }
 
 nlohmann::json nibashared::message_reordermagic::create_request() {
     return {{"equipped_magic_ids", equipped_magic_ids}};
 }
 
-void nibashared::message_reordermagic::merge_response(const nlohmann::json &j) {
-    j.at("success").get_to(success);
-}
+void nibashared::message_reordermagic::merge_response(const nlohmann::json &j) { (void)j; }
 
 void nibashared::message_reordermagic::from_request(const nlohmann::json &j) {
     j.at("equipped_magic_ids").get_to(equipped_magic_ids);

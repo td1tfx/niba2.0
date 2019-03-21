@@ -30,7 +30,7 @@ public:
                 std::string err = merge_j["error"].get<std::string>();
                 throw std::runtime_error(err.c_str());
             }
-            m.merge_response(merge_j);
+            m.base_merge_response(merge_j);
             session_.current_time = std::chrono::high_resolution_clock::now();
             session_.earliest_time = session_.current_time;
             process(m);

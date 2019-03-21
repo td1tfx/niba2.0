@@ -30,12 +30,11 @@ private:
     template<typename Message, typename... Args>
     void create_and_go(Args &&... args) {
         Message message(std::forward<Args>(args)...);
-        if (!message.validate(processor_.get_session())) {
+        if (!message.base_validate(processor_.get_session())) {
             // TODO maybe message specific error msg
             std::cout << "command validation failed" << std::endl;
         } else {
-            auto request_json = message.create_request();
-            request_json["type"] = message.type;
+            auto request_json = message.base_create_request();
             std::string request_str = request_json.dump();
             nibautil::stopwatch stopwatch;
             ws_.write(boost::asio::buffer(request_str));

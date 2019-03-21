@@ -34,7 +34,7 @@ private:
     boost::asio::yield_context &yield_;
     nibaserver::db_accessor &db_;
 
-    template<typename request>
+    template<typename RequestMessage>
     std::string do_request(const nlohmann::json &json_request) {
         // TODO: minimize exceptions
         // check if past earliest_time, then reset
@@ -43,13 +43,13 @@ private:
             throw std::runtime_error("request too frequent");
         }
         session_.earliest_time = session_.current_time;
-        request req;
-        req.from_request(json_request);
-        if (!req.validate(session_)) {
+        RequestMessage req;
+        req.base_from_request(json_request);
+        if (!req.base_validate(session_)) {
             throw std::runtime_error("validation failure");
         }
         process(req);
-        return req.create_response().dump();
+        return req.base_create_response().dump();
     }
 };
 } // namespace nibaserver
