@@ -5,10 +5,13 @@
 
 namespace nibashared {
 namespace delay {
-using namespace std::chrono_literals;
+constexpr auto duration_ms(int ms) {
+    return std::chrono::milliseconds(static_cast<int>(ms * DELAYFACTOR));
+}
+
 // all in ms
-constexpr auto per_hp = std::chrono::milliseconds(static_cast<int>(100 * DELAYFACTOR));
-constexpr auto fight_tick = std::chrono::milliseconds(static_cast<int>(10 * DELAYFACTOR));
+constexpr auto per_hp = duration_ms(100);
+constexpr auto fight_tick = duration_ms(10);
 } // namespace delay
 
 // return duration, hp, ticks etc...
