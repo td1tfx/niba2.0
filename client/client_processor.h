@@ -21,8 +21,7 @@ public:
     void process(nibashared::message_reordermagic &req);
     const nibashared::sessionstate &get_session() const;
 
-    template<typename Message, typename = std::enable_if_t<std::is_base_of<
-                                   nibashared::base_message<Message>, Message>::value>>
+    template<typename Message, typename = nibashared::IsMessage<Message>>
     void dispatch(Message &m, const std::string &merger) {
         std::cout << merger << std::endl;
         try {

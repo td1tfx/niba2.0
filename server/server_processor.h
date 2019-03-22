@@ -5,7 +5,6 @@
 #include "message.h"
 #include "sessiondata.h"
 
-#include <type_traits>
 #include <boost/asio/spawn.hpp>
 #include <chrono>
 #include <nlohmann/json.hpp>
@@ -35,9 +34,7 @@ private:
     boost::asio::yield_context &yield_;
     nibaserver::db_accessor &db_;
 
-    template<typename RequestMessage,
-             typename = std::enable_if_t<
-                 std::is_base_of<nibashared::base_message<RequestMessage>, RequestMessage>::value>>
+    template<typename RequestMessage, typename = nibashared::IsMessage<RequestMessage>>
     std::string do_request(const nlohmann::json &json_request) {
         // TODO: minimize exceptions
         // check if past earliest_time, then reset

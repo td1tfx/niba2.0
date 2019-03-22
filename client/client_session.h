@@ -27,7 +27,7 @@ public:
     std::chrono::high_resolution_clock::time_point earliest() const;
 
 private:
-    template<typename Message, typename... Args>
+    template<typename Message, typename... Args, typename = nibashared::IsMessage<Message>>
     void create_and_go(Args &&... args) {
         Message message(std::forward<Args>(args)...);
         if (!message.base_validate(processor_.get_session())) {

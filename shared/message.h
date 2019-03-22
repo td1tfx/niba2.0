@@ -5,6 +5,7 @@
 #include "structs.h"
 #include <nlohmann/json.hpp>
 #include <optional>
+#include <type_traits>
 #include <vector>
 
 namespace nibashared {
@@ -44,6 +45,9 @@ struct base_message {
 
     bool success = false;
 };
+
+template<typename T>
+using IsMessage = typename std::enable_if<std::is_base_of<base_message<T>, T>::value>::type;
 
 struct message_register : public base_message<message_register> {
     // TODO: make this static?
