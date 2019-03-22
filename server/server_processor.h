@@ -5,8 +5,9 @@
 #include "message.h"
 #include "sessiondata.h"
 
-#include <chrono>
+#include <type_traits>
 #include <boost/asio/spawn.hpp>
+#include <chrono>
 #include <nlohmann/json.hpp>
 
 namespace nibaserver {
@@ -23,9 +24,9 @@ public:
     void process(nibashared::message_getdata &req);
     void process(nibashared::message_fight &req);
     void process(nibashared::message_createchar &req);
-    void process(nibashared::message_learnmagic& req);
-    void process(nibashared::message_fusemagic& req);
-    void process(nibashared::message_reordermagic& req);
+    void process(nibashared::message_learnmagic &req);
+    void process(nibashared::message_fusemagic &req);
+    void process(nibashared::message_reordermagic &req);
     const nibashared::sessionstate &get_session();
 
 private:
@@ -34,7 +35,9 @@ private:
     boost::asio::yield_context &yield_;
     nibaserver::db_accessor &db_;
 
-    template<typename RequestMessage>
+    template<typename RequestMessage,
+             typename = std::enable_if_t<
+                 std::is_base_of<nibashared::base_message<RequestMessage>, RequestMessage>::value>>
     std::string do_request(const nlohmann::json &json_request) {
         // TODO: minimize exceptions
         // check if past earliest_time, then reset

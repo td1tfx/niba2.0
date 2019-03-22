@@ -21,8 +21,9 @@ public:
     void process(nibashared::message_reordermagic &req);
     const nibashared::sessionstate &get_session() const;
 
-    template<typename message>
-    void dispatch(message &m, const std::string &merger) {
+    template<typename Message, typename = std::enable_if_t<std::is_base_of<
+                                   nibashared::base_message<Message>, Message>::value>>
+    void dispatch(Message &m, const std::string &merger) {
         std::cout << merger << std::endl;
         try {
             auto merge_j = nlohmann::json::parse(merger);
