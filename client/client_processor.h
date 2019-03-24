@@ -21,8 +21,8 @@ public:
     void process(nibashared::message_reordermagic &req);
     const nibashared::sessionstate &get_session() const;
 
-    template<typename message>
-    void dispatch(message &m, const std::string &merger) {
+    template<typename Message, typename = nibashared::IsMessage<Message>>
+    void dispatch(Message &m, const std::string &merger) {
         std::cout << merger << std::endl;
         try {
             auto merge_j = nlohmann::json::parse(merger);
@@ -30,7 +30,7 @@ public:
                 std::string err = merge_j["error"].get<std::string>();
                 throw std::runtime_error(err.c_str());
             }
-            m.merge_response(merge_j);
+            m.base_merge_response(merge_j);
             session_.current_time = std::chrono::high_resolution_clock::now();
             session_.earliest_time = session_.current_time;
             process(m);

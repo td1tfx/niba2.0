@@ -5,8 +5,8 @@
 #include "message.h"
 #include "sessiondata.h"
 
-#include <chrono>
 #include <boost/asio/spawn.hpp>
+#include <chrono>
 #include <nlohmann/json.hpp>
 
 namespace nibaserver {
@@ -23,9 +23,9 @@ public:
     void process(nibashared::message_getdata &req);
     void process(nibashared::message_fight &req);
     void process(nibashared::message_createchar &req);
-    void process(nibashared::message_learnmagic& req);
-    void process(nibashared::message_fusemagic& req);
-    void process(nibashared::message_reordermagic& req);
+    void process(nibashared::message_learnmagic &req);
+    void process(nibashared::message_fusemagic &req);
+    void process(nibashared::message_reordermagic &req);
     const nibashared::sessionstate &get_session();
 
 private:
@@ -34,7 +34,7 @@ private:
     boost::asio::yield_context &yield_;
     nibaserver::db_accessor &db_;
 
-    template<typename request>
+    template<typename RequestMessage, typename = nibashared::IsMessage<RequestMessage>>
     std::string do_request(const nlohmann::json &json_request) {
         // TODO: minimize exceptions
         // check if past earliest_time, then reset
@@ -43,13 +43,13 @@ private:
             throw std::runtime_error("request too frequent");
         }
         session_.earliest_time = session_.current_time;
-        request req;
-        req.from_request(json_request);
-        if (!req.validate(session_)) {
+        RequestMessage req;
+        req.base_from_request(json_request);
+        if (!req.base_validate(session_)) {
             throw std::runtime_error("validation failure");
         }
         process(req);
-        return req.create_response().dump();
+        return req.base_create_response().dump();
     }
 };
 } // namespace nibaserver

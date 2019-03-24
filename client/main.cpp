@@ -71,6 +71,8 @@ int main(int argc, char **argv) {
         // separate io thread so that getline doesn't block our websocket pingpong
         std::string line;
         while (std::getline(instream, line)) {
+            if (line.empty())
+                continue;            
             if (line == "exit" || line == "quit")
                 break;
             std::unique_lock<std::mutex> lock(processor_mutex);
