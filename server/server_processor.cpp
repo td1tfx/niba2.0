@@ -90,7 +90,9 @@ void nibaserver::server_processor::process(nibashared::message_login &req) {
 }
 
 void nibaserver::server_processor::process(nibashared::message_getdata &req) {
-    std::tie(req.characters, req.magics, req.equips) = nibashared::staticdata::get().all();
+    nibashared::getdata().to_map(req.characters);
+    nibashared::getdata().to_map(req.magics);
+    nibashared::getdata().to_map(req.equips);
     req.success = true;
 }
 
@@ -128,7 +130,7 @@ void nibaserver::server_processor::process(nibashared::message_createchar &req) 
 }
 
 void nibaserver::server_processor::process(nibashared::message_learnmagic &req) {
-    req.magic = nibashared::staticdata::get().magic(req.static_id);
+    nibashared::staticdata::get().to(req.static_id, req.magic);
     if (req.magic.description.empty()) {
         req.magic.description = req.magic.name;
     }

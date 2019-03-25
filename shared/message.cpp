@@ -95,7 +95,7 @@ bool nibashared::message_fight::validate(const nibashared::sessionstate &session
     if (session.state != nibashared::gamestate::ingame)
         return false;
 
-    if (!nibashared::staticdata::get().has_character(enemyid))
+    if (!nibashared::getdata().has<nibashared::character>(enemyid))
         return false;
 
     return true;
@@ -161,7 +161,7 @@ bool nibashared::message_learnmagic::validate(const nibashared::sessionstate &se
         return false;
     }
 
-    if (!nibashared::staticdata::get().has_magic(static_id)) {
+    if (!nibashared::getdata().has<nibashared::magic>(static_id)) {
         std::cout << "no magic" << std::endl;
         return false;
     }
