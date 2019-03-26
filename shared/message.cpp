@@ -4,8 +4,9 @@
 #include <algorithm>
 #include <unordered_map>
 
+namespace nibashared {
+
 using nlohmann::json;
-using namespace nibashared;
 
 message_register::message_register(std::string &&id, std::string &&password) :
     id(std::move(id)), password(std::move(password)) {}
@@ -297,3 +298,5 @@ void nibashared::message_reordermagic::merge_response(const nlohmann::json &j) {
 void nibashared::message_reordermagic::from_request(const nlohmann::json &j) {
     j.at("equipped_magic_ids").get_to(equipped_magic_ids);
 }
+
+} // namespace nibashared

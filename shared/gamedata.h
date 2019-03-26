@@ -21,34 +21,35 @@ public:
 
     template<typename T>
     const T &at(int id) {
-        return get_map_<T>().at(id);
+        return get_map<T>().at(id);
     }
 
     template<typename T>
     void to(int id, T &t) {
-        t = get_map_<T>().at(id);
+        t = get_map<T>().at(id);
     }
 
     template<typename T>
     bool has(int id) {
-        return get_map_<T>().find(id) != get_map_<T>().end();
+        return get_map<T>().find(id) != get_map<T>().end();
     }
 
     template<typename T>
-    T map() {
-        return get_map_<T>();
+    const T& map() {
+        return get_map<T>();
     }
 
     template<typename T>
     void to_map(internal_map<T> &t) {
-        t = get_map_<T>();
+        t = get_map<T>();
     }
 
     // MUST init somewhere before use!
     template<typename... Ts>
-    static void init(Ts&&... maps) {
+    static void init(internal_map<Ts> &&... maps) {
         auto &inst = staticdata::get();
-        auto result = {(inst.set_map(std::forward<Ts>(maps)), 0)...};
+        // set_map for each, uses the comma operator
+        auto result = {(inst.set_map(std::forward<internal_map<Ts>>(maps)), 0)...};
         (void)result;
     }
 
@@ -56,14 +57,14 @@ private:
     staticdata() = default;
 
     template<typename T>
-    auto &get_map_() {
+    auto &get_map() {
         static internal_map<T> internal;
         return internal;
     }
 
     template<typename T>
     void set_map(internal_map<T> &&mapper) {
-        get_map_<T>() = std::move(mapper);
+        get_map<T>() = std::forward<internal_map<T>>(mapper);
     }
 };
 
