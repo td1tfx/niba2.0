@@ -18,7 +18,8 @@ OZO_PG_DEFINE_CUSTOM_TYPE(nibashared::magic, "magic_info")
 namespace nibaserver {
 
 // we use this just to get around needing to write out the type for the connector
-inline auto make_ozo_connector(boost::asio::io_context &ioc, const std::string &player_conn_str) {
+inline static auto make_ozo_connector(boost::asio::io_context &ioc,
+                                      const std::string &player_conn_str) {
     // note these are static so they still exist after we return from this function
     static auto connection_info = ozo::make_connection_info(
         player_conn_str, ozo::register_types<nibashared::attributes, nibashared::magic,
@@ -39,7 +40,8 @@ inline auto make_ozo_connector(boost::asio::io_context &ioc, const std::string &
     timeouts.connect = std::chrono::seconds(10);
     timeouts.queue = std::chrono::seconds(10);
 
-    return ozo::make_connector(connection_pool, ioc, timeouts);
+    static auto connector = ozo::make_connector(connection_pool, ioc, timeouts);
+    return connector;
 }
 
 using niba_ozo_connector = std::invoke_result_t<decltype(&make_ozo_connector),

@@ -57,41 +57,47 @@ void init_gamedata(const std::string &static_conn_str) {
     const auto connection_info = ozo::make_connection_info(static_conn_str);
     ozo::io_context ioc;
     const auto connector = ozo::make_connector(connection_info, ioc);
-    ozo::rows_of<std::string> character, magic, item;
+    ozo::rows_of<std::string> character_row, magic_row, item_row;
 
     boost::asio::spawn(ioc, [&](boost::asio::yield_context yield) {
         ozo::request(connector, "SELECT to_json::TEXT FROM character_dump"_SQL,
-                     ozo::into(character), yield);
+                     ozo::into(character_row), yield);
 
-        ozo::request(connector, "SELECT to_json::TEXT FROM magic_dump"_SQL, ozo::into(magic),
+        ozo::request(connector, "SELECT to_json::TEXT FROM magic_dump"_SQL, ozo::into(magic_row),
                      yield);
 
-        ozo::request(connector, "SELECT to_json::TEXT FROM item_dump"_SQL, ozo::into(item), yield);
+        ozo::request(connector, "SELECT to_json::TEXT FROM item_dump"_SQL, ozo::into(item_row),
+                     yield);
     });
     ioc.run();
 
-    staticdata::init([&character, &magic, &item](auto &characters, auto &magics, auto &equipments) {
-        try {
-            nlohmann::json serialized_chars = nlohmann::json::parse(std::get<0>(character.at(0)));
-            for (auto &element : serialized_chars) {
-                characters[element["character_id"]] = element;
-            }
-
-            nlohmann::json serialized_magic = nlohmann::json::parse(std::get<0>(magic.at(0)));
-            for (auto &element : serialized_magic) {
-                magics[element["magic_id"]] = element;
-            }
-
-            nlohmann::json serialized_equipment = nlohmann::json::parse(std::get<0>(item.at(0)));
-            for (auto &element : serialized_equipment) {
-                equipments[element["equipment_id"]] = element;
-            }
-        } catch (std::exception &e) {
-            // I don't care at this point, this should be tested statically
-            std::cout << "failed " << e.what() << std::endl;
-            exit(-1);
+    auto character_str = std::get<0>(character_row.at(0));
+    auto magic_str = std::get<0>(magic_row.at(0));
+    auto iter_str = std::get<0>(item_row.at(0));
+    nibashared::staticdata::internal_map<character> characters;
+    nibashared::staticdata::internal_map<magic> magics;
+    nibashared::staticdata::internal_map<equipment> equipments;
+    try {
+        nlohmann::json serialized_chars = nlohmann::json::parse(character_str);
+        for (auto &element : serialized_chars) {
+            characters[element["character_id"]] = element;
         }
-    });
+
+        nlohmann::json serialized_magic = nlohmann::json::parse(magic_str);
+        for (auto &element : serialized_magic) {
+            magics[element["magic_id"]] = element;
+        }
+
+        nlohmann::json serialized_equipment = nlohmann::json::parse(iter_str);
+        for (auto &element : serialized_equipment) {
+            equipments[element["equipment_id"]] = element;
+        }
+    } catch (std::exception &e) {
+        // I don't care at this point, this should be tested statically
+        std::cout << "failed " << e.what() << std::endl;
+        exit(-1);
+    }
+    staticdata::init(std::move(characters), std::move(magics), std::move(equipments));
 }
 
 int main(int argc, char *argv[]) {

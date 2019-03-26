@@ -36,11 +36,8 @@ void client_processor::process(nibashared::message_login &req) {
 
 void nibaclient::client_processor::process(nibashared::message_getdata &req) {
     if (req.success) {
-        nibashared::staticdata::init([&req](auto &characters, auto &magics, auto &equipments) {
-            characters = req.characters;
-            magics = req.magics;
-            equipments = req.equips;
-        });
+        nibashared::staticdata::init(std::move(req.characters), std::move(req.magics),
+                                     std::move(req.equips));
     } else {
         std::cout << "unable to fetch gamedata" << std::endl;
         // probably should crash

@@ -248,16 +248,16 @@ fightable setup_self(nibashared::character &&raw_character,
 }
 
 fightable setup_fightable(int id) {
-    nibashared::character raw_character = staticdata::get().character(id);
+    auto raw_character = getdata().at<character>(id);
     std::vector<nibashared::magic> magics;
     std::vector<nibashared::equipment> equips;
     std::vector<int> magic_ids;
     nibautil::for_each(raw_character.active_magic, [&magics, &magic_ids](auto &magic_id) {
         magic_ids.push_back(magic_id);
-        magics.push_back(staticdata::get().magic(magic_id));
+        magics.push_back(getdata().at<magic>(magic_id));
     });
     nibautil::for_each(raw_character.equipments, [&equips](auto &equip_id) {
-        equips.push_back(staticdata::get().equipment(equip_id));
+        equips.push_back(getdata().at<equipment>(equip_id));
     });
     // std::cout << magics << std::endl;
     // std::cout << equips << std::endl;

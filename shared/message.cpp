@@ -4,8 +4,9 @@
 #include <algorithm>
 #include <unordered_map>
 
+namespace nibashared {
+
 using nlohmann::json;
-using namespace nibashared;
 
 message_register::message_register(std::string &&id, std::string &&password) :
     id(std::move(id)), password(std::move(password)) {}
@@ -95,7 +96,7 @@ bool nibashared::message_fight::validate(const nibashared::sessionstate &session
     if (session.state != nibashared::gamestate::ingame)
         return false;
 
-    if (!nibashared::staticdata::get().has_character(enemyid))
+    if (!nibashared::getdata().has<nibashared::character>(enemyid))
         return false;
 
     return true;
@@ -161,7 +162,7 @@ bool nibashared::message_learnmagic::validate(const nibashared::sessionstate &se
         return false;
     }
 
-    if (!nibashared::staticdata::get().has_magic(static_id)) {
+    if (!nibashared::getdata().has<nibashared::magic>(static_id)) {
         std::cout << "no magic" << std::endl;
         return false;
     }
@@ -297,3 +298,5 @@ void nibashared::message_reordermagic::merge_response(const nlohmann::json &j) {
 void nibashared::message_reordermagic::from_request(const nlohmann::json &j) {
     j.at("equipped_magic_ids").get_to(equipped_magic_ids);
 }
+
+} // namespace nibashared

@@ -9,37 +9,65 @@
 
 namespace nibashared {
 
-// meh singletons
-
 class staticdata {
 public:
-    // so why can't operators be static, especially functors?
-    static staticdata &get();
-    std::tuple<std::unordered_map<int, nibashared::character>,
-               std::unordered_map<int, nibashared::magic>,
-               std::unordered_map<int, nibashared::equipment>>
-    all();
-    const nibashared::character &character(int id);
-    const nibashared::magic &magic(int id);
-    const nibashared::equipment &equipment(int id);
-    // TODO more elegant way to do this
-    // just give const access to the members?
-    bool has_character(int id);
-    bool has_magic(int id);
-    bool has_equipment(int id);
+    template<typename T>
+    using internal_map = std::unordered_map<int, T>;
+
+    static staticdata &get() {
+        static staticdata instance;
+        return instance;
+    }
+
+    template<typename T>
+    const T &at(int id) {
+        return get_map<T>().at(id);
+    }
+
+    template<typename T>
+    void to(int id, T &t) {
+        t = get_map<T>().at(id);
+    }
+
+    template<typename T>
+    bool has(int id) {
+        return get_map<T>().find(id) != get_map<T>().end();
+    }
+
+    template<typename T>
+    const T& map() {
+        return get_map<T>();
+    }
+
+    template<typename T>
+    void to_map(internal_map<T> &t) {
+        t = get_map<T>();
+    }
 
     // MUST init somewhere before use!
-    template<typename Init>
-    static void init(Init init) {
+    template<typename... Ts>
+    static void init(internal_map<Ts> &&... maps) {
         auto &inst = staticdata::get();
-        init(inst.characters_, inst.magics_, inst.equipments_);
+        // set_map for each, uses the comma operator
+        auto result = {(inst.set_map(std::forward<internal_map<Ts>>(maps)), 0)...};
+        (void)result;
     }
 
 private:
-    staticdata();
-    std::unordered_map<int, nibashared::character> characters_;
-    std::unordered_map<int, nibashared::magic> magics_;
-    std::unordered_map<int, nibashared::equipment> equipments_;
+    staticdata() = default;
+
+    template<typename T>
+    auto &get_map() {
+        static internal_map<T> internal;
+        return internal;
+    }
+
+    template<typename T>
+    void set_map(internal_map<T> &&mapper) {
+        get_map<T>() = std::forward<internal_map<T>>(mapper);
+    }
 };
+
+constexpr auto getdata = staticdata::get;
 
 } // namespace nibashared
