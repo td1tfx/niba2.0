@@ -93,10 +93,12 @@ void nibaserver::server_processor::process(nibashared::message_getdata &req) {
     nibashared::getdata().to_map(req.characters);
     nibashared::getdata().to_map(req.magics);
     nibashared::getdata().to_map(req.equips);
+    nibashared::getdata().to_map(req.maps);
     req.success = true;
 }
 
 void nibaserver::server_processor::process(nibashared::message_fight &req) {
+    // TODO assume fixed map id of 1, figure out the enemy
     auto [self_fightable, enemy_fightable] = nibashared::prep_fight(session_, req.enemyid);
     // Maybe refactor again..
     auto max_hp = static_cast<double>(self_fightable.at(0).char_data.stats.hp);

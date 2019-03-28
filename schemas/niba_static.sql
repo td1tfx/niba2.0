@@ -368,6 +368,7 @@ ALTER SEQUENCE public.equipment_type_type_seq OWNED BY public.equipment_type.typ
 CREATE VIEW public.item_dump AS
  SELECT to_json(array_agg(t.*)) AS to_json
    FROM ( SELECT equipment.equipment_id,
+            '-1'::integer AS static_id,
             equipment.name,
             equipment.description,
             equipment.type,
@@ -411,12 +412,12 @@ ALTER TABLE public.item_dump OWNER TO postgres;
 CREATE TABLE public.magic (
     magic_id integer NOT NULL,
     name text,
-    active boolean DEFAULT true,
+    active integer DEFAULT 1,
     multiplier integer DEFAULT 100,
     inner_damage integer DEFAULT 0,
     cd integer DEFAULT 0,
     mp_cost integer DEFAULT 0,
-    inner_property "char" DEFAULT 'j' NOT NULL,
+    inner_property "char" DEFAULT 'j'::"char" NOT NULL,
     description text DEFAULT ''::text,
     hp integer DEFAULT 0,
     mp integer DEFAULT 0,
@@ -461,7 +462,7 @@ CREATE VIEW public.magic_dump AS
             magic.inner_damage,
             magic.cd,
             magic.mp_cost,
-            magic.inner_property,
+            (magic.inner_property)::integer AS inner_property,
             row_to_json(( SELECT d.*::record AS d
                    FROM ( SELECT magic.hp,
                             magic.mp,
@@ -538,6 +539,77 @@ ALTER SEQUENCE public.magic_magic_id_seq OWNED BY public.magic.magic_id;
 
 
 --
+-- Name: map; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.map (
+    map_id integer NOT NULL,
+    name text NOT NULL,
+    description text NOT NULL,
+    elite_prob double precision NOT NULL,
+    boss_prob double precision NOT NULL,
+    boss_id integer NOT NULL,
+    enemy_0 integer,
+    enemy_1 integer,
+    enemy_2 integer,
+    enemy_3 integer,
+    enemy_4 integer,
+    enemy_5 integer,
+    enemy_6 integer,
+    enemy_7 integer,
+    enemy_8 integer,
+    enemy_9 integer,
+    is_open integer NOT NULL,
+    open_map0 integer,
+    open_map1 integer
+);
+
+
+ALTER TABLE public.map OWNER TO postgres;
+
+--
+-- Name: map_dump; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW public.map_dump AS
+ SELECT to_json(array_agg(t.*)) AS to_json
+   FROM ( SELECT map.map_id,
+            map.name,
+            map.description,
+            map.elite_prob,
+            map.boss_prob,
+            map.boss_id,
+            array_remove(ARRAY[map.enemy_0, map.enemy_1, map.enemy_2, map.enemy_3, map.enemy_4, map.enemy_5, map.enemy_6, map.enemy_7, map.enemy_8, map.enemy_9], NULL::integer) AS enemies,
+            map.is_open,
+            array_remove(ARRAY[map.open_map0, map.open_map1], NULL::integer) AS open_maps
+           FROM public.map) t;
+
+
+ALTER TABLE public.map_dump OWNER TO postgres;
+
+--
+-- Name: map_map_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.map_map_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.map_map_id_seq OWNER TO postgres;
+
+--
+-- Name: map_map_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.map_map_id_seq OWNED BY public.map.map_id;
+
+
+--
 -- Name: character_attribute character_id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -577,6 +649,13 @@ ALTER TABLE ONLY public.equipment_type ALTER COLUMN type SET DEFAULT nextval('pu
 --
 
 ALTER TABLE ONLY public.magic ALTER COLUMN magic_id SET DEFAULT nextval('public.magic_magic_id_seq'::regclass);
+
+
+--
+-- Name: map map_id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.map ALTER COLUMN map_id SET DEFAULT nextval('public.map_map_id_seq'::regclass);
 
 
 --
@@ -636,6 +715,14 @@ ALTER TABLE ONLY public.magic
 
 
 --
+-- Name: map map_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.map
+    ADD CONSTRAINT map_pkey PRIMARY KEY (map_id);
+
+
+--
 -- Name: character_magic no_same_magic_per_char; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -692,6 +779,109 @@ ALTER TABLE ONLY public.equipment
 
 
 --
--- PostgreSQL database dump complete
+-- Name: map map_boss_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
+ALTER TABLE ONLY public.map
+    ADD CONSTRAINT map_boss_id_fkey FOREIGN KEY (boss_id) REFERENCES public.character_attribute(character_id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
+-- Name: map map_enemy_0_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.map
+    ADD CONSTRAINT map_enemy_0_fkey FOREIGN KEY (enemy_0) REFERENCES public.character_attribute(character_id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
+-- Name: map map_enemy_1_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.map
+    ADD CONSTRAINT map_enemy_1_fkey FOREIGN KEY (enemy_1) REFERENCES public.character_attribute(character_id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
+-- Name: map map_enemy_2_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.map
+    ADD CONSTRAINT map_enemy_2_fkey FOREIGN KEY (enemy_2) REFERENCES public.character_attribute(character_id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
+-- Name: map map_enemy_3_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.map
+    ADD CONSTRAINT map_enemy_3_fkey FOREIGN KEY (enemy_3) REFERENCES public.character_attribute(character_id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
+-- Name: map map_enemy_4_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.map
+    ADD CONSTRAINT map_enemy_4_fkey FOREIGN KEY (enemy_4) REFERENCES public.character_attribute(character_id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
+-- Name: map map_enemy_5_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.map
+    ADD CONSTRAINT map_enemy_5_fkey FOREIGN KEY (enemy_5) REFERENCES public.character_attribute(character_id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
+-- Name: map map_enemy_6_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.map
+    ADD CONSTRAINT map_enemy_6_fkey FOREIGN KEY (enemy_6) REFERENCES public.character_attribute(character_id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
+-- Name: map map_enemy_7_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.map
+    ADD CONSTRAINT map_enemy_7_fkey FOREIGN KEY (enemy_7) REFERENCES public.character_attribute(character_id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
+-- Name: map map_enemy_8_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.map
+    ADD CONSTRAINT map_enemy_8_fkey FOREIGN KEY (enemy_8) REFERENCES public.character_attribute(character_id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
+-- Name: map map_enemy_9_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.map
+    ADD CONSTRAINT map_enemy_9_fkey FOREIGN KEY (enemy_9) REFERENCES public.character_attribute(character_id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
+-- Name: map map_open_map0_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.map
+    ADD CONSTRAINT map_open_map0_fkey FOREIGN KEY (open_map0) REFERENCES public.map(map_id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
+-- Name: map map_open_map1_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.map
+    ADD CONSTRAINT map_open_map1_fkey FOREIGN KEY (open_map1) REFERENCES public.map(map_id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
+-- PostgreSQL database dump complete
+--

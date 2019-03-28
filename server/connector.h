@@ -3,12 +3,7 @@
 #include <ozo/connection.h>
 #include <ozo/connection_info.h>
 #include <ozo/connection_pool.h>
-#include <ozo/execute.h>
-#include <ozo/request.h>
-#include <ozo/shortcuts.h>
-#include <ozo/type_traits.h>
 #include <structs.h>
-#include <type_traits>
 
 OZO_PG_DEFINE_CUSTOM_TYPE(nibashared::attributes, "character_four_attributes")
 OZO_PG_DEFINE_CUSTOM_TYPE(nibashared::player, "character_info")

@@ -37,8 +37,8 @@ using equipment_ids = std::vector<int>;
 using enemy_ids = std::vector<int>;
 using map_ids = std::vector<int>;
 
-enum property { gold = 'j', wood = 'm', water = 's', fire = 'h', earth = 't' };
-enum equipmenttype {
+enum class property { gold = 'j', wood = 'm', water = 's', fire = 'h', earth = 't' };
+enum class equipmenttype {
     head = 0,
     armor = 1,
     boots = 2,
@@ -215,9 +215,9 @@ STRUCT_JSON_SERIALIZE(equipment);
 STRUCT_PRINT(equipment);
 
 struct map {
-    BOOST_HANA_DEFINE_STRUCT(map, (int, map_id), (double, elite_prob), (double, boss_prob),
-                             (enemy_ids, enemies), (int, boss_id), (map_ids, open_maps),
-                             (bool, is_open));
+    BOOST_HANA_DEFINE_STRUCT(map, (int, map_id), (std::string, name), (std::string, description),
+                             (double, elite_prob), (double, boss_prob), (int, boss_id),
+                             (enemy_ids, enemies), (map_ids, open_maps), (int, is_open));
 };
 STRUCT_JSON_SERIALIZE(map);
 STRUCT_PRINT(map);
