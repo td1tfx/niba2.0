@@ -1,7 +1,6 @@
 #pragma once
 #include "global_defs.h"
 #include "structs.h"
-#include <boost/assert.hpp>
 #include <unordered_map>
 #include <utility>
 

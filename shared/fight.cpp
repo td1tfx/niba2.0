@@ -41,7 +41,7 @@ int fightable::damage_calc(const magic &chosen_magic, const fightable &defender,
     int inner_damage = chosen_magic.inner_damage;
     double inner_damage_multiplier = 1 + char_data.stats.inner_power / INNER_BASE;
     double inner_damage_reduction;
-    enum property inner_property = static_cast<property>(chosen_magic.inner_property);
+    property inner_property = static_cast<property>(chosen_magic.inner_property);
     switch (inner_property) {
     case property::gold:
         inner_damage_reduction = defender.char_data.stats.gold_res / 100.0;
@@ -59,6 +59,7 @@ int fightable::damage_calc(const magic &chosen_magic, const fightable &defender,
         inner_damage_reduction = defender.char_data.stats.earth_res / 100.0;
         break;
     default:
+        BOOST_ASSERT(inner_property);
         inner_damage_reduction = 1.0;
         break;
     }

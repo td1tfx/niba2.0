@@ -74,7 +74,7 @@ nlohmann::json nibashared::message_getdata::create_response() {
     if (!success) {
         return {};
     }
-    return {{"characters", characters}, {"magics", magics}, {"equips", equips}};
+    return {{"characters", characters}, {"magics", magics}, {"equips", equips}, {"maps", maps}};
 }
 
 nlohmann::json nibashared::message_getdata::create_request() { return {}; }
@@ -84,6 +84,7 @@ void nibashared::message_getdata::merge_response(const nlohmann::json &j) {
         j.at("characters").get_to(characters);
         j.at("magics").get_to(magics);
         j.at("equips").get_to(equips);
+        j.at("maps").get_to(maps);
     }
 }
 
@@ -96,6 +97,7 @@ bool nibashared::message_fight::validate(const nibashared::sessionstate &session
     if (session.state != nibashared::gamestate::ingame)
         return false;
 
+    // TODO, remove enemyid
     if (!nibashared::getdata().has<nibashared::character>(enemyid))
         return false;
 
@@ -158,12 +160,10 @@ nibashared::message_learnmagic::message_learnmagic(int static_id) : static_id(st
 
 bool nibashared::message_learnmagic::validate(const nibashared::sessionstate &session) {
     if (session.state != nibashared::gamestate::ingame) {
-        std::cout << "not in game" << std::endl;
         return false;
     }
 
     if (!nibashared::getdata().has<nibashared::magic>(static_id)) {
-        std::cout << "no magic" << std::endl;
         return false;
     }
 

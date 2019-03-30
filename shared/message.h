@@ -97,6 +97,7 @@ struct message_getdata : public base_message<message_getdata> {
     std::unordered_map<int, nibashared::character> characters;
     std::unordered_map<int, nibashared::magic> magics;
     std::unordered_map<int, nibashared::equipment> equips;
+    std::unordered_map<int, nibashared::map> maps;
 };
 
 struct message_fight : public base_message<message_fight> {

@@ -1,18 +1,3 @@
-//
-// Copyright (c) 2016-2017 Vinnie Falco (vinnie dot falco at gmail dot com)
-//
-// Distributed under the Boost Software License, Version 1.0. (See accompanying
-// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-//
-// Official repository: https://github.com/boostorg/beast
-//
-
-//------------------------------------------------------------------------------
-//
-// Example: WebSocket SSL server, coroutine
-//
-//------------------------------------------------------------------------------
-
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/spawn.hpp>
 #include <boost/asio/ssl/stream.hpp>
@@ -20,9 +5,6 @@
 #include <boost/beast/websocket.hpp>
 #include <boost/beast/websocket/ssl.hpp>
 
-#include <ozo/connection.h>
-#include <ozo/connection_info.h>
-#include <ozo/connection_pool.h>
 #include <ozo/execute.h>
 #include <ozo/request.h>
 #include <ozo/shortcuts.h>
@@ -37,68 +19,17 @@
 #include "cert_loader.hpp"
 #include "config.h"
 #include "connector.h"
+#include "data_init.h"
 #include "db_accessor.h"
 #include "gamedata.h"
 #include "logger.h"
 #include "server_session.h"
-#include "structs.h"
 
 using tcp = boost::asio::ip::tcp;              // from <boost/asio/ip/tcp.hpp>
 namespace ssl = boost::asio::ssl;              // from <boost/asio/ssl.hpp>
 namespace websocket = boost::beast::websocket; // from <boost/beast/websocket.hpp>
 namespace sev = boost::log::trivial;
-using namespace ozo::literals;
 using namespace nibaserver;
-
-// TODO maybe refactor it a bit
-void init_gamedata(const std::string &static_conn_str) {
-    using namespace nibashared;
-    // read from postgres here
-    const auto connection_info = ozo::make_connection_info(static_conn_str);
-    ozo::io_context ioc;
-    const auto connector = ozo::make_connector(connection_info, ioc);
-    ozo::rows_of<std::string> character_row, magic_row, item_row;
-
-    boost::asio::spawn(ioc, [&](boost::asio::yield_context yield) {
-        ozo::request(connector, "SELECT to_json::TEXT FROM character_dump"_SQL,
-                     ozo::into(character_row), yield);
-
-        ozo::request(connector, "SELECT to_json::TEXT FROM magic_dump"_SQL, ozo::into(magic_row),
-                     yield);
-
-        ozo::request(connector, "SELECT to_json::TEXT FROM item_dump"_SQL, ozo::into(item_row),
-                     yield);
-    });
-    ioc.run();
-
-    auto character_str = std::get<0>(character_row.at(0));
-    auto magic_str = std::get<0>(magic_row.at(0));
-    auto iter_str = std::get<0>(item_row.at(0));
-    nibashared::staticdata::internal_map<character> characters;
-    nibashared::staticdata::internal_map<magic> magics;
-    nibashared::staticdata::internal_map<equipment> equipments;
-    try {
-        nlohmann::json serialized_chars = nlohmann::json::parse(character_str);
-        for (auto &element : serialized_chars) {
-            characters[element["character_id"]] = element;
-        }
-
-        nlohmann::json serialized_magic = nlohmann::json::parse(magic_str);
-        for (auto &element : serialized_magic) {
-            magics[element["magic_id"]] = element;
-        }
-
-        nlohmann::json serialized_equipment = nlohmann::json::parse(iter_str);
-        for (auto &element : serialized_equipment) {
-            equipments[element["equipment_id"]] = element;
-        }
-    } catch (std::exception &e) {
-        // I don't care at this point, this should be tested statically
-        std::cout << "failed " << e.what() << std::endl;
-        exit(-1);
-    }
-    staticdata::init(std::move(characters), std::move(magics), std::move(equipments));
-}
 
 int main(int argc, char *argv[]) {
     config conf = read_config(argc, argv);
@@ -127,6 +58,7 @@ int main(int argc, char *argv[]) {
 
     boost::asio::spawn(ioc, [&ioc, &address, &port, &ctx, &connector,
                              &logger](boost::asio::yield_context yield) {
+        using namespace ozo::literals;
         boost::system::error_code ec;
 
         // TODO: move elsewhere
