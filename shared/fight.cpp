@@ -38,10 +38,10 @@ int fightable::damage_calc(const magic &chosen_magic, const fightable &defender,
     double physical_damage_reduction =
         defender.char_data.stats.defence / (defender.char_data.stats.defence + DEFENCE_EXTENSION);
 
-    int inner_damage = chosen_magic.inner_damage;
+    int inner_damage{chosen_magic.inner_damage};
     double inner_damage_multiplier = 1 + char_data.stats.inner_power / INNER_BASE;
     double inner_damage_reduction;
-    property inner_property = static_cast<property>(chosen_magic.inner_property);
+    property inner_property{chosen_magic.inner_property};
     switch (inner_property) {
     case property::gold:
         inner_damage_reduction = defender.char_data.stats.gold_res / 100.0;
@@ -85,7 +85,7 @@ int fightable::threat_calc() const {
 // note that return also makes sure the real magic is there if has value
 std::optional<std::size_t> fightable::pick_magic_idx() {
     // potential optimization: precompute the sequence of magics
-    for (std::size_t i = 0; i < magics.size(); i++) {
+    for (std::size_t i = 0; i < magics.size(); ++i) {
         if (magics[i].cd == 0 && magics[i].real_magic.mp_cost < char_data.stats.mp) {
             return i;
         }
@@ -100,7 +100,7 @@ fight::fight(std::vector<fightable> &&friends, std::vector<fightable> &&enemies)
     nibautil::for_each(enemies, [](auto &f) { f.team = 1; });
     std::move(friends.begin(), friends.end(), std::back_inserter(all_));
     std::move(enemies.begin(), enemies.end(), std::back_inserter(all_));
-    for (std::size_t i = 0; i < all_.size(); i++) {
+    for (std::size_t i = 0; i < all_.size(); ++i) {
         all_.at(i).idx = i;
     }
     // sort by speed, use the 'arbitrary' idx to break tie
@@ -108,7 +108,7 @@ fight::fight(std::vector<fightable> &&friends, std::vector<fightable> &&enemies)
         return std::tie(lhs.char_data.stats.speed, lhs.idx) <
                std::tie(rhs.char_data.stats.speed, rhs.idx);
     });
-    for (std::size_t i = 0; i < all_.size(); i++) {
+    for (std::size_t i = 0; i < all_.size(); ++i) {
         all_.at(i).idx = i;
     }
 }
@@ -123,7 +123,7 @@ int fight::go(Rng &rng) {
         if (team_alive_count[0] == 0 || team_alive_count[1] == 0)
             break;
         // all alive indices
-        for (std::size_t i = 0; i < all_.size(); i++) {
+        for (std::size_t i = 0; i < all_.size(); ++i) {
             if (all_.at(i).char_data.stats.hp <= 0) {
                 continue;
             }
@@ -134,7 +134,7 @@ int fight::go(Rng &rng) {
         // find the person that is the fastest to act
         tick_idx_p min_tick{all_.at(alive[0]).ticks_calc(), alive[0]};
         // figure out the ticks to make it to the next action
-        for (std::size_t i = 1; i < alive.size(); i++) {
+        for (std::size_t i = 1; i < alive.size(); ++i) {
             tick_idx_p tick{all_.at(alive[i]).ticks_calc(), alive[i]};
             if (tick < min_tick)
                 min_tick = tick;
@@ -172,7 +172,7 @@ int fight::go(Rng &rng) {
         auto chosen_magic_idx = attacker.pick_magic_idx();
 
         // use just puts it on cd, extra + 1
-        auto dmg = 0;
+        int dmg = 0;
         if (chosen_magic_idx) {
             auto &chosen_magicex = attacker.magics[(*chosen_magic_idx)];
             chosen_magicex.heatup();

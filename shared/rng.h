@@ -2,6 +2,7 @@
 #include <boost/assert.hpp>
 #include <random>
 #include <vector>
+#include <array>
 
 namespace nibashared {
 
@@ -40,4 +41,15 @@ private:
     std::vector<int> precomputed_;
 };
 
+template<typename Weights>
+std::size_t weighted_rand(const Weights& weights) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::array<std::size_t, std::size(weights) + 1> indices;
+    std::iota(indices.begin(), indices.end(), 0);
+    std::piecewise_constant_distribution<> dist(std::begin(indices),
+                                                std::end(indices),
+                                                std::begin(weights));
+    return static_cast<std::size_t>(dist(gen));
+}
 } // namespace nibashared

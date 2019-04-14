@@ -46,7 +46,7 @@ bool db_accessor::login(const std::string &id, const std::string &password,
 
     unsigned char buffer[HASH_SIZE] = {0};
     memcpy(buffer, password.data(), (std::min)(HASH_SIZE, password.size()));
-    for (std::size_t i = 0; i < HASH_SIZE; i++) {
+    for (std::size_t i = 0; i < HASH_SIZE; ++i) {
         buffer[i] ^= raw_salt.at(i);
     }
 
@@ -93,7 +93,7 @@ bool db_accessor::create_user(const std::string &id, const std::string &password
 
     unsigned char buffer[HASH_SIZE] = {0};
     memcpy(buffer, password.data(), (std::min)(HASH_SIZE, password.size()));
-    for (std::size_t i = 0; i < HASH_SIZE; i++) {
+    for (std::size_t i = 0; i < HASH_SIZE; ++i) {
         buffer[i] ^= salt[i];
     }
 
