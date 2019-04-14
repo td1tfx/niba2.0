@@ -12,7 +12,7 @@ clients = 100
 if len(sys.argv) > 1:
     clients = int(sys.argv[1])
 
-# server = subprocess.Popen([dir_path + '/niba-server'], cwd=dir_path)
+server = subprocess.Popen([dir_path + '/niba-server'], cwd=dir_path)
 time.sleep(1)
 
 
@@ -68,5 +68,4 @@ except Exception as e:
     print(e)
 
 finally:
-    pass
-    # server.kill()
+    server.kill()

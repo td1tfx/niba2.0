@@ -54,15 +54,16 @@ int main(int argc, char *argv[]) {
 
     // This holds the self-signed certificate used by the server
     load_server_certificate(ctx);
-    const auto connector = make_ozo_connector(ioc, conf.player_conn_str);
+    auto &connection_pool = make_ozo_connector_pool(conf.player_conn_str);
 
-    boost::asio::spawn(ioc, [&ioc, &address, &port, &ctx, &connector,
+    boost::asio::spawn(ioc, [&ioc, &address, &port, &ctx, &connection_pool,
                              &logger](boost::asio::yield_context yield) {
         using namespace ozo::literals;
         boost::system::error_code ec;
 
         // TODO: move elsewhere
         // reset the login status on start up
+        auto connector = make_ozo_connector(connection_pool, ioc);
         auto conn = ozo::execute(connector, "UPDATE user_id SET logged_in = false WHERE 1 = 1"_SQL,
                                  yield[ec]);
         if (ec) {
@@ -97,7 +98,7 @@ int main(int argc, char *argv[]) {
             tcp::no_delay option(true);
             socket.set_option(option);
             BOOST_LOG_SEV(logger, sev::info) << "Got connection";
-            nibaserver::db_accessor db(connector);
+            nibaserver::db_accessor db(connection_pool, ioc);
             auto session = std::make_shared<server_session>(acceptor.get_executor().context(),
                                                             std::move(socket), ctx, std::move(db));
             session->go();
