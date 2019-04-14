@@ -1,11 +1,18 @@
 #!/usr/bin/env python3
 
+# Run following to clean up db
+# delete from character_equipped_magic where 1=1;
+# delete from player_character where 1=1;
+# delete from user_id where 1=1;
+# delete from player_magic where 1=1;
+
 import subprocess
 import os
 import time
 import sys
 
-dir_path = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'build'))
+dir_path = os.path.abspath(os.path.join(
+    os.path.dirname(__file__), '..', 'build'))
 
 # TODO: make it argparse
 clients = 100
@@ -30,7 +37,8 @@ def run_client(input_bytes):
 try:
     procs = []
     stderrs = []
-    input_bytes = b'register niba%d doctorniba\nlogin niba%d doctorniba\ncreate nibadan%d m 1 1 2 1\nfight 1\nfight 1\nfight 1\nexit\n'
+
+    input_bytes = b'register niba%d doctorniba\nlogin niba%d doctorniba\ncreate nibadan%d m 1 1 2 1\nlearnmagic 1\nlearnmagic 2\nfusemagic 2 1\nreordermagic 2\nfight 1\nfight 1\nfight 1\nexit\n'
     # for j in range(100):
     #     input_bytes += b'fight 1\n'
 
