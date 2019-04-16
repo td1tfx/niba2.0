@@ -61,7 +61,7 @@ public:
     // 2. so instead of returning damage numbers, returning randoms
     fight(std::vector<fightable> &&friends, std::vector<fightable> &&enemies);
 
-    // RNG will be used to provide random numbers (from 0-1 likely)
+    // RNG will be used to provide random numbers
     // the test client will have the set of numbers received from server
     template<typename Rng>
     int go(Rng &rng);

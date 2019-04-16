@@ -6,6 +6,7 @@
 #include "rng.h"
 #include "util.h"
 
+#include <array>
 #include <iostream>
 
 using namespace nibaserver;
@@ -150,16 +151,52 @@ void nibaserver::server_processor::process(nibashared::message_fusemagic &req) {
     auto primary_magic_iter = nibautil::find_if(session_.data.magics, [&req](auto &magic) {
         return magic.magic_id == req.primary_magic_id;
     });
+    // TODO maybe refactor huge chunk of logic out of here
     req.magic = *primary_magic_iter;
     for (auto &magic : session_.data.magics) {
         if (magic.magic_id == req.secondary_magic_id) {
             auto secondary_stats = magic.stats;
-            // TODO:
-            // 根据人物属性，随机选取被融合武功的其中一项属性为融合主属性，其余为附属性。
-            // （力量除以胫骨的比值越大，选取物理输出作为主属性概率越高）
-            // 武功融合过程，主属性武功+附武功主属性的0%~10%，副属性+附武功属性的-1%~3%。
-            // secondary_stats *= 0.1;
+            // for most of the stats, do 5%
+            secondary_stats *= 0.05;
+            // pick the 20% stat based on player main attributes
+            auto &attrs = session_.player->attrs;
+            auto selected = nibashared::weighted_rand(attrs.get_array_ref());
+            using selector = nibashared::attributes::selector;
+            selector attr_enum{selected};
+            auto extra_stats = [PRIM_MULT = 0.15](int &primary, int secondary) {
+                primary += std::lround(secondary * PRIM_MULT);
+            };
+            BOOST_LOG_SEV(logger_, sev::info) << "magic selector index " << selected;
+            switch (attr_enum) {
+            // prefer attack for strength
+            case selector::strength:
+                extra_stats(secondary_stats.attack_min, magic.stats.attack_min);
+                extra_stats(secondary_stats.attack_max, magic.stats.attack_max);
+                break;
+            // prefer accuracy, evasion, speed
+            case selector::dexterity:
+                extra_stats(secondary_stats.accuracy, magic.stats.accuracy);
+                extra_stats(secondary_stats.evasion, magic.stats.evasion);
+                extra_stats(secondary_stats.speed, magic.stats.speed);
+                break;
+            // prefer hp and def
+            case selector::physique:
+                break;
+                extra_stats(secondary_stats.hp, magic.stats.hp);
+                extra_stats(secondary_stats.defence, magic.stats.defence);
+            // prefer mp and inner_power
+            case selector::spirit:
+                break;
+                extra_stats(secondary_stats.mp, magic.stats.mp);
+                extra_stats(secondary_stats.inner_power, magic.stats.inner_power);
+            }
+
             req.magic.stats += secondary_stats;
+
+            // inner damage and multiplier also increment a bit
+            req.magic.inner_damage += std::lround(magic.inner_damage * 0.05);
+            req.magic.multiplier += std::lround((magic.multiplier - 100) * 0.05);
+
             // figure out the new equipped magics
             std::vector<int> new_equipped;
             std::copy_if(session_.data.equipped_magic_ids.begin(),

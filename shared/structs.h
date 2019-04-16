@@ -2,9 +2,11 @@
 
 #pragma once
 
+#include <array>
 #include <boost/hana.hpp>
 #include <nlohmann/json.hpp>
 #include <ostream>
+#include <cmath>
 
 // Copied from nlohmann readme
 namespace nlohmann {
@@ -119,7 +121,7 @@ void hana_from_json(const nlohmann::json &j, T &t) {
 template<typename T>
 std::ostream &operator<<(std::ostream &os, const std::vector<T> &v) {
     os << "[";
-    for (std::size_t i = 0; i < v.size(); i++) {
+    for (std::size_t i = 0; i < v.size(); ++i) {
         os << v[i];
         if (i != v.size() - 1)
             os << ", ";
@@ -162,11 +164,10 @@ struct battlestats {
         return *this;
     }
 
-    battlestats &operator*=(int multiplier) {
+    battlestats &operator*=(double multiplier) {
         boost::hana::for_each(boost::hana::keys(*this), [&](auto key) {
             auto &member = boost::hana::at_key(*this, key);
-            // truncate as needed
-            member *= multiplier;
+            member = std::lround(member * multiplier);
         });
         return *this;
     }
@@ -177,6 +178,13 @@ STRUCT_PRINT(battlestats);
 struct attributes {
     BOOST_HANA_DEFINE_STRUCT(attributes, (int, strength), (int, dexterity), (int, physique),
                              (int, spirit));
+    // Better to use iterator
+    // Or use ranges and coroutines once they come out
+    using array_ref = std::array<std::reference_wrapper<int>, 4>;
+    array_ref get_array_ref() {
+        return {std::ref(strength), std::ref(dexterity), std::ref(physique), std::ref(spirit)};
+    }
+    enum class selector : std::size_t { strength = 0, dexterity = 1, physique = 2, spirit = 3 };
 };
 STRUCT_JSON_SERIALIZE(attributes);
 STRUCT_PRINT(attributes);
