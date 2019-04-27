@@ -80,11 +80,7 @@ int main(int argc, char *argv[]) {
         // Allow address reuse
         acceptor.set_option(boost::asio::socket_base::reuse_address(true));
         // Bind to the server address
-        acceptor.bind(endpoint, ec);
-        if (ec) {
-            BOOST_LOG_SEV(logger, sev::error) << "Binding failure: " << ec.message();
-            return;
-        }
+        acceptor.bind(endpoint);
 
         // Start listening for connections
         acceptor.listen(boost::asio::socket_base::max_listen_connections);
@@ -98,8 +94,8 @@ int main(int argc, char *argv[]) {
             socket.set_option(option);
             BOOST_LOG_SEV(logger, sev::info) << "Got connection";
             nibaserver::db_accessor db(connection_pool, ioc);
-            auto session = std::make_shared<server_session>(acceptor.get_executor().context(),
-                                                            std::move(socket), ctx, std::move(db));
+            auto session =
+                std::make_shared<server_session>(ioc, std::move(socket), ctx, std::move(db));
             session->go();
         }
     });

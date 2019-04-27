@@ -6,12 +6,10 @@
 #include "structs.h"
 #include "util.h"
 
-#include <boost/algorithm/string.hpp>
-#include <boost/asio/connect.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/ssl/stream.hpp>
-#include <boost/asio/steady_timer.hpp>
 #include <boost/beast/core.hpp>
+#include <boost/beast/ssl.hpp>
 #include <boost/beast/websocket.hpp>
 #include <boost/beast/websocket/ssl.hpp>
 
@@ -46,14 +44,12 @@ private:
         }
     }
     void close();
-    void ping_timer(boost::system::error_code ec);
 
     std::string const &host_;
     std::string const &port_;
     boost::asio::io_context &ioc_;
     boost::asio::ip::tcp::resolver resolver_;
-    boost::beast::websocket::stream<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>> ws_;
-    boost::asio::steady_timer timer_;
+    boost::beast::websocket::stream<boost::beast::ssl_stream<boost::beast::tcp_stream>> ws_;
     client_processor processor_;
     bool handled_ = false;
 };

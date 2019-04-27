@@ -1,47 +1,42 @@
 #include "client_session.h"
+#include <boost/algorithm/string.hpp>
 
-using tcp = boost::asio::ip::tcp;              // from <boost/asio/ip/tcp.hpp>
-namespace ssl = boost::asio::ssl;              // from <boost/asio/ssl.hpp>
-namespace websocket = boost::beast::websocket; // from <boost/beast/websocket.hpp>
+namespace ssl = boost::asio::ssl;       // from <boost/asio/ssl.hpp>
+namespace beast = boost::beast;         // from <boost/beast.hpp>
+namespace websocket = beast::websocket; // from <boost/beast/websocket.hpp>
 
 using namespace nibaclient;
 
 // , work_(ioc_)
 nibaclient::client_session::client_session(std::string const &host, std::string const &port,
-                                           boost::asio::io_context &ioc,
-                                           boost::asio::ssl::context &ssl_ctx) :
+                                           boost::asio::io_context &ioc, ssl::context &ssl_ctx) :
     host_(host),
-    port_(port), ioc_(ioc), resolver_(ioc_), ws_(ioc_, ssl_ctx), timer_(ioc_) {
+    port_(port), ioc_(ioc), resolver_(ioc_), ws_(ioc_, ssl_ctx) {
     // everything can be sync because this client has no ui anyway
     auto const results = resolver_.resolve(host_, port_);
-    boost::asio::connect(ws_.next_layer().next_layer(), results.begin(), results.end());
-    tcp::no_delay option(true);
-    ws_.next_layer().next_layer().set_option(option);
+    beast::get_lowest_layer(ws_).expires_after(std::chrono::seconds(30));
+    beast::get_lowest_layer(ws_).connect(results);
+    // boost::asio::ip::tcp::no_delay option(true);
+    // beast::get_lowest_layer(ws_).socket().set_option(option);
+    beast::get_lowest_layer(ws_).expires_after(std::chrono::seconds(30));
     ws_.next_layer().handshake(ssl::stream_base::client);
+    beast::get_lowest_layer(ws_).expires_never();
+    // Set suggested timeout settings for the websocket
+    ws_.set_option(websocket::stream_base::timeout::suggested(beast::role_type::client));    
     ws_.handshake(host_, "/");
-    timer_.expires_after(std::chrono::seconds(5));
-    ping_timer({});
-    // do a data exchange
 }
 
 nibaclient::client_session::~client_session() { close(); }
 
 void nibaclient::client_session::close() {
     if (ws_.is_open()) {
+        beast::get_lowest_layer(ws_).cancel();
         ws_.close(websocket::close_code::normal);
     }
-    timer_.cancel();
 }
 
 void nibaclient::client_session::handle_cmd(const std::string &input) {
     try {
-        if (input == "exit") {
-            std::cout << "goodbye" << std::endl;
-            // this might not be the last command... but works for tests
-            close();
-            ioc_.stop();
-            return;
-        }
         handled_ = true;
         std::vector<std::string> results;
         boost::split(results, input, boost::is_any_of("\t "));
@@ -50,9 +45,8 @@ void nibaclient::client_session::handle_cmd(const std::string &input) {
         // dynamic sized
         if (results[0] == "reordermagic") {
             std::vector<int> selected;
-            std::for_each(results.begin() + 1, results.end(), [&selected](auto &magic_id) {
-                selected.push_back(std::stoi(magic_id));
-            });
+            std::for_each(results.begin() + 1, results.end(),
+                          [&selected](auto &magic_id) { selected.push_back(std::stoi(magic_id)); });
             return create_and_go<nibashared::message_reordermagic>(std::move(selected));
         }
         // password input handled by cmd_processor
@@ -100,26 +94,4 @@ std::chrono::high_resolution_clock::time_point nibaclient::client_session::earli
     if (processor_.get_session().earliest_time == processor_.get_session().current_time)
         return {};
     return processor_.get_session().earliest_time;
-}
-
-void nibaclient::client_session::ping_timer(boost::system::error_code ec) {
-    if (ec && ec != boost::asio::error::operation_aborted)
-        return;
-
-    // See if the timer really expired since the deadline may have moved.
-    if (timer_.expiry() <= std::chrono::steady_clock::now()) {
-        // If this is the first time the timer expired,
-
-        if (ws_.is_open()) {
-            timer_.expires_after(std::chrono::seconds(5));
-            // Now send the ping
-            ws_.async_pong({}, [](boost::system::error_code ec) {
-                (void)ec;
-                // std::cout << "ping sent" << std::endl;
-            });
-        }
-    }
-
-    // Wait on the timer
-    timer_.async_wait([this](boost::system::error_code ec) { ping_timer(ec); });
 }

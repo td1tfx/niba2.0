@@ -62,12 +62,13 @@ int main(int argc, char **argv) {
     ctx.set_verify_mode(ssl::verify_peer);
 
     boost::asio::io_context ioc;
+    auto work_guard = boost::asio::make_work_guard(ioc);
     nibaclient::client_session client_session(host, port, ioc, ctx);
     std::mutex processor_mutex;
     std::condition_variable processor_cv;
     bool processed = true;
 
-    std::thread([&ioc, &instream, &client_session, &processor_mutex, &processor_cv, &processed] {
+    std::thread cmd_thread([&ioc, &work_guard, &instream, &client_session, &processor_mutex, &processor_cv, &processed] {
         // separate io thread so that getline doesn't block our websocket pingpong
         std::string line;
         while (std::getline(instream, line)) {
@@ -101,11 +102,13 @@ int main(int argc, char **argv) {
                 break;
             }
         }
-        ioc.post([&client_session]() { client_session.handle_cmd("exit"); });
-    })
-        .detach();
+        work_guard.reset();
+    });
 
     ioc.run();
+    if (cmd_thread.joinable()) {
+        cmd_thread.join();
+    }
 
     return EXIT_SUCCESS;
 }

@@ -6,44 +6,39 @@
 #include <boost/asio/spawn.hpp>
 #include <boost/beast/http.hpp>
 
-using tcp = boost::asio::ip::tcp;              // from <boost/asio/ip/tcp.hpp>
-namespace ssl = boost::asio::ssl;              // from <boost/asio/ssl.hpp>
-namespace websocket = boost::beast::websocket; // from <boost/beast/websocket.hpp>
+using tcp = boost::asio::ip::tcp;       // from <boost/asio/ip/tcp.hpp>
+namespace beast = boost::beast;         // from <boost/beast.hpp>
+namespace http = beast::http;           // from <boost/beast/http.hpp>
+namespace ssl = boost::asio::ssl;       // from <boost/asio/ssl.hpp>
+namespace websocket = beast::websocket; // from <boost/beast/websocket.hpp>
 namespace sev = boost::log::trivial;
 using namespace nibaserver;
 
 server_session::server_session(boost::asio::io_context &ioc, boost::asio::ip::tcp::socket &&socket,
                                boost::asio::ssl::context &ctx, nibaserver::db_accessor &&db) :
     ioc_(ioc),
-    strand_(ioc_), socket_(std::move(socket)), ws_(socket_, ctx),
-    timer_(socket_.get_executor().context(), (std::chrono::steady_clock::time_point::max)()),
-    db_(std::move(db)) {}
+    strand_(ioc_), ws_(std::move(socket), ctx), db_(std::move(db)) {}
 
 server_session::~server_session() { BOOST_LOG_SEV(logger_, sev::info) << "Session destructed"; }
 
 void server_session::go() {
-    // 2 coroutines - use same strand
-    auto self1(shared_from_this());
-    boost::asio::spawn(strand_, [this, self1](boost::asio::yield_context yield) {
+    auto self(shared_from_this());
+    // note only one coroutine running, strand not neccessary, but potentially we'll add more
+    boost::asio::spawn(strand_, [this, self](boost::asio::yield_context yield) {
         server_processor processor(yield, db_);
         try {
-            // control callback is not a completion handler!
-            ws_.control_callback([this](boost::beast::websocket::frame_type kind,
-                                        boost::beast::string_view payload) {
-                // control frames here are pongs
-                boost::ignore_unused(kind, payload);
-                ping_state_ = pingstate::responsive; // responsive
-                timer_.expires_after(std::chrono::seconds(TIMEOUT));
-            });
+            boost::beast::get_lowest_layer(ws_).expires_after(std::chrono::seconds(30));
             ws_.next_layer().async_handshake(ssl::stream_base::server, yield);
+            boost::beast::get_lowest_layer(ws_).expires_never();
+            ws_.set_option(
+                websocket::stream_base::timeout::suggested(boost::beast::role_type::server));
             // Accept the websocket handshake
-            ws_.async_accept_ex(
-                [](boost::beast::websocket::response_type &m) {
-                    // js-websocket(or chrome) require this field to be non-empty
-                    m.insert(boost::beast::http::field::sec_websocket_protocol, "niba-server");
-                },
-                yield);
-
+            ws_.set_option(websocket::stream_base::decorator([](websocket::response_type &res) {
+                // might only need one
+                res.set(http::field::server, "niba-server");
+                res.insert(http::field::sec_websocket_protocol, "niba-server");
+            }));
+            ws_.async_accept(yield);
             for (;;) {
                 // recv request
                 std::string request_str;
@@ -51,12 +46,9 @@ void server_session::go() {
                 nibautil::stopwatch stopwatch_next_request;
                 ws_.async_read(buffer, yield);
                 BOOST_LOG_SEV(logger_, sev::info)
-                    << "idled for " << stopwatch_next_request.elapsed_ms() << "ms";                
+                    << "idled for " << stopwatch_next_request.elapsed_ms() << "ms";
                 // check how long the request itself is processed
                 nibautil::stopwatch stopwatch;
-                // reset ping state, and timer as well
-                ping_state_ = pingstate::responsive;
-                timer_.expires_after(std::chrono::seconds(TIMEOUT));
                 // process request and send out response
                 std::string response = processor.dispatch(request_str);
                 ws_.async_write(boost::asio::buffer(response), yield);
@@ -71,45 +63,6 @@ void server_session::go() {
             if (processor.get_session().userid) {
                 db_.logout(*processor.get_session().userid, yield);
             }
-            close_down_ = true;
-            boost::system::error_code ec;
-            timer_.cancel(ec);
-        }
-    });
-
-    auto self2(shared_from_this());
-    boost::asio::spawn(strand_, [this, self2](boost::asio::yield_context yield) {
-        boost::system::error_code ec;
-        try {
-            for (;;) {
-                if (close_down_)
-                    break;
-                // check it has expired
-                if (timer_.expiry() <= std::chrono::steady_clock::now()) {
-                    if (ws_.is_open() && ping_state_ == pingstate::responsive) {
-                        ping_state_ = pingstate::onhold;
-                        timer_.expires_after(std::chrono::seconds(TIMEOUT));
-                        // Now send the ping
-                        ws_.async_ping({}, yield[ec]);
-                        // we don't care about ec here
-                    } else if (ws_.is_open()) {
-                        // ping state is onhold - no activity in last 15 seconds
-                        BOOST_LOG_SEV(logger_, sev::info)
-                            << "Connection closing due to ping timeout";
-                        ws_.next_layer().next_layer().cancel(ec);
-                        break;
-                    }
-                }
-                // wait on the timer
-                timer_.async_wait(yield[ec]);
-                // we need this != check, need to experiment more
-                if (ec && ec != boost::asio::error::operation_aborted)
-                    break;
-            }
-            timer_.cancel(ec);
-            BOOST_LOG_SEV(logger_, sev::info) << "ping coroutine exiting";
-        } catch (std::exception &e) {
-            BOOST_LOG_SEV(logger_, sev::info) << "Ping timer exception, reason: " << e.what();
         }
     });
 }
