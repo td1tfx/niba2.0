@@ -13,8 +13,8 @@
 #include <iostream>
 #include <memory>
 #include <string>
-// #include <thread>
-// #include <vector>
+#include <thread>
+#include <vector>
 
 #include "cert_loader.hpp"
 #include "config.h"
@@ -36,8 +36,7 @@ int main(int argc, char *argv[]) {
 
     auto const address = boost::asio::ip::make_address(conf.host);
     unsigned short port = conf.port;
-    // Single threaded
-    // auto const threads = conf.threads;
+    auto const threads = conf.threads;
 
     init_log();
     logger logger;
@@ -47,7 +46,7 @@ int main(int argc, char *argv[]) {
     BOOST_LOG_SEV(logger, sev::info) << "Game data loaded.";
 
     // The io_context is required for all I/O
-    boost::asio::io_context ioc{1};
+    boost::asio::io_context ioc(threads);
 
     // The SSL context is required, and holds certificates
     ssl::context ctx{ssl::context::sslv23};
@@ -106,6 +105,10 @@ int main(int argc, char *argv[]) {
     });
 
     BOOST_LOG_SEV(logger, sev::info) << "Main thread ioc running.";
+    std::vector<std::thread> v;
+    v.reserve(threads - 1);
+    for (auto i = threads - 1; i > 0; --i)
+        v.emplace_back([&ioc] { ioc.run(); });
     ioc.run();
 
     return EXIT_SUCCESS;

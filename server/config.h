@@ -10,7 +10,7 @@ namespace nibaserver {
 struct config {
     std::string host;
     unsigned short port;
-    std::size_t threads;
+    int threads;
     std::string static_conn_str;
     std::string player_conn_str;
 };
@@ -18,7 +18,7 @@ struct config {
 inline config read_config(int argc, char *argv[]) {
     config my_config = {.host = "0.0.0.0",
                         .port = 19999,
-                        .threads = 1,
+                        .threads = 2,
                         .static_conn_str = "dbname=niba_static user=postgres",
                         .player_conn_str = "dbname=niba user=postgres"};
     if (argc < 2) {
@@ -33,10 +33,9 @@ inline config read_config(int argc, char *argv[]) {
         if (auto iter = json.find("port"); iter != json.end()) {
             iter->get_to(my_config.port);
         }
-        // to be supported
-        // if (auto iter = json.find("threads"); iter != json.end()) {
-        //     iter->get_to(my_config.threads);
-        // }
+        if (auto iter = json.find("threads"); iter != json.end()) {
+            iter->get_to(my_config.threads);
+        }
         if (auto iter = json.find("static_conn_str"); iter != json.end()) {
             iter->get_to(my_config.static_conn_str);
         }
