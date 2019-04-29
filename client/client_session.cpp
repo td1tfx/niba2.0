@@ -1,4 +1,5 @@
 #include "client_session.h"
+
 #include <boost/algorithm/string.hpp>
 
 namespace ssl = boost::asio::ssl;       // from <boost/asio/ssl.hpp>
@@ -7,21 +8,36 @@ namespace websocket = beast::websocket; // from <boost/beast/websocket.hpp>
 
 using namespace nibaclient;
 
+namespace {
+
+// auto set a void promise on destruction
+struct promise_setter {
+public:
+    promise_setter(std::promise<void>& promise): promise_(promise) {}
+    ~promise_setter() {
+        promise_.set_value();
+    }
+private:
+    std::promise<void>& promise_;
+};
+
+}
+
 // , work_(ioc_)
 nibaclient::client_session::client_session(std::string const &host, std::string const &port,
                                            boost::asio::io_context &ioc, ssl::context &ssl_ctx) :
     host_(host),
     port_(port), ioc_(ioc), resolver_(ioc_), ws_(ioc_, ssl_ctx) {
+    // TODO make all async
     // everything can be sync because this client has no ui anyway
     auto const results = resolver_.resolve(host_, port_);
     beast::get_lowest_layer(ws_).expires_after(std::chrono::seconds(30));
     beast::get_lowest_layer(ws_).connect(results);
-    // boost::asio::ip::tcp::no_delay option(true);
-    // beast::get_lowest_layer(ws_).socket().set_option(option);
+    boost::asio::ip::tcp::no_delay option(true);
+    beast::get_lowest_layer(ws_).socket().set_option(option);
     beast::get_lowest_layer(ws_).expires_after(std::chrono::seconds(30));
     ws_.next_layer().handshake(ssl::stream_base::client);
     beast::get_lowest_layer(ws_).expires_never();
-    // Set suggested timeout settings for the websocket
     ws_.set_option(websocket::stream_base::timeout::suggested(beast::role_type::client));    
     ws_.handshake(host_, "/");
 }
@@ -35,7 +51,8 @@ void nibaclient::client_session::close() {
     }
 }
 
-void nibaclient::client_session::handle_cmd(const std::string &input) {
+void nibaclient::client_session::handle_cmd(const std::string &input, std::promise<void>&& promise) {
+    promise_setter set_promise(promise);
     try {
         handled_ = true;
         std::vector<std::string> results;
@@ -49,7 +66,6 @@ void nibaclient::client_session::handle_cmd(const std::string &input) {
                           [&selected](auto &magic_id) { selected.push_back(std::stoi(magic_id)); });
             return create_and_go<nibashared::message_reordermagic>(std::move(selected));
         }
-        // password input handled by cmd_processor
         if (results.size() == 3) {
             if (results[0] == "register") {
                 return create_and_go<nibashared::message_register>(std::move(results[1]),
@@ -68,6 +84,9 @@ void nibaclient::client_session::handle_cmd(const std::string &input) {
                 return create_and_go<nibashared::message_fight>(std::stoi(results[1]));
             } else if (results[0] == "learnmagic") {
                 return create_and_go<nibashared::message_learnmagic>(std::stoi(results[1]));
+            } else if (results[0] == "timeout") {
+                std::this_thread::sleep_for(std::chrono::seconds(std::stoi(results[1])));
+                return;
             }
         } else if (results.size() == 7) {
             if (results[0] == "create") {

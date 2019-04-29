@@ -11,14 +11,14 @@ class client_processor {
 public:
     client_processor() = default;
     ~client_processor() = default;
-    void process(nibashared::message_register &req);
-    void process(nibashared::message_login &req);
-    void process(nibashared::message_getdata &req);
-    void process(nibashared::message_fight &req);
-    void process(nibashared::message_createchar &req);
-    void process(nibashared::message_learnmagic &req);
-    void process(nibashared::message_fusemagic &req);
-    void process(nibashared::message_reordermagic &req);
+    void operator()(nibashared::message_register &req);
+    void operator()(nibashared::message_login &req);
+    void operator()(nibashared::message_getdata &req);
+    void operator()(nibashared::message_fight &req);
+    void operator()(nibashared::message_createchar &req);
+    void operator()(nibashared::message_learnmagic &req);
+    void operator()(nibashared::message_fusemagic &req);
+    void operator()(nibashared::message_reordermagic &req);
     const nibashared::sessionstate &get_session() const;
 
     template<typename Message, typename = nibashared::IsMessage<Message>>
@@ -33,7 +33,7 @@ public:
             m.base_merge_response(merge_j);
             session_.current_time = std::chrono::high_resolution_clock::now();
             session_.earliest_time = session_.current_time;
-            process(m);
+            operator()(m);
         } catch (std::exception &e) {
             std::cout << "Client server communication failed: " << e.what() << std::endl;
         }

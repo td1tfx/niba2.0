@@ -24,6 +24,7 @@
 #include <chrono>
 #include <condition_variable>
 #include <fstream>
+#include <future>
 #include <iostream>
 #include <memory>
 #include <mutex>
@@ -64,20 +65,16 @@ int main(int argc, char **argv) {
     boost::asio::io_context ioc;
     auto work_guard = boost::asio::make_work_guard(ioc);
     nibaclient::client_session client_session(host, port, ioc, ctx);
-    std::mutex processor_mutex;
-    std::condition_variable processor_cv;
-    bool processed = true;
 
-    std::thread cmd_thread([&ioc, &work_guard, &instream, &client_session, &processor_mutex, &processor_cv, &processed] {
+    std::thread cmd_thread([&ioc, &work_guard, &instream, &client_session] {
         // separate io thread so that getline doesn't block our websocket pingpong
         std::string line;
-        while (std::getline(instream, line)) {
+        std::getline(instream, line);
+        for (; instream;) {
             if (line.empty())
-                continue;            
+                continue;
             if (line == "exit" || line == "quit")
                 break;
-            std::unique_lock<std::mutex> lock(processor_mutex);
-            processor_cv.wait(lock, [&processed] { return processed; });
             auto earliest = client_session.earliest();
             auto now = std::chrono::high_resolution_clock::now();
             if (earliest > now) {
@@ -86,23 +83,17 @@ int main(int argc, char **argv) {
                 std::cout << "cooldown " << delay.count() << "ns" << std::endl;
                 std::this_thread::sleep_for(delay);
             }
-            processed = false;
-            try {
-                // post the work to ioc
-                // we do not do any network io here
-                ioc.post([&client_session, &processor_mutex, &processor_cv, &processed, line]() {
-                    std::unique_lock<std::mutex> lock(processor_mutex);
-                    client_session.handle_cmd(line);
-                    processed = true;
-                    lock.unlock();
-                    processor_cv.notify_one();
-                });
-            } catch (std::exception &e) {
-                std::cout << e.what() << std::endl;
-                break;
-            }
+            std::promise<void> promise;
+            auto future = promise.get_future();
+            boost::asio::post(ioc, [&client_session, line, promise{std::move(promise)}]() mutable {
+                // sets the promise once its's done
+                client_session.handle_cmd(line, std::move(promise));
+            });
+            std::getline(instream, line);
+            future.wait();
         }
         work_guard.reset();
+        ioc.stop();
     });
 
     ioc.run();

@@ -9,7 +9,7 @@
 
 using namespace nibaclient;
 
-void client_processor::process(nibashared::message_register &req) {
+void client_processor::operator()(nibashared::message_register &req) {
     if (req.success) {
         std::cout << "success" << std::endl;
     } else {
@@ -17,7 +17,7 @@ void client_processor::process(nibashared::message_register &req) {
     }
 }
 
-void client_processor::process(nibashared::message_login &req) {
+void client_processor::operator()(nibashared::message_login &req) {
     if (req.success) {
         std::cout << "success" << std::endl;
         session_.userid = req.id;
@@ -34,7 +34,7 @@ void client_processor::process(nibashared::message_login &req) {
     }
 }
 
-void nibaclient::client_processor::process(nibashared::message_getdata &req) {
+void nibaclient::client_processor::operator()(nibashared::message_getdata &req) {
     if (req.success) {
         nibashared::staticdata::init(std::move(req.characters), std::move(req.magics),
                                      std::move(req.equips), std::move(req.maps));
@@ -44,7 +44,7 @@ void nibaclient::client_processor::process(nibashared::message_getdata &req) {
     }
 }
 
-void nibaclient::client_processor::process(nibashared::message_fight &req) {
+void nibaclient::client_processor::operator()(nibashared::message_fight &req) {
     nibashared::rng_client rng(std::move(req.generated));
     auto [self_fightable, enemy_fightable] = nibashared::prep_fight(session_, req.enemyid);
     auto max_hp = static_cast<double>(self_fightable.at(0).char_data.stats.hp);
@@ -55,7 +55,7 @@ void nibaclient::client_processor::process(nibashared::message_fight &req) {
                                                       fight.elapsed_ticks());
 }
 
-void nibaclient::client_processor::process(nibashared::message_createchar &req) {
+void nibaclient::client_processor::operator()(nibashared::message_createchar &req) {
     if (req.success) {
         std::cout << "success" << std::endl;
         std::cout << req.player << std::endl;
@@ -67,7 +67,7 @@ void nibaclient::client_processor::process(nibashared::message_createchar &req) 
     }
 }
 
-void nibaclient::client_processor::process(nibashared::message_learnmagic &req) {
+void nibaclient::client_processor::operator()(nibashared::message_learnmagic &req) {
     if (req.success) {
         std::cout << "learned magic " << req.magic.name << std::endl;
         session_.data.magics.push_back(std::move(req.magic));
@@ -76,7 +76,7 @@ void nibaclient::client_processor::process(nibashared::message_learnmagic &req) 
     }
 }
 
-void nibaclient::client_processor::process(nibashared::message_fusemagic &req) {
+void nibaclient::client_processor::operator()(nibashared::message_fusemagic &req) {
     if (req.success) {
         // remove secondary magic and update primary magic
         nibautil::vector_remove(session_.data.magics, [&req](auto &magic) {
@@ -96,7 +96,7 @@ void nibaclient::client_processor::process(nibashared::message_fusemagic &req) {
     }
 }
 
-void nibaclient::client_processor::process(nibashared::message_reordermagic &req) {
+void nibaclient::client_processor::operator()(nibashared::message_reordermagic &req) {
     if (req.success) {
         session_.data.equipped_magic_ids = std::move(req.equipped_magic_ids);
     } else {

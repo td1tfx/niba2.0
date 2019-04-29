@@ -6,11 +6,12 @@
 #include <nlohmann/json.hpp>
 #include <optional>
 #include <type_traits>
+#include <variant>
 #include <vector>
 
 namespace nibashared {
 
-enum class cmdtype : std::size_t {
+enum class type_message : std::size_t {
     login = 0,
     registeration = 1,
     createchar = 2,
@@ -23,6 +24,8 @@ enum class cmdtype : std::size_t {
     LAST
 };
 
+enum class tag_message : std::size_t { request = 0, response = 1 };
+
 template<typename Impl>
 struct base_message {
     Impl &self() { return static_cast<Impl &>(*this); }
@@ -30,10 +33,12 @@ struct base_message {
     nlohmann::json base_create_response() {
         auto j = self().create_response();
         j["success"] = success;
+        j["tag"] = tag_message::response;
         return j;
     }
     nlohmann::json base_create_request() {
         auto j = self().create_request();
+        j["tag"] = tag_message::request;
         j["type"] = self().type;
         return j;
     }
@@ -51,7 +56,7 @@ using IsMessage = typename std::enable_if<std::is_base_of<base_message<T>, T>::v
 
 struct message_register : public base_message<message_register> {
     // TODO: make this static?
-    const cmdtype type = cmdtype::registeration;
+    const type_message type = type_message::registeration;
 
     message_register() = default;
     message_register(std::string &&id, std::string &&password);
@@ -67,7 +72,7 @@ struct message_register : public base_message<message_register> {
 };
 
 struct message_login : public base_message<message_login> {
-    const cmdtype type = cmdtype::login;
+    const type_message type = type_message::login;
 
     message_login() = default;
     message_login(std::string &&id, std::string &&password);
@@ -85,7 +90,7 @@ struct message_login : public base_message<message_login> {
 };
 
 struct message_getdata : public base_message<message_getdata> {
-    const cmdtype type = cmdtype::getdata;
+    const type_message type = type_message::getdata;
 
     message_getdata() = default;
     bool validate(const nibashared::sessionstate &session);
@@ -101,7 +106,7 @@ struct message_getdata : public base_message<message_getdata> {
 };
 
 struct message_fight : public base_message<message_fight> {
-    const cmdtype type = cmdtype::fight;
+    const type_message type = type_message::fight;
 
     message_fight() = default;
     // TODO this should be changed, we shouldn't use enemyid to identify the enemy
@@ -118,7 +123,7 @@ struct message_fight : public base_message<message_fight> {
 };
 
 struct message_createchar : public base_message<message_createchar> {
-    const cmdtype type = cmdtype::createchar;
+    const type_message type = type_message::createchar;
 
     message_createchar() = default;
     message_createchar(nibashared::player &&player);
@@ -136,7 +141,7 @@ struct message_learnmagic : public base_message<message_learnmagic> {
     // A magic_book is a book id stored in player_books
     // a player learns a magic from a magic_book
     // but a magic_book is just a magic in staticdata(TODO: add exp requirement)
-    const cmdtype type = cmdtype::learnmagic;
+    const type_message type = type_message::learnmagic;
 
     message_learnmagic() = default;
     explicit message_learnmagic(int static_id);
@@ -151,7 +156,7 @@ struct message_learnmagic : public base_message<message_learnmagic> {
 };
 
 struct message_fusemagic : public base_message<message_fusemagic> {
-    const cmdtype type = cmdtype::fusemagic;
+    const type_message type = type_message::fusemagic;
 
     message_fusemagic() = default;
     message_fusemagic(int primary_magic_id, int secondary_magic_id);
@@ -168,7 +173,7 @@ struct message_fusemagic : public base_message<message_fusemagic> {
 
 struct message_reordermagic : public base_message<message_reordermagic> {
     // use the same message for equipping & unequipping magics
-    const cmdtype type = cmdtype::reordermagic;
+    const type_message type = type_message::reordermagic;
 
     message_reordermagic() = default;
     explicit message_reordermagic(std::vector<int> &&equipped_magic_ids);
@@ -180,5 +185,9 @@ struct message_reordermagic : public base_message<message_reordermagic> {
 
     std::vector<int> equipped_magic_ids;
 };
+
+using variant_message =
+    std::variant<message_register, message_login, message_getdata, message_fight,
+                 message_createchar, message_learnmagic, message_fusemagic, message_reordermagic>;
 
 } // namespace nibashared

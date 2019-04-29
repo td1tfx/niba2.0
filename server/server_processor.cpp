@@ -21,29 +21,29 @@ std::string server_processor::dispatch(const std::string &request) {
     try {
         auto j = nlohmann::json::parse(request);
         auto cmd_id = j.at("type").get<std::size_t>();
-        switch (static_cast<nibashared::cmdtype>(cmd_id)) {
-        case nibashared::cmdtype::registeration: {
+        switch (static_cast<nibashared::type_message>(cmd_id)) {
+        case nibashared::type_message::registeration: {
             return do_request<nibashared::message_register>(j);
         }
-        case nibashared::cmdtype::login: {
+        case nibashared::type_message::login: {
             return do_request<nibashared::message_login>(j);
         }
-        case nibashared::cmdtype::getdata: {
+        case nibashared::type_message::getdata: {
             return do_request<nibashared::message_getdata>(j);
         }
-        case nibashared::cmdtype::fight: {
+        case nibashared::type_message::fight: {
             return do_request<nibashared::message_fight>(j);
         }
-        case nibashared::cmdtype::createchar: {
+        case nibashared::type_message::createchar: {
             return do_request<nibashared::message_createchar>(j);
         }
-        case nibashared::cmdtype::learnmagic: {
+        case nibashared::type_message::learnmagic: {
             return do_request<nibashared::message_learnmagic>(j);
         }
-        case nibashared::cmdtype::fusemagic: {
+        case nibashared::type_message::fusemagic: {
             return do_request<nibashared::message_fusemagic>(j);
         }
-        case nibashared::cmdtype::reordermagic: {
+        case nibashared::type_message::reordermagic: {
             return do_request<nibashared::message_reordermagic>(j);
         }
         default:

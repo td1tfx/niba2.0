@@ -13,6 +13,9 @@
 #include <boost/beast/websocket.hpp>
 #include <boost/beast/websocket/ssl.hpp>
 
+#include <optional>
+#include <future>
+
 namespace nibaclient {
 
 class client_session {
@@ -21,7 +24,7 @@ public:
                    boost::asio::ssl::context &ssl_ctx);
     ~client_session();
 
-    void handle_cmd(const std::string &input);
+    void handle_cmd(const std::string &input, std::promise<void>&& promise);
     std::chrono::high_resolution_clock::time_point earliest() const;
 
 private:
@@ -51,6 +54,7 @@ private:
     boost::asio::ip::tcp::resolver resolver_;
     boost::beast::websocket::stream<boost::beast::ssl_stream<boost::beast::tcp_stream>> ws_;
     client_processor processor_;
+    std::optional<nibashared::variant_message> request_;
     bool handled_ = false;
 };
 
