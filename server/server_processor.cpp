@@ -19,36 +19,20 @@ std::string server_processor::dispatch(const std::string &request) {
     // logging the request is bad, when password is involved
     // BOOST_LOG_SEV(logger_, sev::debug) << request;
     try {
+        session_.current_time = std::chrono::high_resolution_clock::now();
+        if (session_.current_time < session_.earliest_time) {
+            throw std::runtime_error("request too frequent");
+        }
+        session_.earliest_time = session_.current_time;
+
         auto j = nlohmann::json::parse(request);
-        auto cmd_id = j.at("type").get<std::size_t>();
-        switch (static_cast<nibashared::type_message>(cmd_id)) {
-        case nibashared::type_message::registeration: {
-            return do_request<nibashared::message_register>(j);
-        }
-        case nibashared::type_message::login: {
-            return do_request<nibashared::message_login>(j);
-        }
-        case nibashared::type_message::getdata: {
-            return do_request<nibashared::message_getdata>(j);
-        }
-        case nibashared::type_message::fight: {
-            return do_request<nibashared::message_fight>(j);
-        }
-        case nibashared::type_message::createchar: {
-            return do_request<nibashared::message_createchar>(j);
-        }
-        case nibashared::type_message::learnmagic: {
-            return do_request<nibashared::message_learnmagic>(j);
-        }
-        case nibashared::type_message::fusemagic: {
-            return do_request<nibashared::message_fusemagic>(j);
-        }
-        case nibashared::type_message::reordermagic: {
-            return do_request<nibashared::message_reordermagic>(j);
-        }
-        default:
-            BOOST_LOG_SEV(logger_, sev::info) << "unknown request type: " << cmd_id;
-        }
+        return nibashared::message::dispatcher(j, [this](auto req) {
+            if (!req.base_validate(session_)) {
+                throw std::runtime_error("validation failure");
+            }
+            process(req);
+            return req.base_create_response().dump();
+        });
     }
     // return whatever error message, I don't care
     catch (std::exception &e) {
@@ -58,7 +42,7 @@ std::string server_processor::dispatch(const std::string &request) {
     return error_msg.dump();
 }
 
-void nibaserver::server_processor::process(nibashared::message_register &req) {
+void nibaserver::server_processor::process(nibashared::message_registration &req) {
     if (db_.create_user(req.id, req.password, yield_)) {
         req.success = true;
         BOOST_LOG_SEV(logger_, sev::info) << "User " << req.id << " has registered.";

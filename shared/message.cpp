@@ -8,10 +8,10 @@ namespace nibashared {
 
 using nlohmann::json;
 
-message_register::message_register(std::string &&id, std::string &&password) :
+message_registration::message_registration(std::string &&id, std::string &&password) :
     id(std::move(id)), password(std::move(password)) {}
 
-bool message_register::validate(const nibashared::sessionstate &session) {
+bool message_registration::validate(const nibashared::sessionstate &session) {
     // TODO: throw error with error code?
     if (session.state != nibashared::gamestate::prelogin)
         return false;
@@ -22,13 +22,13 @@ bool message_register::validate(const nibashared::sessionstate &session) {
     return true;
 }
 
-json message_register::create_response() { return {}; }
+json message_registration::create_response() { return {}; }
 
 // this is not used
-json message_register::create_request() { return {{"id", id}, {"password", password}}; }
-void message_register::merge_response(const json &j) { (void)j; }
+json message_registration::create_request() { return {{"id", id}, {"password", password}}; }
+void message_registration::merge_response(const json &j) { (void)j; }
 
-void message_register::from_request(const json &j) {
+void message_registration::from_request(const json &j) {
     j.at("id").get_to(id);
     j.at("password").get_to(password);
 }

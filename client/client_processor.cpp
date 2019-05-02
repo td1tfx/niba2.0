@@ -9,7 +9,7 @@
 
 using namespace nibaclient;
 
-void client_processor::operator()(nibashared::message_register &req) {
+void client_processor::operator()(nibashared::message_registration &req) {
     if (req.success) {
         std::cout << "success" << std::endl;
     } else {

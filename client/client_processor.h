@@ -11,7 +11,7 @@ class client_processor {
 public:
     client_processor() = default;
     ~client_processor() = default;
-    void operator()(nibashared::message_register &req);
+    void operator()(nibashared::message_registration &req);
     void operator()(nibashared::message_login &req);
     void operator()(nibashared::message_getdata &req);
     void operator()(nibashared::message_fight &req);
@@ -22,20 +22,14 @@ public:
     const nibashared::sessionstate &get_session() const;
 
     template<typename Message, typename = nibashared::IsMessage<Message>>
-    void dispatch(Message &m, const std::string &merger) {
-        std::cout << merger << std::endl;
+    void process_response(Message &m, const nlohmann::json &merge_j) {
         try {
-            auto merge_j = nlohmann::json::parse(merger);
-            if (merge_j.find("error") != merge_j.end()) {
-                std::string err = merge_j["error"].get<std::string>();
-                throw std::runtime_error(err.c_str());
-            }
             m.base_merge_response(merge_j);
             session_.current_time = std::chrono::high_resolution_clock::now();
             session_.earliest_time = session_.current_time;
             operator()(m);
         } catch (std::exception &e) {
-            std::cout << "Client server communication failed: " << e.what() << std::endl;
+            std::cout << "Failed to process response: " << e.what() << std::endl;
         }
     }
 
