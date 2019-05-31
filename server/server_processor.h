@@ -4,6 +4,7 @@
 #include "logger.h"
 #include "message.h"
 #include "sessiondata.h"
+#include "session_map.h"
 
 #include <boost/asio/spawn.hpp>
 #include <chrono>
@@ -11,8 +12,10 @@
 
 namespace nibaserver {
 class server_processor {
+using session_wptr = std::weak_ptr<server_session>;
+
 public:
-    server_processor(boost::asio::yield_context &yield, nibaserver::db_accessor &db);
+    server_processor(boost::asio::yield_context &yield, db_accessor &db, session_map& ss_map, session_wptr ss_wptr);
     ~server_processor() = default;
     // dispatch is responsible to handle all the type conversion, make the whatever calls
     // and then finally return the serialized message
@@ -26,12 +29,16 @@ public:
     void process(nibashared::message_learnmagic &req);
     void process(nibashared::message_fusemagic &req);
     void process(nibashared::message_reordermagic &req);
+    void process(nibashared::message_echo& req);
+    void process(nibashared::message_send& req);
     const nibashared::sessionstate &get_session();
 
 private:
     logger logger_;
     nibashared::sessionstate session_;
     boost::asio::yield_context &yield_;
-    nibaserver::db_accessor &db_;
+    db_accessor &db_;
+    session_map& ss_map_;
+    session_wptr ss_wptr_;
 };
 } // namespace nibaserver

@@ -12,12 +12,14 @@ namespace http = beast::http;           // from <boost/beast/http.hpp>
 namespace ssl = boost::asio::ssl;       // from <boost/asio/ssl.hpp>
 namespace websocket = beast::websocket; // from <boost/beast/websocket.hpp>
 namespace sev = boost::log::trivial;
-using namespace nibaserver;
+
+namespace nibaserver {
 
 server_session::server_session(boost::asio::io_context &ioc, boost::asio::ip::tcp::socket &&socket,
-                               boost::asio::ssl::context &ctx, nibaserver::db_accessor &&db) :
-    ioc_(ioc),
-    strand_(ioc_), ws_(std::move(socket), ctx), db_(std::move(db)) {}
+                               boost::asio::ssl::context &ctx, nibaserver::db_accessor &&db,
+                               session_map &ss_map) :
+    ioc_{ioc},
+    strand_{ioc_}, ws_{std::move(socket), ctx}, db_{std::move(db)}, ss_map_{ss_map} {}
 
 server_session::~server_session() { BOOST_LOG_SEV(logger_, sev::info) << "Session destructed"; }
 
@@ -25,7 +27,7 @@ void server_session::go() {
     auto self(shared_from_this());
     // note only one coroutine running, strand not neccessary, but potentially we'll add more
     boost::asio::spawn(strand_, [this, self](boost::asio::yield_context yield) {
-        server_processor processor(yield, db_);
+        server_processor processor(yield, db_, ss_map_, self);
         try {
             boost::beast::get_lowest_layer(ws_).expires_after(std::chrono::seconds(30));
             ws_.next_layer().async_handshake(ssl::stream_base::server, yield);
@@ -66,3 +68,5 @@ void server_session::go() {
         }
     });
 }
+
+} // namespace nibaserver

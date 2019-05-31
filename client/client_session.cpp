@@ -34,8 +34,8 @@ void nibaclient::client_session::start() {
             ready_promise_.set_exception(std::current_exception());
             return;
         }
-        // Now start long running read coroutine
-        for(;;) {
+        // Now start long running read loop
+        for (;;) {
             std::string incoming_str;
             auto buffer = boost::asio::dynamic_buffer(incoming_str);
             try {
@@ -49,29 +49,32 @@ void nibaclient::client_session::start() {
                 }
                 nibashared::message::tag tag{json.at("tag").get<int>()};
                 if (request_.has_value() && tag == nibashared::message::tag::response) {
-                    // Since we strictly wait for 1 response per request, this response must match the request.
-                    // Merge it with the request and process.
-                    std::visit([&json, this, yield](auto& response) {
-                        processor_.process_response(response, json);
-                        // Manually chain the getdata message
-                        if (response.type == nibashared::message::type::login) {
-                            write_message(nibashared::message_getdata{}, yield);
-                        } else {
-                            // Set the promise!
-                            std::cout << "DEBUG setting promise for response\n";
-                            request_promise_.set_value(response.type);
-                        }
-                    }, request_.value());
+                    // Since we strictly wait for 1 response per request, this response must match
+                    // the request. Merge it with the request and process.
+                    std::visit(
+                        [&json, this, yield](auto &response) {
+                            processor_.process_response(response, json);
+                            if (response.type == nibashared::message::type::login) {
+                                // Manually chain the getdata message
+                                // TODO combine getdata with login
+                                write_message(nibashared::message_getdata{}, yield);
+                            } else {
+                                // Set the promise!
+                                request_promise_.set_value(response.type);
+                            }
+                        },
+                        request_.value());
                 } else {
                     // It's some unknown message, just process it
-                    nibashared::message::dispatcher(json, [this](auto message){
+                    nibashared::message::dispatcher(json, [this](auto message) {
                         // Incoming message, assume "it just works"
-                        processor_(message);
+                        processor_.process(message);
                     });
                 }
-            } catch (std::exception& ex) {
+            } catch (std::exception &ex) {
                 std::cout << "failed to process incoming message: " << ex.what() << "\n";
-                break;
+                // just kill it for now
+                throw ex;
             }
         }
 
@@ -85,9 +88,8 @@ void nibaclient::client_session::stop() {
     // Exceptions may happen in the destructor, but if it throws, then let it crash...?
     if (ws_.is_open()) {
         // ioc should finish the close before shutting down
-        ws_.async_close(websocket::close_code::normal, [](beast::error_code ec) {
-            std::cout << ec.message() << std::endl;
-        });
+        ws_.async_close(websocket::close_code::normal,
+                        [](beast::error_code ec) { std::cout << ec.message() << std::endl; });
     }
 }
 
@@ -109,7 +111,7 @@ nibaclient::client_session::handle_cmd(const std::string &input) {
         if (results.size() == 3) {
             if (results[0] == "register") {
                 return create_and_go<nibashared::message_registration>(std::move(results[1]),
-                                                                   std::move(results[2]));
+                                                                       std::move(results[2]));
             } else if (results[0] == "login") {
                 return create_and_go<nibashared::message_login>(std::move(results[1]),
                                                                 std::move(results[2]));
@@ -118,6 +120,9 @@ nibaclient::client_session::handle_cmd(const std::string &input) {
             } else if (results[0] == "fusemagic") {
                 return create_and_go<nibashared::message_fusemagic>(std::stoi(results[1]),
                                                                     std::stoi(results[2]));
+            } else if (results[0] == "send") {
+                return create_and_go<nibashared::message_send>(std::move(results[1]),
+                                                               std::move(results[2]));
             }
         } else if (results.size() == 2) {
             if (results[0] == "fight") {

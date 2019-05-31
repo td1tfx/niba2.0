@@ -24,6 +24,8 @@ enum class type : int {
     learnmagic = 5,
     fusemagic = 6,
     reordermagic = 7,
+    echo = 8,
+    send = 9,
 
     LAST
 };
@@ -193,11 +195,40 @@ struct message_reordermagic : public base_message<message_reordermagic> {
     std::vector<int> equipped_magic_ids;
 };
 
+struct message_echo : public base_message<message_echo> {
+    // doesn't echo back...
+    const message::type type = message::type::echo;
+
+    message_echo() = default;
+    explicit message_echo(std::string echo_str);
+    bool validate(const nibashared::sessionstate &session);
+    nlohmann::json create_response();
+    nlohmann::json create_request();
+    void merge_response(const nlohmann::json &j);
+    void from_request(const nlohmann::json &j);
+
+    std::string echo_str;
+};
+
+struct message_send : public base_message<message_send> {
+    const message::type type = message::type::send;
+    message_send() = default;
+    explicit message_send(std::string name, std::string message);
+    bool validate(const nibashared::sessionstate &session);
+    nlohmann::json create_response();
+    nlohmann::json create_request();
+    void merge_response(const nlohmann::json &j);
+    void from_request(const nlohmann::json &j);
+
+    std::string name;
+    std::string message;
+};
+
 namespace message {
 
-using variant =
-    std::variant<message_registration, message_login, message_getdata, message_fight,
-                 message_createchar, message_learnmagic, message_fusemagic, message_reordermagic>;
+using variant = std::variant<message_registration, message_login, message_getdata, message_fight,
+                             message_createchar, message_learnmagic, message_fusemagic,
+                             message_reordermagic, message_echo, message_send>;
 
 template<typename Message, typename = nibashared::IsMessage<Message>>
 Message parse(const nlohmann::json &j) {
@@ -233,6 +264,12 @@ auto dispatcher(const nlohmann::json &j, Handler &&handler) {
     }
     case message::type::reordermagic: {
         return handler(parse<message_reordermagic>(j));
+    }
+    case message::type::echo: {
+        return handler(parse<message_echo>(j));
+    }
+    case message::type::send: {
+        return handler(parse<message_send>(j));
     }
     default:
         throw std::runtime_error("unknown request " + std::to_string(cmd_id));

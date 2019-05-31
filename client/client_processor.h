@@ -11,14 +11,16 @@ class client_processor {
 public:
     client_processor() = default;
     ~client_processor() = default;
-    void operator()(nibashared::message_registration &req);
-    void operator()(nibashared::message_login &req);
-    void operator()(nibashared::message_getdata &req);
-    void operator()(nibashared::message_fight &req);
-    void operator()(nibashared::message_createchar &req);
-    void operator()(nibashared::message_learnmagic &req);
-    void operator()(nibashared::message_fusemagic &req);
-    void operator()(nibashared::message_reordermagic &req);
+    void process(nibashared::message_registration &req);
+    void process(nibashared::message_login &req);
+    void process(nibashared::message_getdata &req);
+    void process(nibashared::message_fight &req);
+    void process(nibashared::message_createchar &req);
+    void process(nibashared::message_learnmagic &req);
+    void process(nibashared::message_fusemagic &req);
+    void process(nibashared::message_reordermagic &req);
+    void process(nibashared::message_echo& msg);            // This is a message
+    void process(nibashared::message_send& req);            // Not handling
     const nibashared::sessionstate &get_session() const;
 
     template<typename Message, typename = nibashared::IsMessage<Message>>
@@ -27,7 +29,7 @@ public:
             m.base_merge_response(merge_j);
             session_.current_time = std::chrono::high_resolution_clock::now();
             session_.earliest_time = session_.current_time;
-            operator()(m);
+            process(m);
         } catch (std::exception &e) {
             std::cout << "Failed to process response: " << e.what() << std::endl;
         }

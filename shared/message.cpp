@@ -293,10 +293,50 @@ nlohmann::json nibashared::message_reordermagic::create_request() {
     return {{"equipped_magic_ids", equipped_magic_ids}};
 }
 
-void nibashared::message_reordermagic::merge_response(const nlohmann::json &j) { (void)j; }
+void nibashared::message_reordermagic::merge_response(const nlohmann::json &) {}
 
 void nibashared::message_reordermagic::from_request(const nlohmann::json &j) {
     j.at("equipped_magic_ids").get_to(equipped_magic_ids);
+}
+
+nibashared::message_echo::message_echo(std::string echo_str) : echo_str(std::move(echo_str)) {}
+
+bool nibashared::message_echo::validate(const nibashared::sessionstate &) { return true; }
+
+nlohmann::json nibashared::message_echo::create_response() { return {{"echo_str", echo_str}}; }
+
+nlohmann::json nibashared::message_echo::create_request() { return {{"echo_str", echo_str}}; }
+
+void nibashared::message_echo::merge_response(const nlohmann::json &j) {
+    j.at("echo_str").get_to(echo_str);
+}
+
+void nibashared::message_echo::from_request(const nlohmann::json &j) {
+    j.at("echo_str").get_to(echo_str);
+}
+
+nibashared::message_send::message_send(std::string name, std::string message) :
+    name{std::move(name)}, message{std::move(message)} {}
+
+bool nibashared::message_send::validate(const nibashared::sessionstate &) {
+    if (message.size() > 256) {
+        // Message too long
+        return false;
+    }
+    return true;
+}
+
+nlohmann::json nibashared::message_send::create_response() { return {}; }
+
+nlohmann::json nibashared::message_send::create_request() {
+    return {{"name", name}, {"message", message}};
+}
+
+void nibashared::message_send::merge_response(const nlohmann::json &) {}
+
+void nibashared::message_send::from_request(const nlohmann::json &j) {
+    j.at("name").get_to(name);
+    j.at("message").get_to(message);
 }
 
 } // namespace nibashared

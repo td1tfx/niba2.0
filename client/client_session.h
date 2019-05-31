@@ -37,7 +37,6 @@ private:
         request_promise_ = std::promise<nibashared::message::type>();
         auto future = request_promise_.get_future();
         Message message(std::forward<Args>(args)...);
-        std::cout << "DEBUG spawning coroutine to handle request\n";
         // Post to ioc thread(or spawn coroutine) to avoid accessing data on 2 threads
         // particularly, request_ should be shielded
         boost::asio::spawn(ioc_, [this, self = shared_from_this(),
@@ -57,7 +56,6 @@ private:
     void write_message(Message&& message, boost::asio::yield_context yield) {
         auto request_json = message.base_create_request();
         std::string request_str = request_json.dump();
-        std::cout << "DEBUG " << request_str << "\n";
         request_.emplace(std::move(message));
         request_stopwatch_.reset();
         boost::system::error_code ec;
