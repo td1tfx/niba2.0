@@ -53,7 +53,7 @@ void server_session::go() {
                 nibautil::stopwatch stopwatch;
                 // process request and send out response
                 std::string response = processor.dispatch(request_str);
-                ws_.async_write(boost::asio::buffer(response), yield);
+                write(std::move(response));
                 BOOST_LOG_SEV(logger_, sev::info)
                     << "request processed in " << stopwatch.elapsed_ms() << "ms";
             }

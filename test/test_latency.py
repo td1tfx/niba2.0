@@ -38,14 +38,14 @@ try:
     procs = []
     stderrs = []
 
-    input_bytes = b'register niba%d doctorniba\nlogin niba%d doctorniba\ncreate nibadan%d m 1 1 2 1\nlearnmagic 1\nlearnmagic 2\nfusemagic 2 1\nreordermagic 2\nfight 1\nfight 1\nfight 1\nexit\n'
+    input_bytes = b'register niba%d doctorniba\nlogin niba%d doctorniba\ncreate nibadan%d m 1 1 2 1\nsend nibadan%d helloworld\nlearnmagic 1\nlearnmagic 2\nfusemagic 2 1\nreordermagic 2\nfight 1\nfight 1\nfight 1\nexit\n'
     # for j in range(100):
     #     input_bytes += b'fight 1\n'
 
     start = time.time()
 
     for i in range(clients):
-        proc = run_client(input_bytes % (i, i, i))
+        proc = run_client(input_bytes % (i, i, i, i-1))
         procs.append(proc)
 
     for proc in procs:
@@ -60,14 +60,18 @@ try:
         # print(stderr)
         time = 0
         requests = 0
-        for latency in stderr.split(b'\n'):
-            if latency == b'':
-                continue
-            time += float(latency)
-            requests += 1
-        avg = time / requests
-        # print(avg, 'ms')
-        total += avg
+        try:
+            for latency in stderr.split(b'\n'):
+                if latency == b'':
+                    continue
+                time += float(latency)
+                requests += 1
+            avg = time / requests
+            # print(avg, 'ms')
+            total += avg
+        except Exception as e:
+            print(stderr)
+            raise e
 
     print('average wait per request', total / clients, 'ms')
     print('overall', end - start, 's')

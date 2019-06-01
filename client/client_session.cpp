@@ -78,7 +78,8 @@ void nibaclient::client_session::start() {
                 }
             } catch (std::exception &ex) {
                 std::cout << "fatal error: " << ex.what() << "\n";
-                throw ex;
+                // throw ex;
+                break;
             }
         }
     });

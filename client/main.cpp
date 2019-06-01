@@ -50,12 +50,13 @@ int main(int argc, char **argv) {
     std::thread io_worker([&ioc] { ioc.run(); });
 
     auto session_ptr = std::make_shared<nibaclient::client_session>(host, port, ioc, ctx);
-    // This needs to be shared_ptr to use shared_from_this(), which makes our coroutines
-    // safe to access all members at all times, which is unfortunate as we can't rely
-    // on constructor and destructor for initialization and cleanup.
+    // This needs to be a shared_ptr to use shared_from_this(), which makes our coroutine
+    // safe to access all members at all times. 
+    // We can't rely on destructor for cleanup as a long running coroutine might not be done yet.
     // Another way would be that the destructor should wait for futures that the coroutine
     // would set at the end its execution.
     session_ptr->start();
+    // Use start so we can fetch the first line of input while being setup
 
     std::string line{};
 
