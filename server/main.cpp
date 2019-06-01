@@ -116,7 +116,7 @@ int main(int argc, char *argv[]) {
         for (;;) {
             cleanup_timer.async_wait(yield);
             ss_map.cleanup();
-            cleanup_timer.expires_after(std::chrono::minutes(5));
+            cleanup_timer.expires_after(std::chrono::minutes(3));
         }
     });
 

@@ -25,29 +25,9 @@ public:
     ~server_session();
     void go();
 
-    void write(std::string str) {
-        // Note this call is thread safe
-        // The queue is protected by the strand_
-        BOOST_LOG_SEV(logger_, boost::log::trivial::debug) << "write called";
-        boost::asio::spawn(strand_, [this, str{std::move(str)},
-                                     self{shared_from_this()}](boost::asio::yield_context yield) {
-            write_queue_.emplace(std::move(str));
-            BOOST_LOG_SEV(logger_, boost::log::trivial::debug) << "str enqueued";
-            if (write_queue_.size() != 1) {
-                return;
-                // Don't do anything, someone will handle it
-            }
-            for (;;) {
-                if (write_queue_.empty()) {
-                    return;
-                }
-                // write it
-                ws_.async_write(boost::asio::buffer(write_queue_.front()), yield);
-                // pop after we are done
-                write_queue_.pop();
-            }
-        });
-    }
+    // Note this call is thread safe
+    // The queue is protected by the strand_
+    void write(std::string str);
 
 private:
     boost::asio::io_context &ioc_;

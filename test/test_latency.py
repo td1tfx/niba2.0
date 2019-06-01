@@ -19,7 +19,7 @@ clients = 100
 if len(sys.argv) > 1:
     clients = int(sys.argv[1])
 
-server = subprocess.Popen([dir_path + '/niba-server'], cwd=dir_path)
+server = subprocess.Popen([dir_path + '/niba-server', 'config.json'], cwd=dir_path)
 time.sleep(1)
 
 
@@ -38,14 +38,16 @@ try:
     procs = []
     stderrs = []
 
-    input_bytes = b'register niba%d doctorniba\nlogin niba%d doctorniba\ncreate nibadan%d m 1 1 2 1\nsend nibadan%d helloworld\nlearnmagic 1\nlearnmagic 2\nfusemagic 2 1\nreordermagic 2\nfight 1\nfight 1\nfight 1\nexit\n'
+    input_bytes = b'register niba%d doctorniba\nlogin niba%d doctorniba\ncreate nibadan%d m 1 1 2 1\nsend nibadan helloworld\nlearnmagic 1\nlearnmagic 2\nfusemagic 2 1\nreordermagic 2\nfight 1\nfight 1\nfight 1\nexit\n'
     # for j in range(100):
     #     input_bytes += b'fight 1\n'
 
     start = time.time()
 
+    niba0 = run_client(b'register niba doctorniba\nlogin niba doctorniba\ncreate nibadan m 1 1 2 1\ntimeout 10\nexit\n')
+
     for i in range(clients):
-        proc = run_client(input_bytes % (i, i, i, i-1))
+        proc = run_client(input_bytes % (i, i, i))
         procs.append(proc)
 
     for proc in procs:
@@ -75,6 +77,8 @@ try:
 
     print('average wait per request', total / clients, 'ms')
     print('overall', end - start, 's')
+
+    niba0.terminate()
 
 except Exception as e:
     print(e)

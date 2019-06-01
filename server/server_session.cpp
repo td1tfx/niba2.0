@@ -25,7 +25,6 @@ server_session::~server_session() { BOOST_LOG_SEV(logger_, sev::info) << "Sessio
 
 void server_session::go() {
     auto self(shared_from_this());
-    // note only one coroutine running, strand not neccessary, but potentially we'll add more
     boost::asio::spawn(strand_, [this, self](boost::asio::yield_context yield) {
         server_processor processor(yield, db_, ss_map_, self);
         try {
@@ -65,6 +64,28 @@ void server_session::go() {
             if (processor.get_session().userid) {
                 db_.logout(*processor.get_session().userid, yield);
             }
+        }
+    });
+}
+
+void server_session::write(std::string str) {
+    BOOST_LOG_SEV(logger_, boost::log::trivial::debug) << "write called";
+    boost::asio::spawn(strand_, [this, str{std::move(str)},
+                                    self{shared_from_this()}](boost::asio::yield_context yield) {
+        write_queue_.emplace(std::move(str));
+        BOOST_LOG_SEV(logger_, boost::log::trivial::debug) << "str enqueued";
+        if (write_queue_.size() != 1) {
+            return;
+            // Don't do anything, someone will handle it
+        }
+        for (;;) {
+            if (write_queue_.empty()) {
+                return;
+            }
+            // write it
+            ws_.async_write(boost::asio::buffer(write_queue_.front()), yield);
+            // pop after we are done
+            write_queue_.pop();
         }
     });
 }

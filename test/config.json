@@ -1,0 +1,7 @@
+{
+    "host": "0.0.0.0",
+    "port": 19999,
+    "threads": 1,
+    "static_conn_str": "dbname=niba_static user=postgres",
+    "player_conn_str": "dbname=niba user=postgres"
+}

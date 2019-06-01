@@ -21,9 +21,9 @@ inline static auto &make_ozo_connector_pool(const std::string &player_conn_str) 
                                              nibashared::player, nibashared::battlestats>());
     static ozo::connection_pool_config connection_pool_config;
     // Maximum limit for number of stored connections
-    connection_pool_config.capacity = 100;
+    connection_pool_config.capacity = 10;
     // Maximum limit for number of waiting requests for connection
-    connection_pool_config.queue_capacity = 5000;
+    connection_pool_config.queue_capacity = 500;
     // Maximum time duration to store unused open connection
     connection_pool_config.idle_timeout = std::chrono::seconds(60);
     static auto connection_pool =
