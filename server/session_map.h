@@ -21,7 +21,8 @@ public:
     using session_wptr = std::weak_ptr<server_session>;
 
     session_map() = default;
-    // TODO delete copy constructor
+    session_map(const session_map &) = delete;
+    session_map &operator=(const session_map &) = delete;
 
     // Write to session of given name, returns whether person is online
     // (eg. session exists and not yet destroyed)

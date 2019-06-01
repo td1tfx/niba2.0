@@ -25,14 +25,10 @@ public:
 
     template<typename Message, typename = nibashared::IsMessage<Message>>
     void process_response(Message &m, const nlohmann::json &merge_j) {
-        try {
-            m.base_merge_response(merge_j);
-            session_.current_time = std::chrono::high_resolution_clock::now();
-            session_.earliest_time = session_.current_time;
-            process(m);
-        } catch (std::exception &e) {
-            std::cout << "Failed to process response: " << e.what() << std::endl;
-        }
+        m.base_merge_response(merge_j);
+        session_.current_time = std::chrono::high_resolution_clock::now();
+        session_.earliest_time = session_.current_time;
+        process(m);
     }
 
 private:

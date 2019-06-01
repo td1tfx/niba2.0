@@ -1,6 +1,7 @@
 #include "client_session.h"
 
 #include <boost/algorithm/string.hpp>
+#include <sstream>
 
 namespace ssl = boost::asio::ssl;       // from <boost/asio/ssl.hpp>
 namespace beast = boost::beast;         // from <boost/beast.hpp>
@@ -41,16 +42,19 @@ void nibaclient::client_session::start() {
             try {
                 ws_.async_read(buffer, yield);
                 std::cerr << request_stopwatch_.elapsed_ms() << std::endl;
-                std::cout << incoming_str << "\n";
+                // std::cout << incoming_str << "\n";
                 auto json = nlohmann::json::parse(incoming_str);
-                if (json.find("error") != json.end()) {
-                    std::string err = json["error"].get<std::string>();
-                    throw std::runtime_error(err.c_str());
-                }
                 nibashared::message::tag tag{json.at("tag").get<int>()};
                 if (request_.has_value() && tag == nibashared::message::tag::response) {
+                    if (json.find("error") != json.end()) {
+                        std::string err = json["error"].get<std::string>();
+                        std::cout << "failed to process request: " << err.c_str() << "\n";
+                        request_promise_.set_value(nibashared::message::type::none);
+                        continue;
+                    }
                     // Since we strictly wait for 1 response per request, this response must match
                     // the request. Merge it with the request and process.
+                    std::cout << "----Response----\n";
                     std::visit(
                         [&json, this, yield](auto &response) {
                             processor_.process_response(response, json);
@@ -64,21 +68,19 @@ void nibaclient::client_session::start() {
                             }
                         },
                         request_.value());
+                    std::cout << "----------------\n";
                 } else {
                     // It's some unknown message, just process it
-                    nibashared::message::dispatcher(json, [this](auto message) {
+                    nibashared::message::dispatcher(json, [this](auto &&message) {
                         // Incoming message, assume "it just works"
                         processor_.process(message);
                     });
                 }
             } catch (std::exception &ex) {
-                std::cout << "failed to process incoming message: " << ex.what() << "\n";
-                // just kill it for now
+                std::cout << "fatal error: " << ex.what() << "\n";
                 throw ex;
             }
         }
-
-        // processor_.dispatch(message, response_str);
     });
 }
 
@@ -107,6 +109,18 @@ nibaclient::client_session::handle_cmd(const std::string &input) {
             std::for_each(results.begin() + 1, results.end(),
                           [&selected](auto &magic_id) { selected.push_back(std::stoi(magic_id)); });
             return create_and_go<nibashared::message_reordermagic>(std::move(selected));
+        } else if (results[0] == "send") {
+            if (results.size() < 3) {
+                throw std::runtime_error("need more arguments");
+            }
+            std::stringstream ss;
+            for (auto iter = std::next(results.begin(), 2); iter != results.end(); ++iter) {
+                ss << *iter;
+                if (iter != std::prev(results.end())) {
+                    ss << " ";
+                }
+            }
+            return create_and_go<nibashared::message_send>(std::move(results[1]), ss.str());
         }
         if (results.size() == 3) {
             if (results[0] == "register") {
@@ -120,9 +134,6 @@ nibaclient::client_session::handle_cmd(const std::string &input) {
             } else if (results[0] == "fusemagic") {
                 return create_and_go<nibashared::message_fusemagic>(std::stoi(results[1]),
                                                                     std::stoi(results[2]));
-            } else if (results[0] == "send") {
-                return create_and_go<nibashared::message_send>(std::move(results[1]),
-                                                               std::move(results[2]));
             }
         } else if (results.size() == 2) {
             if (results[0] == "fight") {

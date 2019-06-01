@@ -80,8 +80,8 @@ int main(int argc, char **argv) {
   
         std::getline(instream, line);
 
-        std::cout << "waiting for future\n";
         // Blocks until request is completed, we may need better ways to handle it
+        // TODO try catch, 2 types of exception: ignore, terminate
         future.wait();
     }
     // Need to stop() the session so async_read would error out and eventually stop all

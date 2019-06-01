@@ -299,26 +299,36 @@ void nibashared::message_reordermagic::from_request(const nlohmann::json &j) {
     j.at("equipped_magic_ids").get_to(equipped_magic_ids);
 }
 
-nibashared::message_echo::message_echo(std::string echo_str) : echo_str(std::move(echo_str)) {}
+nibashared::message_echo::message_echo(std::string echo_str, std::string sender) :
+    echo_str{std::move(echo_str)}, sender{std::move(sender)} {}
 
 bool nibashared::message_echo::validate(const nibashared::sessionstate &) { return true; }
 
-nlohmann::json nibashared::message_echo::create_response() { return {{"echo_str", echo_str}}; }
+nlohmann::json nibashared::message_echo::create_response() {
+    return {{"echo_str", echo_str}, {"sender", sender}};
+}
 
-nlohmann::json nibashared::message_echo::create_request() { return {{"echo_str", echo_str}}; }
+nlohmann::json nibashared::message_echo::create_request() {
+    return {{"echo_str", echo_str}, {"sender", sender}};
+}
 
 void nibashared::message_echo::merge_response(const nlohmann::json &j) {
     j.at("echo_str").get_to(echo_str);
+    j.at("sender").get_to(sender);
 }
 
 void nibashared::message_echo::from_request(const nlohmann::json &j) {
     j.at("echo_str").get_to(echo_str);
+    j.at("sender").get_to(sender);
 }
 
 nibashared::message_send::message_send(std::string name, std::string message) :
     name{std::move(name)}, message{std::move(message)} {}
 
-bool nibashared::message_send::validate(const nibashared::sessionstate &) {
+bool nibashared::message_send::validate(const nibashared::sessionstate &session) {
+    if (session.state == nibashared::gamestate::prelogin) {
+        return false;
+    }
     if (message.size() > 256) {
         // Message too long
         return false;

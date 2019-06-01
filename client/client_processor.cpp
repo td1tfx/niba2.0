@@ -38,6 +38,7 @@ void nibaclient::client_processor::process(nibashared::message_getdata &req) {
     if (req.success) {
         nibashared::staticdata::init(std::move(req.characters), std::move(req.magics),
                                      std::move(req.equips), std::move(req.maps));
+        std::cout << "data initialized" << std::endl;
     } else {
         std::cout << "unable to fetch gamedata" << std::endl;
         // probably should crash
@@ -105,8 +106,7 @@ void nibaclient::client_processor::process(nibashared::message_reordermagic &req
 }
 
 void nibaclient::client_processor::process(nibashared::message_echo& msg) {
-    // here is the problem, writing the iostream while reading an input could be weird
-    std::cout << msg.echo_str << std::endl;
+    std::cout << msg.sender << ": " << msg.echo_str << std::endl;
 }
 
 void nibaclient::client_processor::process(nibashared::message_send& req) {

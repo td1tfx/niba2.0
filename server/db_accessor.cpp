@@ -18,8 +18,11 @@ constexpr std::size_t HASH_SIZE = 32;
 
 #define CHECKDBERROR(ec, conn, ret)                                                                \
     if (ec) {                                                                                      \
-        BOOST_LOG_SEV(logger_, sev::error) << ec.message() << " | " << ozo::error_message(conn)    \
-                                           << " | " << ozo::get_error_context(conn);               \
+        BOOST_LOG_SEV(logger_, sev::error) << ec.message();                                        \
+        if (!ozo::is_null_recursive(conn)) {                                                       \
+            BOOST_LOG_SEV(logger_, sev::error)                                                     \
+                << ozo::error_message(conn) << " | " << ozo::get_error_context(conn);              \
+        }                                                                                          \
         return ret;                                                                                \
     }
 
@@ -146,8 +149,6 @@ nibashared::playerdata nibaserver::db_accessor::get_aux(const std::string &name,
                                                         boost::asio::yield_context &yield) {
     BOOST_LOG_SEV(logger_, sev::info) << "fetching character magic and equips for " << name;
     nibashared::playerdata ret;
-    // auto &equips = ret.second;
-    // ?? looking for ways to fix this
     ozo::rows_of<nibashared::magic> rows;
     ozo::error_code ec{};
     auto conn = ozo::request(get_connector(),
@@ -159,17 +160,16 @@ nibashared::playerdata nibaserver::db_accessor::get_aux(const std::string &name,
     }
     BOOST_LOG_SEV(logger_, sev::info) << "getting player magics " << name;
     ozo::rows_of<std::vector<int>> equipped_magic_rows;
-    conn = ozo::request(
-        get_connector(), "SELECT magics FROM character_equipped_magic WHERE character_name = "_SQL + name,
-        ozo::into(equipped_magic_rows), yield[ec]);
+    conn = ozo::request(get_connector(),
+                        "SELECT magics FROM character_equipped_magic WHERE character_name = "_SQL +
+                            name,
+                        ozo::into(equipped_magic_rows), yield[ec]);
     if (equipped_magic_rows.size() != 0) {
         ret.equipped_magic_ids = std::get<0>(equipped_magic_rows.back());
     }
     CHECKDBERROR(ec, conn, ret);
-    // TODO: also grab map right here
 
     return ret;
-    // skipping equipments for now...hoping there is a fix and we don't need to do this anymore
 }
 
 bool db_accessor::create_char(const std::string &id, const nibashared::player &player,

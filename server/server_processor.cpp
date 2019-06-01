@@ -28,7 +28,7 @@ std::string server_processor::dispatch(const std::string &request) {
         session_.earliest_time = session_.current_time;
 
         auto j = nlohmann::json::parse(request);
-        return nibashared::message::dispatcher(j, [this](auto req) {
+        return nibashared::message::dispatcher(j, [this](auto &&req) {
             if (!req.base_validate(session_)) {
                 throw std::runtime_error("validation failure");
             }
@@ -40,7 +40,8 @@ std::string server_processor::dispatch(const std::string &request) {
     catch (std::exception &e) {
         BOOST_LOG_SEV(logger_, sev::info) << "dispatch failure: " << e.what();
     }
-    nlohmann::json error_msg{{"error", "request error"}};
+    nlohmann::json error_msg{{"error", "request error"},
+                             {"tag", nibashared::message::tag::response}};
     return error_msg.dump();
 }
 
@@ -221,8 +222,9 @@ void nibaserver::server_processor::process(nibashared::message_reordermagic &req
 void nibaserver::server_processor::process(nibashared::message_echo &) {}
 
 void nibaserver::server_processor::process(nibashared::message_send &req) {
-    BOOST_LOG_SEV(logger_, sev::info) << session_.player.value().name << " sending message to " << req.name;
-    nibashared::message_echo echo{std::move(req.message)};
+    BOOST_LOG_SEV(logger_, sev::info)
+        << session_.player.value().name << " sending message to " << req.name;
+    nibashared::message_echo echo{std::move(req.message), session_.player.value().name};
     req.success = ss_map_.write(req.name, echo.base_create_request().dump());
 }
 
