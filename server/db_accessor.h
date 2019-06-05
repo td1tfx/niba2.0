@@ -52,7 +52,7 @@ public:
 
 private:
     auto get_connector() {
-        return make_ozo_connector(conn_pool_, ioc_);
+        return conn_pool_[ioc_];
     }
 
     logger logger_;

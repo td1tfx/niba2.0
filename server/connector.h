@@ -34,15 +34,4 @@ inline static auto &make_ozo_connector_pool(const std::string &player_conn_str) 
 using niba_ozo_connection_pool_ref =
     std::invoke_result_t<decltype(&make_ozo_connector_pool), const std::string &>;
 
-inline auto make_ozo_connector(niba_ozo_connection_pool_ref &pool, boost::asio::io_context &ioc) {
-    ozo::connection_pool_timeouts timeouts;
-    timeouts.connect = std::chrono::seconds(10);
-    timeouts.queue = std::chrono::seconds(10);
-    return ozo::make_connector(pool, ioc, timeouts);
-}
-
-using niba_ozo_connector =
-    std::invoke_result_t<decltype(&make_ozo_connector), niba_ozo_connection_pool_ref &,
-                         boost::asio::io_context &>;
-
 } // namespace nibaserver

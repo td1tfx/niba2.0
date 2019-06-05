@@ -71,8 +71,8 @@ int main(int argc, char *argv[]) {
 
         // TODO: move elsewhere
         // reset the login status on start up
-        auto connector = make_ozo_connector(connection_pool, ioc);
-        auto conn = ozo::execute(connector, "UPDATE user_id SET logged_in = false WHERE 1 = 1"_SQL,
+        auto conn = ozo::execute(connection_pool[ioc], "UPDATE user_id SET logged_in = false WHERE 1 = 1"_SQL,
+                                 ozo::deadline(std::chrono::seconds(5)),
                                  yield[ec]);
         if (ec) {
             BOOST_LOG_SEV(logger, sev::error) << ec.message() << " | " << ozo::error_message(conn)
