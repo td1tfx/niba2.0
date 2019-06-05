@@ -10,7 +10,7 @@
 
 #include <chrono>
 #include <condition_variable>
-#include <fstream>
+// #include <fstream>
 #include <future>
 #include <iostream>
 #include <memory>
@@ -28,14 +28,23 @@ namespace ssl = boost::asio::ssl;              // from <boost/asio/ssl.hpp>
 namespace websocket = boost::beast::websocket; // from <boost/beast/websocket.hpp>
 
 int main(int argc, char **argv) {
-    std::unique_ptr<std::ifstream> fin{};
-    if (argc == 2) {
-        fin = std::make_unique<std::ifstream>(argv[1]);
-    }
-    std::istream &instream = fin ? *fin : std::cin;
+    // std::unique_ptr<std::ifstream> fin{};
+    // if (argc == 2) {
+    //     fin = std::make_unique<std::ifstream>(argv[1]);
+    // }
+    // std::istream &instream = fin ? *fin : std::cin;
+
+    // disable fstream in for now
+    std::istream &instream = std::cin;
 
     std::string host{"localhost"};
     std::string port{"19999"};
+    if (argc >= 2) {
+        host = argv[1];
+    }
+    if (argc == 3) {
+        port = argv[2];
+    }
 
     // The SSL context is required, and holds certificates
     ssl::context ctx{ssl::context::sslv23_client};
@@ -51,7 +60,7 @@ int main(int argc, char **argv) {
 
     auto session_ptr = std::make_shared<nibaclient::client_session>(host, port, ioc, ctx);
     // This needs to be a shared_ptr to use shared_from_this(), which makes our coroutine
-    // safe to access all members at all times. 
+    // safe to access all members at all times.
     // We can't rely on destructor for cleanup as a long running coroutine might not be done yet.
     // Another way would be that the destructor should wait for futures that the coroutine
     // would set at the end its execution.
@@ -76,9 +85,9 @@ int main(int argc, char **argv) {
             std::cout << "cooldown " << delay.count() << "ns" << std::endl;
             std::this_thread::sleep_for(delay);
         }
-        
+
         auto future = session_ptr->handle_cmd(line);
-  
+
         std::getline(instream, line);
 
         // Blocks until request is completed, we may need better ways to handle it
