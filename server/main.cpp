@@ -56,7 +56,7 @@ int main(int argc, char *argv[]) {
 
     // This holds the self-signed certificate used by the server
     load_server_certificate(ctx);
-    auto &connection_pool = make_ozo_connector_pool(conf.player_conn_str);
+    auto connection_pool = make_ozo_connector_pool(conf.player_conn_str);
 
     // We need a global session weakptr to handle player connections
     // and a timer to periodically cleanup the weakptr

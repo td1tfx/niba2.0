@@ -18,7 +18,7 @@ namespace nibaserver {
 
 class db_accessor {
 public:
-    db_accessor(niba_ozo_connection_pool_ref &conn_pool, boost::asio::io_context &ioc);
+    db_accessor(niba_ozo_connection_pool &conn_pool, boost::asio::io_context &ioc);
     // ~db_accessor() = default;
     bool login(const std::string &id, const std::string &password,
                boost::asio::yield_context &yield);
@@ -51,13 +51,9 @@ public:
                       boost::asio::yield_context &yield);
 
 private:
-    auto get_connector() {
-        return conn_pool_[ioc_];
-    }
-
     logger logger_;
-    niba_ozo_connection_pool_ref& conn_pool_;
-    boost::asio::io_context& ioc_;
+    niba_ozo_connection_pool &conn_pool_;
+    boost::asio::io_context &ioc_;
 };
 
 } // namespace nibaserver

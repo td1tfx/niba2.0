@@ -28,7 +28,7 @@ constexpr auto default_timeout = std::chrono::seconds(10);
         return ret;                                                                                \
     }
 
-db_accessor::db_accessor(niba_ozo_connection_pool_ref &conn_pool, boost::asio::io_context &ioc) :
+db_accessor::db_accessor(niba_ozo_connection_pool &conn_pool, boost::asio::io_context &ioc) :
     conn_pool_(conn_pool), ioc_(ioc) {
     logger_ = logger();
 }
@@ -38,7 +38,7 @@ bool db_accessor::login(const std::string &id, const std::string &password,
     ozo::error_code ec{};
     ozo::rows_of<std::string, ozo::pg::bytea, ozo::pg::bytea, bool> user_credential;
     auto conn =
-        ozo::request(get_connector(),
+        ozo::request(conn_pool_[ioc_],
                      "SELECT id, hashed_password, salt, logged_in FROM user_id WHERE id="_SQL + id,
                      ozo::deadline(default_timeout), ozo::into(user_credential), yield[ec]);
     CHECKDBERROR(ec, conn, false);
@@ -77,7 +77,7 @@ bool db_accessor::login(const std::string &id, const std::string &password,
             return false;
         }
 
-        ozo::execute(get_connector(), "UPDATE user_id SET logged_in = true WHERE id="_SQL + id,
+        ozo::execute(conn_pool_[ioc_], "UPDATE user_id SET logged_in = true WHERE id="_SQL + id,
                      ozo::deadline(default_timeout), yield[ec]);
         CHECKDBERROR(ec, conn, false);
         return true;
@@ -89,7 +89,7 @@ bool db_accessor::login(const std::string &id, const std::string &password,
 bool db_accessor::logout(const std::string &id, boost::asio::yield_context &yield) {
     ozo::error_code ec{};
     auto conn =
-        ozo::execute(get_connector(), "UPDATE user_id SET logged_in = false WHERE id="_SQL + id,
+        ozo::execute(conn_pool_[ioc_], "UPDATE user_id SET logged_in = false WHERE id="_SQL + id,
                      ozo::deadline(default_timeout), yield[ec]);
     CHECKDBERROR(ec, conn, false);
     return true;
@@ -122,7 +122,7 @@ bool db_accessor::create_user(const std::string &id, const std::string &password
     ozo::pg::bytea salt_bytea(std::move(salt));
     ozo::pg::bytea pswd_bytea(std::move(hashed_password));
 
-    auto conn = ozo::execute(get_connector(),
+    auto conn = ozo::execute(conn_pool_[ioc_],
                              "INSERT INTO user_id (id, hashed_password, salt) VALUES ("_SQL + id +
                                  ","_SQL + pswd_bytea + ","_SQL + salt_bytea + ")"_SQL,
                              ozo::deadline(default_timeout), yield[ec]);
@@ -140,7 +140,7 @@ nibaserver::db_accessor::get_char(const std::string &id, boost::asio::yield_cont
     // TODO: do something else, for example change how player is layed out
     ozo::rows_of<nibashared::player> characters;
     auto conn =
-        ozo::request(get_connector(), "SELECT character FROM player_character WHERE id="_SQL + id,
+        ozo::request(conn_pool_[ioc_], "SELECT character FROM player_character WHERE id="_SQL + id,
                      ozo::deadline(default_timeout), ozo::into(characters), yield[ec]);
     CHECKDBERROR(ec, conn, {});
     if (characters.size() == 0)
@@ -154,7 +154,7 @@ nibashared::playerdata nibaserver::db_accessor::get_aux(const std::string &name,
     nibashared::playerdata ret;
     ozo::rows_of<nibashared::magic> rows;
     ozo::error_code ec{};
-    auto conn = ozo::request(get_connector(),
+    auto conn = ozo::request(conn_pool_[ioc_],
                              "SELECT magic FROM player_magic WHERE character_name="_SQL + name,
                              ozo::deadline(default_timeout), ozo::into(rows), yield[ec]);
     CHECKDBERROR(ec, conn, ret);
@@ -163,7 +163,7 @@ nibashared::playerdata nibaserver::db_accessor::get_aux(const std::string &name,
     }
     BOOST_LOG_SEV(logger_, sev::info) << "getting player magics " << name;
     ozo::rows_of<std::vector<int>> equipped_magic_rows;
-    conn = ozo::request(get_connector(),
+    conn = ozo::request(conn_pool_[ioc_],
                         "SELECT magics FROM character_equipped_magic WHERE character_name = "_SQL +
                             name,
                         ozo::deadline(default_timeout), ozo::into(equipped_magic_rows), yield[ec]);
@@ -179,7 +179,7 @@ bool db_accessor::create_char(const std::string &id, const nibashared::player &p
                               boost::asio::yield_context &yield) {
     ozo::error_code ec{};
     // the insert string is unfortunately long and hand written
-    auto conn = ozo::execute(get_connector(),
+    auto conn = ozo::execute(conn_pool_[ioc_],
                              "INSERT INTO player_character(id, character) VALUES("_SQL + id +
                                  ","_SQL + player + ")"_SQL,
                              ozo::deadline(default_timeout), yield[ec]);
@@ -196,7 +196,7 @@ bool db_accessor::create_magic(const std::string &player_name, const nibashared:
     auto query = "INSERT INTO player_magic(character_name, magic_id, magic) VALUES("_SQL +
                  player_name + ","_SQL + magic.magic_id + ","_SQL + magic + ")"_SQL;
 
-    auto conn = ozo::execute(get_connector(), query, ozo::deadline(default_timeout), yield[ec]);
+    auto conn = ozo::execute(conn_pool_[ioc_], query, ozo::deadline(default_timeout), yield[ec]);
     CHECKDBERROR(ec, conn, false);
     return true;
 }
@@ -206,7 +206,7 @@ bool db_accessor::fuse_magic(const std::string &player_name, const nibashared::m
                              boost::asio::yield_context &yield) {
     ozo::error_code ec{};
 
-    auto transaction = ozo::begin(get_connector(), yield);
+    auto transaction = ozo::begin(conn_pool_[ioc_], yield);
     ozo::result result;
     auto query = "UPDATE player_magic SET magic = "_SQL + magic + " WHERE character_name = "_SQL +
                  player_name + " AND "_SQL + " magic_id = "_SQL + magic.magic_id;
@@ -244,7 +244,7 @@ bool db_accessor::equip_magics(const std::string &player_name,
                                boost::asio::yield_context &yield) {
     ozo::error_code ec{};
     auto conn = ozo::execute(
-        get_connector(),
+        conn_pool_[ioc_],
         "INSERT INTO character_equipped_magic(character_name, magics) VALUES("_SQL + player_name +
             ","_SQL + equipped_magic_ids +
             ") ON CONFLICT (character_name) DO UPDATE SET magics ="_SQL + equipped_magic_ids,
