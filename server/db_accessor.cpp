@@ -163,10 +163,9 @@ nibashared::playerdata nibaserver::db_accessor::get_aux(const std::string &name,
     }
     BOOST_LOG_SEV(logger_, sev::info) << "getting player magics " << name;
     ozo::rows_of<std::vector<int>> equipped_magic_rows;
-    conn = ozo::request(conn,
-                        "SELECT magics FROM character_equipped_magic WHERE character_name = "_SQL +
-                            name,
-                        ozo::deadline(default_timeout), ozo::into(equipped_magic_rows), yield[ec]);
+    conn = ozo::request(
+        conn, "SELECT magics FROM character_equipped_magic WHERE character_name = "_SQL + name,
+        ozo::deadline(default_timeout), ozo::into(equipped_magic_rows), yield[ec]);
     CHECKDBERROR(ec, conn, ret);
     if (equipped_magic_rows.size() != 0) {
         ret.equipped_magic_ids = std::get<0>(equipped_magic_rows.back());
@@ -205,11 +204,11 @@ bool db_accessor::fuse_magic(const std::string &player_name, const nibashared::m
                              boost::asio::yield_context &yield) {
     ozo::error_code ec{};
 
-    auto transaction = ozo::begin(conn_pool_[ioc_], yield);
+    auto transaction = ozo::begin(conn_pool_[ioc_], ozo::deadline(default_timeout), yield);
     ozo::result result;
     auto query = "UPDATE player_magic SET magic = "_SQL + magic + " WHERE character_name = "_SQL +
                  player_name + " AND "_SQL + " magic_id = "_SQL + magic.magic_id;
-    ozo::request(transaction, query, std::ref(result), yield[ec]);
+    ozo::request(transaction, query, ozo::deadline(default_timeout), std::ref(result), yield[ec]);
     if (ec) {
         BOOST_LOG_SEV(logger_, sev::error) << ec.message() << "111";
         return false;
@@ -232,7 +231,7 @@ bool db_accessor::fuse_magic(const std::string &player_name, const nibashared::m
         BOOST_LOG_SEV(logger_, sev::error) << ec.message() << "333";
         return false;
     }
-    auto conn = ozo::commit(std::move(transaction), yield[ec]);
+    auto conn = ozo::commit(std::move(transaction), ozo::deadline(default_timeout), yield[ec]);
 
     CHECKDBERROR(ec, conn, false);
     return true;
