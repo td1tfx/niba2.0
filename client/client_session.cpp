@@ -40,7 +40,15 @@ void nibaclient::client_session::start() {
             std::string incoming_str;
             auto buffer = boost::asio::dynamic_buffer(incoming_str);
             try {
-                ws_.async_read(buffer, yield);
+                beast::error_code ec;
+                ws_.async_read(buffer, yield[ec]);
+                if (ec == beast::websocket::error::closed ||
+                    ec == boost::asio::error::operation_aborted) {
+                    return;
+                } else if (ec) {
+                    std::cerr << "read fatal error: " << ec.message() << std::endl;
+                    return;
+                }
                 std::cerr << request_stopwatch_.elapsed_ms() << std::endl;
                 // std::cout << incoming_str << "\n";
                 auto json = nlohmann::json::parse(incoming_str);
@@ -77,9 +85,10 @@ void nibaclient::client_session::start() {
                     });
                 }
             } catch (std::exception &ex) {
-                std::cout << "fatal error: " << ex.what() << "\n";
-                // throw ex;
+                // TODO maybe just remove the catch
+                std::cerr << "fatal error: " << ex.what() << "\n";
                 break;
+                // throw ex;
             }
         }
     });
@@ -89,11 +98,16 @@ void nibaclient::client_session::block_until_ready() { ready_future_.get(); }
 
 void nibaclient::client_session::stop() {
     // Exceptions may happen in the destructor, but if it throws, then let it crash...?
-    if (ws_.is_open()) {
-        // ioc should finish the close before shutting down
-        ws_.async_close(websocket::close_code::normal,
-                        [](beast::error_code ec) { std::cout << ec.message() << std::endl; });
-    }
+    boost::asio::spawn(ioc_, [this, self = shared_from_this()](boost::asio::yield_context yield) {
+        if (ws_.is_open()) {
+            // ioc should finish the close before shutting down
+            beast::error_code ec;
+            ws_.async_close(websocket::close_code::normal, yield[ec]);
+            if (ec && ec != boost::asio::error::operation_aborted) {
+                std::cerr << "Close error: " << ec.message() << std::endl;
+            }
+        }
+    });
 }
 
 std::future<nibashared::message::type>
