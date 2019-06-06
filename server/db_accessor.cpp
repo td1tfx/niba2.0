@@ -77,7 +77,7 @@ bool db_accessor::login(const std::string &id, const std::string &password,
             return false;
         }
 
-        ozo::execute(conn_pool_[ioc_], "UPDATE user_id SET logged_in = true WHERE id="_SQL + id,
+        ozo::execute(conn, "UPDATE user_id SET logged_in = true WHERE id="_SQL + id,
                      ozo::deadline(default_timeout), yield[ec]);
         CHECKDBERROR(ec, conn, false);
         return true;
@@ -163,15 +163,14 @@ nibashared::playerdata nibaserver::db_accessor::get_aux(const std::string &name,
     }
     BOOST_LOG_SEV(logger_, sev::info) << "getting player magics " << name;
     ozo::rows_of<std::vector<int>> equipped_magic_rows;
-    conn = ozo::request(conn_pool_[ioc_],
+    conn = ozo::request(conn,
                         "SELECT magics FROM character_equipped_magic WHERE character_name = "_SQL +
                             name,
                         ozo::deadline(default_timeout), ozo::into(equipped_magic_rows), yield[ec]);
+    CHECKDBERROR(ec, conn, ret);
     if (equipped_magic_rows.size() != 0) {
         ret.equipped_magic_ids = std::get<0>(equipped_magic_rows.back());
     }
-    CHECKDBERROR(ec, conn, ret);
-
     return ret;
 }
 
