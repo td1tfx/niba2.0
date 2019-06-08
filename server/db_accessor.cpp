@@ -126,6 +126,9 @@ bool db_accessor::create_user(const std::string &id, const std::string &password
                              "INSERT INTO user_id (id, hashed_password, salt) VALUES ("_SQL + id +
                                  ","_SQL + pswd_bytea + ","_SQL + salt_bytea + ")"_SQL,
                              ozo::deadline(default_timeout), yield[ec]);
+    if (ec == ozo::sqlstate::make_error_code(ozo::sqlstate::unique_violation)) {
+        return false;
+    }
     CHECKDBERROR(ec, conn, false);
 
     return true;
@@ -181,8 +184,9 @@ bool db_accessor::create_char(const std::string &id, const nibashared::player &p
                              "INSERT INTO player_character(id, character) VALUES("_SQL + id +
                                  ","_SQL + player + ")"_SQL,
                              ozo::deadline(default_timeout), yield[ec]);
-
-    // might not be an error
+    if (ec == ozo::sqlstate::make_error_code(ozo::sqlstate::unique_violation)) {
+        return false;
+    }
     CHECKDBERROR(ec, conn, false);
     return true;
 }

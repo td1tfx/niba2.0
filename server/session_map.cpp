@@ -9,7 +9,7 @@ bool session_map::write(const std::string &name, std::string &&data) {
     std::shared_lock lock{mutex_};
     if (auto iter = map_.find(name); iter != map_.end()) {
         if (auto ptr = iter->second.lock()) {
-            ptr->write(std::move(data));
+            ptr->write(name, std::move(data));
             return true;
         }
     }
@@ -38,6 +38,13 @@ bool session_map::register_session(const std::string &name, session_wptr wptr) {
     }
     map_.emplace(name, wptr);
     return true;
+}
+
+void session_map::remove(const std::string& name) {
+    std::unique_lock{mutex_};
+    if (auto iter = map_.find(name); iter != map_.end()) {
+        map_.erase(iter);
+    }
 }
 
 } // namespace nibaserver

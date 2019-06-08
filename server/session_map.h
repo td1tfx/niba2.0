@@ -35,7 +35,10 @@ public:
     // Register, session
     // Once user logs in properly, add to map_
     // if a valid entry exists, then deny the login
-    bool register_session(const std::string &, session_wptr wptr);
+    bool register_session(const std::string &name, session_wptr wptr);
+
+    // Attempt to remove a session, usually the session itself on destruction
+    void remove(const std::string& name);
 
 private:
     std::shared_mutex mutex_;

@@ -27,7 +27,7 @@ public:
 
     // Note this call is thread safe
     // The queue is protected by the strand_
-    void write(std::string str);
+    void write(std::string name, std::string str);
 
 private:
     boost::asio::io_context &ioc_;

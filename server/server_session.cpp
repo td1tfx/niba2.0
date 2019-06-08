@@ -45,33 +45,41 @@ void server_session::go() {
                 std::string request_str;
                 auto buffer = boost::asio::dynamic_buffer(request_str);
                 nibautil::stopwatch stopwatch_next_request;
-                ws_.async_read(buffer, yield);
+                boost::system::error_code ec;
+                ws_.async_read(buffer, yield[ec]);
+                if (ec) {
+                    BOOST_LOG_SEV(logger_, sev::info) << "Session ending, reason: " << ec.message();
+                    break;
+                }
                 BOOST_LOG_SEV(logger_, sev::info)
                     << "idled for " << stopwatch_next_request.elapsed_ms() << "ms";
                 // check how long the request itself is processed
                 nibautil::stopwatch stopwatch;
                 // process request and send out response
                 std::string response = processor.dispatch(request_str);
-                write(std::move(response));
+                // current session writes doesn't have a name, empty strings are also cheap
+                write({}, std::move(response));
                 BOOST_LOG_SEV(logger_, sev::info)
                     << "request processed in " << stopwatch.elapsed_ms() << "ms";
             }
         }
         // unrecoverable error
         catch (std::exception &e) {
-            // moving this logging line to the end will cause crashes
             BOOST_LOG_SEV(logger_, sev::info) << "Session ending, reason: " << e.what();
-            if (processor.get_session().userid) {
-                db_.logout(*processor.get_session().userid, yield);
-            }
+        }
+        if (processor.get_session().player) {
+            ss_map_.remove(processor.get_session().player.value().name);
+        }
+        if (processor.get_session().userid) {
+            db_.logout(processor.get_session().userid.value(), yield);
         }
     });
 }
 
-void server_session::write(std::string str) {
+void server_session::write(std::string name, std::string str) {
     BOOST_LOG_SEV(logger_, boost::log::trivial::debug) << "write called";
-    boost::asio::spawn(strand_, [this, str{std::move(str)},
-                                    self{shared_from_this()}](boost::asio::yield_context yield) {
+    boost::asio::spawn(strand_, [this, name{std::move(name)}, str{std::move(str)},
+                                 self{shared_from_this()}](boost::asio::yield_context yield) {
         write_queue_.emplace(std::move(str));
         BOOST_LOG_SEV(logger_, boost::log::trivial::debug) << "str enqueued";
         if (write_queue_.size() != 1) {
@@ -83,9 +91,19 @@ void server_session::write(std::string str) {
                 return;
             }
             // write it
-            ws_.async_write(boost::asio::buffer(write_queue_.front()), yield);
-            // pop after we are done
+            boost::system::error_code ec;
+            ws_.async_write(boost::asio::buffer(write_queue_.front()), yield[ec]);
+            // pop after we are done writing
             write_queue_.pop();
+            if (ec == beast::websocket::error::closed ||
+                ec == boost::asio::error::operation_aborted) {
+                return;
+            } else if (ec) {
+                // TODO: find a better way to identify a session
+                BOOST_LOG_SEV(logger_, sev::warning)
+                    << "Write to session: " << name << " failed: " << ec.message();
+                return;
+            }
         }
     });
 }
