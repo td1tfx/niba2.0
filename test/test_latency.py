@@ -80,9 +80,14 @@ try:
             print(stderr)
             # raise e
 
+    # stdout, stderr = niba0.communicate()
+    # print(stdout)
+    niba0.stdin.write("\nexit\n")
+
     print('average wait per request', total / clients, 'ms')
     print('overall', end - start, 's')
-    
+
+
 except Exception as e:
     print(e)
 

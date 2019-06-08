@@ -6,7 +6,7 @@
 namespace nibaserver {
 
 bool session_map::write(const std::string &name, std::string &&data) {
-    std::lock_guard<std::mutex> guard(mutex_);
+    std::shared_lock lock{mutex_};
     if (auto iter = map_.find(name); iter != map_.end()) {
         if (auto ptr = iter->second.lock()) {
             ptr->write(std::move(data));
@@ -17,7 +17,7 @@ bool session_map::write(const std::string &name, std::string &&data) {
 }
 
 void session_map::cleanup() {
-    std::lock_guard<std::mutex> guard(mutex_);
+    std::unique_lock lock{mutex_};
     for (auto it = map_.begin(); it != map_.end();) {
         if (it->second.expired()) {
             it = map_.erase(it);
@@ -28,7 +28,7 @@ void session_map::cleanup() {
 }
 
 bool session_map::register_session(const std::string &name, session_wptr wptr) {
-    std::lock_guard<std::mutex> guard(mutex_);
+    std::unique_lock lock{mutex_};
     if (auto iter = map_.find(name); iter != map_.end()) {
         if (!iter->second.expired()) {
             return false;

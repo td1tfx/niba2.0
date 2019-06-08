@@ -3,7 +3,7 @@
 #include "logger.h"
 
 #include <memory>
-#include <mutex>
+#include <shared_mutex>
 #include <string>
 #include <unordered_map>
 
@@ -38,7 +38,7 @@ public:
     bool register_session(const std::string &, session_wptr wptr);
 
 private:
-    std::mutex mutex_;
+    std::shared_mutex mutex_;
     std::unordered_map<std::string, session_wptr> map_;
     logger logger_;
 };
