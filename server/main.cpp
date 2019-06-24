@@ -110,13 +110,14 @@ int main(int argc, char *argv[]) {
     });
 
     // session_ptr clean up
+    constexpr auto interval = std::chrono::minutes(5);  // TODO: make it configurable
     boost::asio::steady_timer cleanup_timer{ioc};
-    cleanup_timer.expires_after(std::chrono::minutes(5));
+    cleanup_timer.expires_after(interval);
     boost::asio::spawn(ioc, [&cleanup_timer, &ss_map](boost::asio::yield_context yield) {
         for (;;) {
             cleanup_timer.async_wait(yield);
             ss_map.cleanup();
-            cleanup_timer.expires_after(std::chrono::minutes(3));
+            cleanup_timer.expires_after(interval);
         }
     });
 

@@ -200,7 +200,7 @@ struct message_echo : public base_message<message_echo> {
     const message::type type = message::type::echo;
 
     message_echo() = default;
-    explicit message_echo(std::string echo_str, std::string sender);
+    message_echo(std::string echo_str, std::string sender);
     bool validate(const nibashared::sessionstate &session);
     nlohmann::json create_response();
     nlohmann::json create_request();
@@ -214,7 +214,7 @@ struct message_echo : public base_message<message_echo> {
 struct message_send : public base_message<message_send> {
     const message::type type = message::type::send;
     message_send() = default;
-    explicit message_send(std::string name, std::string message);
+    message_send(std::string name, std::string message);
     bool validate(const nibashared::sessionstate &session);
     nlohmann::json create_response();
     nlohmann::json create_request();
