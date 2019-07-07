@@ -6,110 +6,106 @@
 #include <boost/asio/spawn.hpp>
 #include <boost/beast/http.hpp>
 
-using tcp = boost::asio::ip::tcp;              // from <boost/asio/ip/tcp.hpp>
-namespace ssl = boost::asio::ssl;              // from <boost/asio/ssl.hpp>
-namespace websocket = boost::beast::websocket; // from <boost/beast/websocket.hpp>
+using tcp = boost::asio::ip::tcp;       // from <boost/asio/ip/tcp.hpp>
+namespace beast = boost::beast;         // from <boost/beast.hpp>
+namespace http = beast::http;           // from <boost/beast/http.hpp>
+namespace ssl = boost::asio::ssl;       // from <boost/asio/ssl.hpp>
+namespace websocket = beast::websocket; // from <boost/beast/websocket.hpp>
 namespace sev = boost::log::trivial;
-using namespace nibaserver;
+
+namespace nibaserver {
 
 server_session::server_session(boost::asio::io_context &ioc, boost::asio::ip::tcp::socket &&socket,
-                               boost::asio::ssl::context &ctx, nibaserver::db_accessor &&db) :
-    ioc_(ioc),
-    strand_(ioc_), socket_(std::move(socket)), ws_(socket_, ctx),
-    timer_(socket_.get_executor().context(), (std::chrono::steady_clock::time_point::max)()),
-    db_(std::move(db)) {}
+                               boost::asio::ssl::context &ctx, nibaserver::db_accessor &&db,
+                               session_map &ss_map) :
+    ioc_{ioc},
+    strand_{ioc_}, ws_{std::move(socket), ctx}, db_{std::move(db)}, ss_map_{ss_map} {}
 
 server_session::~server_session() { BOOST_LOG_SEV(logger_, sev::info) << "Session destructed"; }
 
 void server_session::go() {
-    // 2 coroutines - use same strand
-    auto self1(shared_from_this());
-    boost::asio::spawn(strand_, [this, self1](boost::asio::yield_context yield) {
-        server_processor processor(yield, db_);
+    auto self(shared_from_this());
+    boost::asio::spawn(strand_, [this, self](boost::asio::yield_context yield) {
+        server_processor processor(yield, db_, ss_map_, self);
         try {
-            // control callback is not a completion handler!
-            ws_.control_callback([this](boost::beast::websocket::frame_type kind,
-                                        boost::beast::string_view payload) {
-                // control frames here are pongs
-                boost::ignore_unused(kind, payload);
-                ping_state_ = pingstate::responsive; // responsive
-                timer_.expires_after(std::chrono::seconds(TIMEOUT));
-            });
+            boost::beast::get_lowest_layer(ws_).expires_after(std::chrono::seconds(30));
             ws_.next_layer().async_handshake(ssl::stream_base::server, yield);
+            boost::beast::get_lowest_layer(ws_).expires_never();
+            ws_.set_option(
+                websocket::stream_base::timeout::suggested(boost::beast::role_type::server));
             // Accept the websocket handshake
-            ws_.async_accept_ex(
-                [](boost::beast::websocket::response_type &m) {
-                    // js-websocket(or chrome) require this field to be non-empty
-                    m.insert(boost::beast::http::field::sec_websocket_protocol, "niba-server");
-                },
-                yield);
-
+            ws_.set_option(websocket::stream_base::decorator([](websocket::response_type &res) {
+                // might only need one
+                res.set(http::field::server, "niba-server");
+                res.insert(http::field::sec_websocket_protocol, "niba-server");
+            }));
+            ws_.async_accept(yield);
             for (;;) {
                 // recv request
                 std::string request_str;
                 auto buffer = boost::asio::dynamic_buffer(request_str);
                 nibautil::stopwatch stopwatch_next_request;
-                ws_.async_read(buffer, yield);
+                boost::system::error_code ec;
+                ws_.async_read(buffer, yield[ec]);
+                if (ec) {
+                    BOOST_LOG_SEV(logger_, sev::info) << "Session ending, reason: " << ec.message();
+                    break;
+                }
                 BOOST_LOG_SEV(logger_, sev::info)
-                    << "idled for " << stopwatch_next_request.elapsed_ms() << "ms";                
+                    << "idled for " << stopwatch_next_request.elapsed_ms() << "ms";
                 // check how long the request itself is processed
                 nibautil::stopwatch stopwatch;
-                // reset ping state, and timer as well
-                ping_state_ = pingstate::responsive;
-                timer_.expires_after(std::chrono::seconds(TIMEOUT));
                 // process request and send out response
                 std::string response = processor.dispatch(request_str);
-                ws_.async_write(boost::asio::buffer(response), yield);
+                // current session writes doesn't have a name, empty strings are also cheap
+                write({}, std::move(response));
                 BOOST_LOG_SEV(logger_, sev::info)
                     << "request processed in " << stopwatch.elapsed_ms() << "ms";
             }
         }
         // unrecoverable error
         catch (std::exception &e) {
-            // moving this logging line to the end will cause crashes
             BOOST_LOG_SEV(logger_, sev::info) << "Session ending, reason: " << e.what();
-            if (processor.get_session().userid) {
-                db_.logout(*processor.get_session().userid, yield);
-            }
-            close_down_ = true;
-            boost::system::error_code ec;
-            timer_.cancel(ec);
         }
-    });
-
-    auto self2(shared_from_this());
-    boost::asio::spawn(strand_, [this, self2](boost::asio::yield_context yield) {
-        boost::system::error_code ec;
-        try {
-            for (;;) {
-                if (close_down_)
-                    break;
-                // check it has expired
-                if (timer_.expiry() <= std::chrono::steady_clock::now()) {
-                    if (ws_.is_open() && ping_state_ == pingstate::responsive) {
-                        ping_state_ = pingstate::onhold;
-                        timer_.expires_after(std::chrono::seconds(TIMEOUT));
-                        // Now send the ping
-                        ws_.async_ping({}, yield[ec]);
-                        // we don't care about ec here
-                    } else if (ws_.is_open()) {
-                        // ping state is onhold - no activity in last 15 seconds
-                        BOOST_LOG_SEV(logger_, sev::info)
-                            << "Connection closing due to ping timeout";
-                        ws_.next_layer().next_layer().cancel(ec);
-                        break;
-                    }
-                }
-                // wait on the timer
-                timer_.async_wait(yield[ec]);
-                // we need this != check, need to experiment more
-                if (ec && ec != boost::asio::error::operation_aborted)
-                    break;
-            }
-            timer_.cancel(ec);
-            BOOST_LOG_SEV(logger_, sev::info) << "ping coroutine exiting";
-        } catch (std::exception &e) {
-            BOOST_LOG_SEV(logger_, sev::info) << "Ping timer exception, reason: " << e.what();
+        if (processor.get_session().player) {
+            ss_map_.remove(processor.get_session().player.value().name);
+        }
+        if (processor.get_session().userid) {
+            db_.logout(processor.get_session().userid.value(), yield);
         }
     });
 }
+
+void server_session::write(std::string name, std::string str) {
+    BOOST_LOG_SEV(logger_, boost::log::trivial::debug) << "write called";
+    boost::asio::spawn(strand_, [this, name{std::move(name)}, str{std::move(str)},
+                                 self{shared_from_this()}](boost::asio::yield_context yield) {
+        write_queue_.emplace(std::move(str));
+        BOOST_LOG_SEV(logger_, boost::log::trivial::debug) << "str enqueued";
+        if (write_queue_.size() != 1) {
+            return;
+            // Don't do anything, someone will handle it
+        }
+        for (;;) {
+            if (write_queue_.empty()) {
+                return;
+            }
+            // write it
+            boost::system::error_code ec;
+            ws_.async_write(boost::asio::buffer(write_queue_.front()), yield[ec]);
+            // pop after we are done writing
+            write_queue_.pop();
+            if (ec == beast::websocket::error::closed ||
+                ec == boost::asio::error::operation_aborted) {
+                return;
+            } else if (ec) {
+                // TODO: find a better way to identify a session
+                BOOST_LOG_SEV(logger_, sev::warning)
+                    << "Write to session: " << name << " failed: " << ec.message();
+                return;
+            }
+        }
+    });
+}
+
+} // namespace nibaserver

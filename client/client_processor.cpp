@@ -9,7 +9,7 @@
 
 using namespace nibaclient;
 
-void client_processor::process(nibashared::message_register &req) {
+void client_processor::process(nibashared::message_registration &req) {
     if (req.success) {
         std::cout << "success" << std::endl;
     } else {
@@ -38,6 +38,7 @@ void nibaclient::client_processor::process(nibashared::message_getdata &req) {
     if (req.success) {
         nibashared::staticdata::init(std::move(req.characters), std::move(req.magics),
                                      std::move(req.equips), std::move(req.maps));
+        std::cout << "data initialized" << std::endl;
     } else {
         std::cout << "unable to fetch gamedata" << std::endl;
         // probably should crash
@@ -101,6 +102,18 @@ void nibaclient::client_processor::process(nibashared::message_reordermagic &req
         session_.data.equipped_magic_ids = std::move(req.equipped_magic_ids);
     } else {
         std::cout << "failed to reorder magic" << std::endl;
+    }
+}
+
+void nibaclient::client_processor::process(nibashared::message_echo& msg) {
+    std::cout << msg.sender << ": " << msg.echo_str << std::endl;
+}
+
+void nibaclient::client_processor::process(nibashared::message_send& req) {
+    if (req.success) {
+        std::cout << "message sent\n";
+    } else {
+        std::cout << "player offline or does not exist\n";
     }
 }
 

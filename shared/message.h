@@ -6,11 +6,16 @@
 #include <nlohmann/json.hpp>
 #include <optional>
 #include <type_traits>
+#include <utility>
+#include <variant>
 #include <vector>
 
 namespace nibashared {
 
-enum class cmdtype : std::size_t {
+namespace message {
+
+enum class type : int {
+    none = -1,
     login = 0,
     registeration = 1,
     createchar = 2,
@@ -19,9 +24,15 @@ enum class cmdtype : std::size_t {
     learnmagic = 5,
     fusemagic = 6,
     reordermagic = 7,
+    echo = 8,
+    send = 9,
 
     LAST
 };
+
+enum class tag : int { request = 0, response = 1 };
+
+} // namespace message
 
 template<typename Impl>
 struct base_message {
@@ -30,10 +41,13 @@ struct base_message {
     nlohmann::json base_create_response() {
         auto j = self().create_response();
         j["success"] = success;
+        j["type"] = self().type;
+        j["tag"] = message::tag::response;
         return j;
     }
     nlohmann::json base_create_request() {
         auto j = self().create_request();
+        j["tag"] = message::tag::request;
         j["type"] = self().type;
         return j;
     }
@@ -49,12 +63,12 @@ struct base_message {
 template<typename T>
 using IsMessage = typename std::enable_if<std::is_base_of<base_message<T>, T>::value>::type;
 
-struct message_register : public base_message<message_register> {
+struct message_registration : public base_message<message_registration> {
     // TODO: make this static?
-    const cmdtype type = cmdtype::registeration;
+    const message::type type = message::type::registeration;
 
-    message_register() = default;
-    message_register(std::string &&id, std::string &&password);
+    message_registration() = default;
+    message_registration(std::string &&id, std::string &&password);
     bool validate(const nibashared::sessionstate &session);
     nlohmann::json create_response();
     nlohmann::json create_request();
@@ -67,7 +81,7 @@ struct message_register : public base_message<message_register> {
 };
 
 struct message_login : public base_message<message_login> {
-    const cmdtype type = cmdtype::login;
+    const message::type type = message::type::login;
 
     message_login() = default;
     message_login(std::string &&id, std::string &&password);
@@ -85,7 +99,7 @@ struct message_login : public base_message<message_login> {
 };
 
 struct message_getdata : public base_message<message_getdata> {
-    const cmdtype type = cmdtype::getdata;
+    const message::type type = message::type::getdata;
 
     message_getdata() = default;
     bool validate(const nibashared::sessionstate &session);
@@ -101,7 +115,7 @@ struct message_getdata : public base_message<message_getdata> {
 };
 
 struct message_fight : public base_message<message_fight> {
-    const cmdtype type = cmdtype::fight;
+    const message::type type = message::type::fight;
 
     message_fight() = default;
     // TODO this should be changed, we shouldn't use enemyid to identify the enemy
@@ -118,7 +132,7 @@ struct message_fight : public base_message<message_fight> {
 };
 
 struct message_createchar : public base_message<message_createchar> {
-    const cmdtype type = cmdtype::createchar;
+    const message::type type = message::type::createchar;
 
     message_createchar() = default;
     message_createchar(nibashared::player &&player);
@@ -136,7 +150,7 @@ struct message_learnmagic : public base_message<message_learnmagic> {
     // A magic_book is a book id stored in player_books
     // a player learns a magic from a magic_book
     // but a magic_book is just a magic in staticdata(TODO: add exp requirement)
-    const cmdtype type = cmdtype::learnmagic;
+    const message::type type = message::type::learnmagic;
 
     message_learnmagic() = default;
     explicit message_learnmagic(int static_id);
@@ -151,7 +165,7 @@ struct message_learnmagic : public base_message<message_learnmagic> {
 };
 
 struct message_fusemagic : public base_message<message_fusemagic> {
-    const cmdtype type = cmdtype::fusemagic;
+    const message::type type = message::type::fusemagic;
 
     message_fusemagic() = default;
     message_fusemagic(int primary_magic_id, int secondary_magic_id);
@@ -168,7 +182,7 @@ struct message_fusemagic : public base_message<message_fusemagic> {
 
 struct message_reordermagic : public base_message<message_reordermagic> {
     // use the same message for equipping & unequipping magics
-    const cmdtype type = cmdtype::reordermagic;
+    const message::type type = message::type::reordermagic;
 
     message_reordermagic() = default;
     explicit message_reordermagic(std::vector<int> &&equipped_magic_ids);
@@ -180,5 +194,89 @@ struct message_reordermagic : public base_message<message_reordermagic> {
 
     std::vector<int> equipped_magic_ids;
 };
+
+struct message_echo : public base_message<message_echo> {
+    // doesn't echo back...
+    const message::type type = message::type::echo;
+
+    message_echo() = default;
+    message_echo(std::string echo_str, std::string sender);
+    bool validate(const nibashared::sessionstate &session);
+    nlohmann::json create_response();
+    nlohmann::json create_request();
+    void merge_response(const nlohmann::json &j);
+    void from_request(const nlohmann::json &j);
+
+    std::string echo_str;
+    std::string sender;
+};
+
+struct message_send : public base_message<message_send> {
+    const message::type type = message::type::send;
+    message_send() = default;
+    message_send(std::string name, std::string message);
+    bool validate(const nibashared::sessionstate &session);
+    nlohmann::json create_response();
+    nlohmann::json create_request();
+    void merge_response(const nlohmann::json &j);
+    void from_request(const nlohmann::json &j);
+
+    std::string name;
+    std::string message;
+};
+
+namespace message {
+
+using variant = std::variant<message_registration, message_login, message_getdata, message_fight,
+                             message_createchar, message_learnmagic, message_fusemagic,
+                             message_reordermagic, message_echo, message_send>;
+
+template<typename Message, typename = nibashared::IsMessage<Message>>
+Message parse(const nlohmann::json &j) {
+    Message m;
+    m.base_from_request(j);
+    return m;
+}
+
+template<typename Handler>
+auto dispatcher(const nlohmann::json &j, Handler &&handler) {
+    auto cmd_id = j.at("type").get<int>();
+    switch (message::type{cmd_id}) {
+    case message::type::registeration: {
+        return handler(parse<message_registration>(j));
+    }
+    case message::type::login: {
+        return handler(parse<message_login>(j));
+    }
+    case message::type::getdata: {
+        return handler(parse<message_getdata>(j));
+    }
+    case message::type::fight: {
+        return handler(parse<message_fight>(j));
+    }
+    case message::type::createchar: {
+        return handler(parse<message_createchar>(j));
+    }
+    case message::type::learnmagic: {
+        return handler(parse<message_learnmagic>(j));
+    }
+    case message::type::fusemagic: {
+        return handler(parse<message_fusemagic>(j));
+    }
+    case message::type::reordermagic: {
+        return handler(parse<message_reordermagic>(j));
+    }
+    case message::type::echo: {
+        return handler(parse<message_echo>(j));
+    }
+    case message::type::send: {
+        return handler(parse<message_send>(j));
+    }
+    default:
+        throw std::runtime_error("unknown request " + std::to_string(cmd_id));
+    }
+}
+
+} // namespace message
 
 } // namespace nibashared

@@ -12,53 +12,40 @@
 using namespace nibaserver;
 namespace sev = boost::log::trivial;
 
-server_processor::server_processor(boost::asio::yield_context &yield, nibaserver::db_accessor &db) :
-    session_(), yield_(yield), db_(db) {}
+server_processor::server_processor(boost::asio::yield_context &yield, db_accessor &db,
+                                   session_map &ss_map, session_wptr ss_wptr) :
+    session_{},
+    yield_{yield}, db_{db}, ss_map_{ss_map}, ss_wptr_{ss_wptr} {}
 
 std::string server_processor::dispatch(const std::string &request) {
     // logging the request is bad, when password is involved
     // BOOST_LOG_SEV(logger_, sev::debug) << request;
     try {
+        session_.current_time = std::chrono::high_resolution_clock::now();
+        if (session_.current_time < session_.earliest_time) {
+            throw std::runtime_error("request too frequent");
+        }
+        session_.earliest_time = session_.current_time;
+
         auto j = nlohmann::json::parse(request);
-        auto cmd_id = j.at("type").get<std::size_t>();
-        switch (static_cast<nibashared::cmdtype>(cmd_id)) {
-        case nibashared::cmdtype::registeration: {
-            return do_request<nibashared::message_register>(j);
-        }
-        case nibashared::cmdtype::login: {
-            return do_request<nibashared::message_login>(j);
-        }
-        case nibashared::cmdtype::getdata: {
-            return do_request<nibashared::message_getdata>(j);
-        }
-        case nibashared::cmdtype::fight: {
-            return do_request<nibashared::message_fight>(j);
-        }
-        case nibashared::cmdtype::createchar: {
-            return do_request<nibashared::message_createchar>(j);
-        }
-        case nibashared::cmdtype::learnmagic: {
-            return do_request<nibashared::message_learnmagic>(j);
-        }
-        case nibashared::cmdtype::fusemagic: {
-            return do_request<nibashared::message_fusemagic>(j);
-        }
-        case nibashared::cmdtype::reordermagic: {
-            return do_request<nibashared::message_reordermagic>(j);
-        }
-        default:
-            BOOST_LOG_SEV(logger_, sev::info) << "unknown request type: " << cmd_id;
-        }
+        return nibashared::message::dispatcher(j, [this](auto &&req) {
+            if (!req.base_validate(session_)) {
+                throw std::runtime_error("validation failure");
+            }
+            process(req);
+            return req.base_create_response().dump();
+        });
     }
     // return whatever error message, I don't care
     catch (std::exception &e) {
         BOOST_LOG_SEV(logger_, sev::info) << "dispatch failure: " << e.what();
     }
-    nlohmann::json error_msg{{"error", "request error"}};
+    nlohmann::json error_msg{{"error", "request error"},
+                             {"tag", nibashared::message::tag::response}};
     return error_msg.dump();
 }
 
-void nibaserver::server_processor::process(nibashared::message_register &req) {
+void nibaserver::server_processor::process(nibashared::message_registration &req) {
     if (db_.create_user(req.id, req.password, yield_)) {
         req.success = true;
         BOOST_LOG_SEV(logger_, sev::info) << "User " << req.id << " has registered.";
@@ -73,7 +60,7 @@ void nibaserver::server_processor::process(nibashared::message_login &req) {
         req.success = true;
         session_.userid = req.id;
         req.player = db_.get_char(req.id, yield_);
-        if (req.player) {
+        if (req.player && ss_map_.register_session((*(req.player)).name, ss_wptr_)) {
             session_.state = nibashared::gamestate::ingame;
             session_.player = *(req.player);
             // player data exists, so lets fetch equipments&magics data of the player
@@ -117,7 +104,8 @@ void nibaserver::server_processor::process(nibashared::message_createchar &req) 
         return;
     }
     // players have an id of -1? or auto increment?
-    if (db_.create_char(*(session_.userid), req.player, yield_)) {
+    if (db_.create_char(*(session_.userid), req.player, yield_) &&
+        ss_map_.register_session(req.player.name, ss_wptr_)) {
         req.success = true;
         // nothing to modify for player
         session_.state = nibashared::gamestate::ingame;
@@ -181,14 +169,14 @@ void nibaserver::server_processor::process(nibashared::message_fusemagic &req) {
                 break;
             // prefer hp and def
             case selector::physique:
-                break;
                 extra_stats(secondary_stats.hp, magic.stats.hp);
                 extra_stats(secondary_stats.defence, magic.stats.defence);
+                break;
             // prefer mp and inner_power
             case selector::spirit:
-                break;
                 extra_stats(secondary_stats.mp, magic.stats.mp);
                 extra_stats(secondary_stats.inner_power, magic.stats.inner_power);
+                break;
             }
 
             req.magic.stats += secondary_stats;
@@ -229,6 +217,15 @@ void nibaserver::server_processor::process(nibashared::message_reordermagic &req
         return;
     }
     session_.data.equipped_magic_ids = req.equipped_magic_ids;
+}
+
+void nibaserver::server_processor::process(nibashared::message_echo &) {}
+
+void nibaserver::server_processor::process(nibashared::message_send &req) {
+    BOOST_LOG_SEV(logger_, sev::info)
+        << session_.player.value().name << " sending message to " << req.name;
+    nibashared::message_echo echo{std::move(req.message), session_.player.value().name};
+    req.success = ss_map_.write(req.name, echo.base_create_request().dump());
 }
 
 const nibashared::sessionstate &nibaserver::server_processor::get_session() { return session_; }

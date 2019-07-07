@@ -1,8 +1,8 @@
 ### Build
 
 see CMakeList.txt
-Boost 1.68.0, OpenSSL, nlohmann_json(https://github.com/nlohmann/json)
-ozo(submoduled)
+Boost 1.70.0, OpenSSL, nlohmann_json(https://github.com/nlohmann/json) ozo(submoduled)
+
 `./rebuild.sh`
 
 
@@ -11,7 +11,7 @@ ozo(submoduled)
 ```
 cd build
 ./niba-server /path/to/config # or just ./niba-server
-./niba-client ../testscript # or just ./niba-client or cat ../testscript - | ./niba-client
+cat ../testscript - | ./niba-client # or just ./niba-client
 ```
 
 

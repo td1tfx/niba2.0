@@ -8,10 +8,10 @@ namespace nibashared {
 
 using nlohmann::json;
 
-message_register::message_register(std::string &&id, std::string &&password) :
+message_registration::message_registration(std::string &&id, std::string &&password) :
     id(std::move(id)), password(std::move(password)) {}
 
-bool message_register::validate(const nibashared::sessionstate &session) {
+bool message_registration::validate(const nibashared::sessionstate &session) {
     // TODO: throw error with error code?
     if (session.state != nibashared::gamestate::prelogin)
         return false;
@@ -22,13 +22,13 @@ bool message_register::validate(const nibashared::sessionstate &session) {
     return true;
 }
 
-json message_register::create_response() { return {}; }
+json message_registration::create_response() { return {}; }
 
 // this is not used
-json message_register::create_request() { return {{"id", id}, {"password", password}}; }
-void message_register::merge_response(const json &j) { (void)j; }
+json message_registration::create_request() { return {{"id", id}, {"password", password}}; }
+void message_registration::merge_response(const json &j) { (void)j; }
 
-void message_register::from_request(const json &j) {
+void message_registration::from_request(const json &j) {
     j.at("id").get_to(id);
     j.at("password").get_to(password);
 }
@@ -293,10 +293,60 @@ nlohmann::json nibashared::message_reordermagic::create_request() {
     return {{"equipped_magic_ids", equipped_magic_ids}};
 }
 
-void nibashared::message_reordermagic::merge_response(const nlohmann::json &j) { (void)j; }
+void nibashared::message_reordermagic::merge_response(const nlohmann::json &) {}
 
 void nibashared::message_reordermagic::from_request(const nlohmann::json &j) {
     j.at("equipped_magic_ids").get_to(equipped_magic_ids);
+}
+
+nibashared::message_echo::message_echo(std::string echo_str, std::string sender) :
+    echo_str{std::move(echo_str)}, sender{std::move(sender)} {}
+
+bool nibashared::message_echo::validate(const nibashared::sessionstate &) { return true; }
+
+nlohmann::json nibashared::message_echo::create_response() {
+    return {{"echo_str", echo_str}, {"sender", sender}};
+}
+
+nlohmann::json nibashared::message_echo::create_request() {
+    return {{"echo_str", echo_str}, {"sender", sender}};
+}
+
+void nibashared::message_echo::merge_response(const nlohmann::json &j) {
+    j.at("echo_str").get_to(echo_str);
+    j.at("sender").get_to(sender);
+}
+
+void nibashared::message_echo::from_request(const nlohmann::json &j) {
+    j.at("echo_str").get_to(echo_str);
+    j.at("sender").get_to(sender);
+}
+
+nibashared::message_send::message_send(std::string name, std::string message) :
+    name{std::move(name)}, message{std::move(message)} {}
+
+bool nibashared::message_send::validate(const nibashared::sessionstate &session) {
+    if (session.state == nibashared::gamestate::prelogin) {
+        return false;
+    }
+    if (message.size() > 256) {
+        // Message too long
+        return false;
+    }
+    return true;
+}
+
+nlohmann::json nibashared::message_send::create_response() { return {}; }
+
+nlohmann::json nibashared::message_send::create_request() {
+    return {{"name", name}, {"message", message}};
+}
+
+void nibashared::message_send::merge_response(const nlohmann::json &) {}
+
+void nibashared::message_send::from_request(const nlohmann::json &j) {
+    j.at("name").get_to(name);
+    j.at("message").get_to(message);
 }
 
 } // namespace nibashared

@@ -1,70 +1,151 @@
 #include "client_session.h"
 
-using tcp = boost::asio::ip::tcp;              // from <boost/asio/ip/tcp.hpp>
-namespace ssl = boost::asio::ssl;              // from <boost/asio/ssl.hpp>
-namespace websocket = boost::beast::websocket; // from <boost/beast/websocket.hpp>
+#include <boost/algorithm/string.hpp>
+#include <sstream>
+
+namespace ssl = boost::asio::ssl;       // from <boost/asio/ssl.hpp>
+namespace beast = boost::beast;         // from <boost/beast.hpp>
+namespace websocket = beast::websocket; // from <boost/beast/websocket.hpp>
 
 using namespace nibaclient;
 
-// , work_(ioc_)
 nibaclient::client_session::client_session(std::string const &host, std::string const &port,
-                                           boost::asio::io_context &ioc,
-                                           boost::asio::ssl::context &ssl_ctx) :
-    host_(host),
-    port_(port), ioc_(ioc), resolver_(ioc_), ws_(ioc_, ssl_ctx), timer_(ioc_) {
-    // everything can be sync because this client has no ui anyway
-    auto const results = resolver_.resolve(host_, port_);
-    boost::asio::connect(ws_.next_layer().next_layer(), results.begin(), results.end());
-    tcp::no_delay option(true);
-    ws_.next_layer().next_layer().set_option(option);
-    ws_.next_layer().handshake(ssl::stream_base::client);
-    ws_.handshake(host_, "/");
-    timer_.expires_after(std::chrono::seconds(5));
-    ping_timer({});
-    // do a data exchange
-}
+                                           boost::asio::io_context &ioc, ssl::context &ssl_ctx) :
+    host_{host},
+    port_{port}, ioc_{ioc}, resolver_{ioc_}, ws_{ioc_, ssl_ctx}, ready_promise_{},
+    ready_future_{ready_promise_.get_future()} {}
 
-nibaclient::client_session::~client_session() { close(); }
-
-void nibaclient::client_session::close() {
-    if (ws_.is_open()) {
-        ws_.close(websocket::close_code::normal);
-    }
-    timer_.cancel();
-}
-
-void nibaclient::client_session::handle_cmd(const std::string &input) {
-    try {
-        if (input == "exit") {
-            std::cout << "goodbye" << std::endl;
-            // this might not be the last command... but works for tests
-            close();
-            ioc_.stop();
+void nibaclient::client_session::start() {
+    // Note we only have 1 ioc_ thread, so no strand needed
+    boost::asio::spawn(ioc_, [this, self = shared_from_this()](boost::asio::yield_context yield) {
+        try {
+            auto const results = resolver_.async_resolve(host_, port_, yield);
+            beast::get_lowest_layer(ws_).expires_after(std::chrono::seconds(30));
+            beast::get_lowest_layer(ws_).async_connect(results, yield);
+            boost::asio::ip::tcp::no_delay option(true);
+            beast::get_lowest_layer(ws_).socket().set_option(option);
+            beast::get_lowest_layer(ws_).expires_after(std::chrono::seconds(30));
+            ws_.next_layer().async_handshake(ssl::stream_base::client, yield);
+            beast::get_lowest_layer(ws_).expires_never();
+            ws_.set_option(websocket::stream_base::timeout::suggested(beast::role_type::client));
+            ws_.async_handshake(host_, "/", yield);
+            ready_promise_.set_value();
+        } catch (...) {
+            // Apparently this can throw as well, but let's see if we care...
+            ready_promise_.set_exception(std::current_exception());
             return;
         }
+        // Now start long running read loop
+        for (;;) {
+            std::string incoming_str;
+            auto buffer = boost::asio::dynamic_buffer(incoming_str);
+            try {
+                beast::error_code ec;
+                ws_.async_read(buffer, yield[ec]);
+                if (ec == beast::websocket::error::closed ||
+                    ec == boost::asio::error::operation_aborted) {
+                    return;
+                } else if (ec) {
+                    std::cerr << "read fatal error: " << ec.message() << std::endl;
+                    return;
+                }
+                std::cerr << request_stopwatch_.elapsed_ms() << std::endl;
+                // std::cout << incoming_str << "\n";
+                auto json = nlohmann::json::parse(incoming_str);
+                nibashared::message::tag tag{json.at("tag").get<int>()};
+                if (request_.has_value() && tag == nibashared::message::tag::response) {
+                    if (json.find("error") != json.end()) {
+                        std::string err = json["error"].get<std::string>();
+                        std::cout << "failed to process request: " << err.c_str() << "\n";
+                        request_promise_.set_value(nibashared::message::type::none);
+                        continue;
+                    }
+                    // Since we strictly wait for 1 response per request, this response must match
+                    // the request. Merge it with the request and process.
+                    std::cout << "----Response----\n";
+                    std::visit(
+                        [&json, this, yield](auto &response) {
+                            processor_.process_response(response, json);
+                            if (response.type == nibashared::message::type::login) {
+                                // Manually chain the getdata message
+                                // TODO combine getdata with login
+                                write_message(nibashared::message_getdata{}, yield);
+                            } else {
+                                // Set the promise!
+                                request_promise_.set_value(response.type);
+                            }
+                        },
+                        request_.value());
+                    std::cout << "----------------\n";
+                } else {
+                    // It's some unknown message, just process it
+                    nibashared::message::dispatcher(json, [this](auto &&message) {
+                        // Incoming message, assume "it just works"
+                        processor_.process(message);
+                    });
+                }
+            } catch (std::exception &ex) {
+                // TODO maybe just remove the catch
+                std::cerr << "fatal error: " << ex.what() << "\n";
+                break;
+                // throw ex;
+            }
+        }
+    });
+}
+
+void nibaclient::client_session::block_until_ready() { ready_future_.get(); }
+
+void nibaclient::client_session::stop() {
+    // Exceptions may happen in the destructor, but if it throws, then let it crash...?
+    boost::asio::spawn(ioc_, [this, self = shared_from_this()](boost::asio::yield_context yield) {
+        if (ws_.is_open()) {
+            // ioc should finish the close before shutting down
+            beast::error_code ec;
+            ws_.async_close(websocket::close_code::normal, yield[ec]);
+            if (ec && ec != boost::asio::error::operation_aborted) {
+                std::cerr << "Close error: " << ec.message() << std::endl;
+            }
+        }
+    });
+}
+
+std::future<nibashared::message::type>
+nibaclient::client_session::handle_cmd(const std::string &input) {
+    try {
         handled_ = true;
         std::vector<std::string> results;
         boost::split(results, input, boost::is_any_of("\t "));
         if (results.empty())
             throw std::runtime_error("empty input");
-        // dynamic sized
+        // Dynamically sized arguments
         if (results[0] == "reordermagic") {
             std::vector<int> selected;
-            std::for_each(results.begin() + 1, results.end(), [&selected](auto &magic_id) {
-                selected.push_back(std::stoi(magic_id));
-            });
+            std::for_each(results.begin() + 1, results.end(),
+                          [&selected](auto &magic_id) { selected.push_back(std::stoi(magic_id)); });
             return create_and_go<nibashared::message_reordermagic>(std::move(selected));
+        } else if (results[0] == "send") {
+            if (results.size() < 3) {
+                throw std::runtime_error("need more arguments");
+            }
+            std::stringstream ss;
+            for (auto iter = std::next(results.begin(), 2); iter != results.end(); ++iter) {
+                ss << *iter;
+                if (iter != std::prev(results.end())) {
+                    ss << " ";
+                }
+            }
+            return create_and_go<nibashared::message_send>(std::move(results[1]), ss.str());
         }
-        // password input handled by cmd_processor
         if (results.size() == 3) {
             if (results[0] == "register") {
-                return create_and_go<nibashared::message_register>(std::move(results[1]),
-                                                                   std::move(results[2]));
+                return create_and_go<nibashared::message_registration>(std::move(results[1]),
+                                                                       std::move(results[2]));
             } else if (results[0] == "login") {
-                create_and_go<nibashared::message_login>(std::move(results[1]),
-                                                         std::move(results[2]));
-                // force a getdata after login
-                return create_and_go<nibashared::message_getdata>();
+                return create_and_go<nibashared::message_login>(std::move(results[1]),
+                                                                std::move(results[2]));
+                // Force a getdata after login
+                // create_and_go<nibashared::message_getdata>();
             } else if (results[0] == "fusemagic") {
                 return create_and_go<nibashared::message_fusemagic>(std::stoi(results[1]),
                                                                     std::stoi(results[2]));
@@ -74,6 +155,9 @@ void nibaclient::client_session::handle_cmd(const std::string &input) {
                 return create_and_go<nibashared::message_fight>(std::stoi(results[1]));
             } else if (results[0] == "learnmagic") {
                 return create_and_go<nibashared::message_learnmagic>(std::stoi(results[1]));
+            } else if (results[0] == "timeout") {
+                // This should be posted to ioc, TODO
+                std::this_thread::sleep_for(std::chrono::seconds(std::stoi(results[1])));
             }
         } else if (results.size() == 7) {
             if (results[0] == "create") {
@@ -85,41 +169,25 @@ void nibaclient::client_session::handle_cmd(const std::string &input) {
                                                  .physique = std::stoi(results[5]),
                                                  .spirit = std::stoi(results[6])}});
             }
+        } else {
+            throw std::runtime_error("incorrect command");
         }
-    } catch (...) {
-        std::cout << "incorrect command" << std::endl;
-        // parsing failure whatever
+    } catch (std::exception &exc) {
+        std::cout << exc.what() << std::endl;
     }
     handled_ = false;
+    // Return a dummy future, that has promised already fulfilled
+    std::promise<nibashared::message::type> promise;
+    auto future = promise.get_future();
+    promise.set_value(nibashared::message::type::none);
+    return future;
 }
 
 std::chrono::high_resolution_clock::time_point nibaclient::client_session::earliest() const {
     if (!handled_)
         return {};
-    // if no change then it means do whatever
+    // If no change then it means do whatever
     if (processor_.get_session().earliest_time == processor_.get_session().current_time)
         return {};
     return processor_.get_session().earliest_time;
-}
-
-void nibaclient::client_session::ping_timer(boost::system::error_code ec) {
-    if (ec && ec != boost::asio::error::operation_aborted)
-        return;
-
-    // See if the timer really expired since the deadline may have moved.
-    if (timer_.expiry() <= std::chrono::steady_clock::now()) {
-        // If this is the first time the timer expired,
-
-        if (ws_.is_open()) {
-            timer_.expires_after(std::chrono::seconds(5));
-            // Now send the ping
-            ws_.async_pong({}, [](boost::system::error_code ec) {
-                (void)ec;
-                // std::cout << "ping sent" << std::endl;
-            });
-        }
-    }
-
-    // Wait on the timer
-    timer_.async_wait([this](boost::system::error_code ec) { ping_timer(ec); });
 }
