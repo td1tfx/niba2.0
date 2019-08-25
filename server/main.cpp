@@ -10,8 +10,8 @@
 #include <ozo/request.h>
 #include <ozo/shortcuts.h>
 
-#include <cstdlib>
 #include <chrono>
+#include <cstdlib>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -64,16 +64,16 @@ int main(int argc, char *argv[]) {
     // the global sessions will be passed into the server_session?
     session_map ss_map;
 
-    boost::asio::spawn(ioc, [&ioc, &address, &port, &ctx, &connection_pool,
-                             &logger, &ss_map](boost::asio::yield_context yield) {
+    boost::asio::spawn(ioc, [&ioc, &address, &port, &ctx, &connection_pool, &logger,
+                             &ss_map](boost::asio::yield_context yield) {
         using namespace ozo::literals;
         boost::system::error_code ec;
 
         // TODO: move elsewhere
         // reset the login status on start up
-        auto conn = ozo::execute(connection_pool[ioc], "UPDATE user_id SET logged_in = false WHERE 1 = 1"_SQL,
-                                 ozo::deadline(std::chrono::seconds(5)),
-                                 yield[ec]);
+        auto conn = ozo::execute(connection_pool[ioc],
+                                 "UPDATE user_id SET logged_in = false WHERE 1 = 1"_SQL,
+                                 ozo::deadline(std::chrono::seconds(5)), yield[ec]);
         if (ec) {
             BOOST_LOG_SEV(logger, sev::error) << ec.message() << " | " << ozo::error_message(conn)
                                               << " | " << ozo::get_error_context(conn);
@@ -110,17 +110,16 @@ int main(int argc, char *argv[]) {
     });
 
     // session_ptr clean up
-    constexpr auto interval = std::chrono::minutes(5);  // TODO: make it configurable
+    constexpr auto interval = std::chrono::minutes(5); // TODO: make it configurable
     boost::asio::steady_timer cleanup_timer{ioc};
     cleanup_timer.expires_after(interval);
-    boost::asio::spawn(ioc, [&cleanup_timer, &ss_map](boost::asio::yield_context yield) {
+    boost::asio::spawn(ioc, [&cleanup_timer, &ss_map, &interval](boost::asio::yield_context yield) {
         for (;;) {
             cleanup_timer.async_wait(yield);
             ss_map.cleanup();
             cleanup_timer.expires_after(interval);
         }
     });
-
 
     BOOST_LOG_SEV(logger, sev::info) << "Main thread ioc running.";
     std::vector<std::thread> v;
