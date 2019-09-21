@@ -4,9 +4,9 @@
 
 #include <array>
 #include <boost/hana.hpp>
+#include <cmath>
 #include <nlohmann/json.hpp>
 #include <ostream>
-#include <cmath>
 
 // Copied from nlohmann readme
 namespace nlohmann {
@@ -104,14 +104,20 @@ inline std::ostream &operator<<(std::ostream &os, const equipmenttype &v) {
 }
 
 template<typename T>
-void hana_to_json(nlohmann::json &j, const T &t) {
+constexpr auto HanaStruct = boost::hana::Struct<std::decay_t<T>>::value;
+
+template<typename T>
+using IsHanaStructT = std::enable_if_t<HanaStruct<T>, T>;
+
+template<typename T, typename = IsHanaStructT<T>>
+void to_json(nlohmann::json &j, const T &t) {
     boost::hana::for_each(t, boost::hana::fuse([&j](auto name, auto member) {
                               j[boost::hana::to<char const *>(name)] = member;
                           }));
 }
 
-template<typename T>
-void hana_from_json(const nlohmann::json &j, T &t) {
+template<typename T, typename = IsHanaStructT<T>>
+void from_json(const nlohmann::json &j, T &t) {
     boost::hana::for_each(boost::hana::keys(t), [&j, &t](auto key) {
         auto &member = boost::hana::at_key(t, key);
         j.at(boost::hana::to<char const *>(key)).get_to(member);
@@ -130,21 +136,12 @@ std::ostream &operator<<(std::ostream &os, const std::vector<T> &v) {
     return os;
 }
 
-template<typename T>
-std::ostream &hana_print(std::ostream &os, const T &t) {
-    // TODO constexpr or some other way to get rid of last space
+template<typename T, typename = IsHanaStructT<T>>
+std::ostream &operator<<(std::ostream &os, const T &t) {
     boost::hana::for_each(t, boost::hana::fuse([&os](auto name, auto member) {
                               os << boost::hana::to<char const *>(name) << ": " << member << " ";
                           }));
-    return os;
 }
-
-#define STRUCT_JSON_SERIALIZE(STRUCT)                                                              \
-    inline void to_json(nlohmann::json &j, const STRUCT &t) { hana_to_json(j, t); }                \
-    inline void from_json(const nlohmann::json &j, STRUCT &t) { hana_from_json(j, t); }
-
-#define STRUCT_PRINT(STRUCT)                                                                       \
-    inline std::ostream &operator<<(std::ostream &os, const STRUCT &t) { return hana_print(os, t); }
 
 struct battlestats {
     BOOST_HANA_DEFINE_STRUCT(battlestats, (int, hp), (int, mp), (int, attack_min),
@@ -172,8 +169,6 @@ struct battlestats {
         return *this;
     }
 };
-STRUCT_JSON_SERIALIZE(battlestats);
-STRUCT_PRINT(battlestats);
 
 struct attributes {
     BOOST_HANA_DEFINE_STRUCT(attributes, (int, strength), (int, dexterity), (int, physique),
@@ -186,24 +181,18 @@ struct attributes {
     }
     enum class selector : std::size_t { strength = 0, dexterity = 1, physique = 2, spirit = 3 };
 };
-STRUCT_JSON_SERIALIZE(attributes);
-STRUCT_PRINT(attributes);
 
 struct character {
     BOOST_HANA_DEFINE_STRUCT(character, (std::string, name), (int, character_id),
                              (std::string, description), (attributes, attrs), (battlestats, stats),
                              (equipment_ids, equipments), (magic_ids, active_magic));
 };
-STRUCT_JSON_SERIALIZE(character);
-STRUCT_PRINT(character);
 
 // adapters? or just use character?
 struct player {
     // may contain other stuff, but whatever
     BOOST_HANA_DEFINE_STRUCT(player, (std::string, name), (char, gender), (attributes, attrs));
 };
-STRUCT_JSON_SERIALIZE(player);
-STRUCT_PRINT(player);
 
 struct magic {
     BOOST_HANA_DEFINE_STRUCT(magic, (int, magic_id), (std::string, name), (int, active),
@@ -211,31 +200,23 @@ struct magic {
                              (char, inner_property), (std::string, description),
                              (battlestats, stats));
 };
-STRUCT_JSON_SERIALIZE(magic);
-STRUCT_PRINT(magic);
 
 struct equipment {
     BOOST_HANA_DEFINE_STRUCT(equipment, (int, equipment_id), (int, static_id), (std::string, name),
                              (std::string, description), (equipmenttype, type),
                              (battlestats, stats), (int, item_level), (int, required_level));
 };
-STRUCT_JSON_SERIALIZE(equipment);
-STRUCT_PRINT(equipment);
 
 struct map {
     BOOST_HANA_DEFINE_STRUCT(map, (int, map_id), (std::string, name), (std::string, description),
                              (double, elite_prob), (double, boss_prob), (int, boss_id),
                              (enemy_ids, enemies), (map_ids, open_maps), (int, is_open));
 };
-STRUCT_JSON_SERIALIZE(map);
-STRUCT_PRINT(map);
 
 struct playerdata {
     BOOST_HANA_DEFINE_STRUCT(playerdata, (std::vector<magic>, magics),
                              (std::vector<equipment>, equips), (magic_ids, equipped_magic_ids),
                              (map_ids, avail_map_ids));
 };
-STRUCT_JSON_SERIALIZE(playerdata);
-STRUCT_PRINT(playerdata);
 
 } // namespace nibashared
