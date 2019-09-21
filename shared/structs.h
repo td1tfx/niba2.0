@@ -141,6 +141,7 @@ std::ostream &operator<<(std::ostream &os, const T &t) {
     boost::hana::for_each(t, boost::hana::fuse([&os](auto name, auto member) {
                               os << boost::hana::to<char const *>(name) << ": " << member << " ";
                           }));
+    return os;
 }
 
 struct battlestats {
