@@ -41,7 +41,7 @@ bool session_map::register_session(const std::string &name, session_wptr wptr) {
 }
 
 void session_map::remove(const std::string& name) {
-    std::unique_lock{mutex_};
+    std::unique_lock lock{mutex_};
     if (auto iter = map_.find(name); iter != map_.end()) {
         map_.erase(iter);
     }
